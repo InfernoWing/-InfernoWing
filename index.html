@@ -1,11 +1,970 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>학원 관리 시스템</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>학원 관리 시스템</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#20291f; --board:#26362b; --board-dark:#1b271a;
+    --chalk:#f4efe4; --chalk-dim:#c9c2ac;
+    --mustard:#e7a13c; --mustard-dim:#e7a13c33;
+    --blue:#3f6b8f; --blue-dim:#3f6b8f22;
+    --violet:#7a5ca8; --violet-dim:#7a5ca822;
+    --rust:#c96a4e; --green:#3d8361; --line:#3b4c3f;
+    --paper:#faf7ef; --paper-card:#ffffff;
+    --pill-bg:#f7e6b8; --pill-border:#eed69a; --pill-text:#7a5518; --pill-count:#e2871f;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:'Noto Sans KR',sans-serif; min-height:100vh; }
+  ::selection{background:var(--mustard-dim);}
+
+  header.app-head{
+    background:var(--board); color:var(--chalk); padding:26px 20px 20px;
+    position:relative; overflow:hidden; border-bottom:6px solid var(--mustard);
+  }
+  header.app-head::before{
+    content:""; position:absolute; inset:0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, #ffffff08 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, #ffffff05 28px);
+    pointer-events:none;
+  }
+  .head-inner{max-width:1120px;margin:0 auto;position:relative;}
+  .eyebrow{ font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--mustard); font-weight:700; margin-bottom:6px; }
+  h1.title{ font-family:'Gowun Batang',serif; font-size:clamp(24px,4.2vw,34px); margin:0 0 4px; font-weight:700; }
+  .subtitle{color:var(--chalk-dim); font-size:13.5px; margin:0;}
+
+  nav.tabs{ max-width:1120px; margin:18px auto 0; padding:0 20px; display:flex; gap:8px; }
+  nav.tabs button{
+    flex:1; background:var(--paper-card); border:2px solid var(--line); border-bottom:none;
+    color:var(--ink); font-family:inherit; font-weight:700; font-size:14px;
+    padding:11px 8px; border-radius:10px 10px 0 0; cursor:pointer; opacity:.55; transition:.15s;
+  }
+  nav.tabs button.active{ opacity:1; background:var(--board); color:var(--chalk); border-color:var(--board); }
+  nav.tabs button:hover{opacity:.85;}
+
+  main{ max-width:1120px; margin:0 auto; padding:0 20px 60px; }
+  section.panel{
+    background:var(--paper-card); border:2px solid var(--line);
+    border-radius:0 0 var(--radius) var(--radius); padding:22px; display:none;
+  }
+  section.panel.active{display:block;}
+  .panel-head-row{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:4px;}
+  h2.panel-title{ font-family:'Gowun Batang',serif; font-size:20px; margin:0 0 4px; }
+  p.panel-desc{color:#6b7368; font-size:13px; margin:0 0 16px;}
+
+  #setupBanner{
+    display:none; background:#fff4e0; border:2px solid var(--mustard);
+    border-radius:12px; padding:16px 18px; margin:0 0 22px; font-size:13px; line-height:1.6;
+  }
+  #setupBanner b{color:var(--rust);}
+  #setupBanner code{ background:#00000010; padding:2px 6px; border-radius:5px; font-size:12px; }
+
+  .form-row{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;}
+  .form-row > div{flex:1; min-width:140px;}
+  label{display:block; font-size:12px; font-weight:600; color:#556; margin-bottom:5px;}
+  input[type=text], input[type=tel], input[type=date], select, textarea{
+    width:100%; padding:9px 11px; border:1.5px solid #dcd6c6; border-radius:9px;
+    font-family:inherit; font-size:13.5px; background:#fffdf8;
+  }
+  input:focus, select:focus, textarea:focus{ outline:none; border-color:var(--mustard); }
+  .btn{
+    display:inline-flex; align-items:center; gap:6px; background:var(--board); color:var(--chalk);
+    border:none; padding:10px 17px; border-radius:9px; font-family:inherit; font-weight:700;
+    font-size:13.5px; cursor:pointer; transition:.15s; white-space:nowrap;
+  }
+  .btn:hover{background:var(--board-dark);}
+  .btn.secondary{background:transparent; color:var(--ink); border:1.5px solid #d8d2c0;}
+  .btn.secondary:hover{background:#f2eee2;}
+  .btn.small{padding:7px 12px; font-size:12px;}
+  .btn-row{margin-top:4px;}
+
+  .filter-bar{
+    display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;
+    background:#f6f3e9; border:1.5px solid #e7e1cf; border-radius:11px;
+    padding:12px 14px; margin-bottom:18px;
+  }
+  .filter-bar > div{min-width:150px;}
+  .filter-bar label{margin-bottom:4px; color:#7a7462;}
+  .filter-bar select{background:#fff;}
+
+  .student-checks{
+    display:flex; flex-wrap:wrap; gap:8px; border:1.5px solid #dcd6c6; border-radius:9px;
+    padding:10px; max-height:160px; overflow-y:auto; background:#fffdf8;
+  }
+  .student-checks label{
+    display:flex; align-items:center; gap:6px; font-weight:500; font-size:13px; color:var(--ink);
+    background:#f2eee2; padding:6px 10px; border-radius:20px; cursor:pointer; margin:0;
+  }
+  .student-card{
+    display:flex; justify-content:space-between; align-items:center; padding:12px 14px;
+    border:1.5px solid #ece7d8; border-radius:11px; margin-bottom:9px; background:#fffdf8;
+  }
+  .student-card .name{font-weight:700; font-size:14.5px;}
+  .student-card .meta{color:#8a8375; font-size:12px; margin-top:2px;}
+  .tag{ display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px; margin-right:5px; }
+  .tag.school{background:var(--blue-dim); color:var(--blue);}
+  .tag.teacher{background:var(--mustard-dim); color:#8a5a13;}
+  .tag.grade{background:var(--violet-dim); color:var(--violet);}
+  .tag.clickable{cursor:pointer;}
+  .tag.clickable:hover{filter:brightness(0.93);}
+  .icon-btn{ border:none; background:#eee9dc; border-radius:7px; padding:6px 9px; cursor:pointer; font-size:12.5px; }
+  .icon-btn:hover{background:#e0d9c6;}
+  .icon-btn.del{background:#f6dcd2; color:#a3492e;}
+  .icon-btn.del:hover{background:#efc7b6;}
+
+  /* ---------- 시험정보 입력 탭 ---------- */
+  .exam-school-row{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:18px;}
+  .exam-school-row select{width:auto; min-width:200px;}
+  .exam-summary{font-size:12.5px; color:#8a8375; font-weight:600;}
+  .exam-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:14px;}
+  .exam-card{border:1.5px solid #ece7d8; border-radius:12px; padding:14px; background:#fffdf8; display:flex; flex-direction:column; gap:9px;}
+  .exam-card .card-head{display:flex; justify-content:space-between; align-items:center; padding-bottom:8px; border-bottom:1.5px dashed #e7e1cf;}
+  .exam-card .ctitle{font-weight:800; font-size:14px;}
+  .count-badge{font-size:10.5px; font-weight:700; background:var(--mustard-dim); color:#8a5a13; padding:2px 8px; border-radius:20px; white-space:nowrap;}
+  .not-held-row{display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; color:#7a5518; cursor:pointer;}
+  .not-held-row input{width:auto;}
+  .reason-box{display:none;}
+  .reason-box.show{display:block;}
+  .mini-row{display:flex; gap:7px;}
+  .mini-row > div{flex:1; min-width:0;}
+  .exam-card label.small{font-size:10.5px; margin-bottom:3px; color:#8a8375;}
+  .exam-card input, .exam-card select, .exam-card textarea{font-size:12px; padding:7px 8px;}
+  .exam-card textarea{min-height:44px; resize:vertical;}
+  .save-row{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:2px;}
+  .makeup-info{font-size:11px; color:#8a8375; white-space:nowrap;}
+  .makeup-row{align-items:stretch;}
+  .footer-note{font-size:10px; color:#b3ab97; margin-top:2px;}
+
+  /* ---------- Calendar ---------- */
+  .cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:10px;}
+  .cal-head .month-label{font-family:'Gowun Batang',serif; font-size:19px;}
+  .cal-nav{display:flex; gap:6px; align-items:center;}
+  .cal-nav button.arrow{ background:#f2eee2; border:none; width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:15px; font-weight:700; }
+  .month-quick{display:flex; gap:6px;}
+  .month-quick button{
+    border:1.5px solid #ddd6c2; background:#fff; padding:7px 13px; border-radius:20px;
+    font-family:inherit; font-weight:700; font-size:13px; cursor:pointer; color:#6b7368;
+  }
+  .month-quick button.active{background:var(--board); color:var(--chalk); border-color:var(--board);}
+  .hint-line{font-size:12px; color:#a49c88; margin:0 0 14px;}
+
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cal-dow{ text-align:center; font-size:11.5px; font-weight:700; color:#9a9484; padding-bottom:4px; }
+  .cal-cell{
+    min-height:88px; border:1.5px solid #ece7d8; border-radius:9px; padding:6px;
+    position:relative; background:#fffdf8;
+  }
+  .cal-cell.empty{background:transparent; border:none;}
+  .cal-cell .num{font-size:12px; font-weight:700; color:#a49c88;}
+  .cal-cell.today .num{color:var(--rust);}
+
+  .exam-pill{
+    display:flex; align-items:center; justify-content:space-between; gap:5px;
+    background:var(--pill-bg); border:1px solid var(--pill-border); color:var(--pill-text);
+    border-radius:7px; padding:3px 7px; font-size:11px; font-weight:700;
+    margin-top:3px; cursor:pointer; overflow:hidden;
+  }
+  .exam-pill:hover{filter:brightness(0.97); border-color:var(--mustard);}
+  .exam-pill .label{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .exam-pill .count{
+    background:var(--pill-count); color:#fff; border-radius:999px; min-width:16px; height:16px;
+    font-size:10px; display:flex; align-items:center; justify-content:center; padding:0 4px; flex-shrink:0;
+  }
+
+  /* ---------- Overlay / Modal ---------- */
+  .overlay{ display:none; position:fixed; inset:0; background:#1b271acc; align-items:center; justify-content:center; z-index:50; padding:20px; }
+  .overlay.active{display:flex;}
+  .modal{ background:var(--paper-card); border-radius:16px; padding:24px; max-width:540px; width:100%; max-height:88vh; overflow-y:auto; }
+  .modal h3{font-family:'Gowun Batang',serif; margin:0 0 4px; font-size:20px;}
+  .close-x{ float:right; background:none; border:none; font-size:20px; cursor:pointer; color:#999; }
+  .modal-meta{ color:#8a8375; font-size:12.5px; margin:0 0 16px; line-height:1.7; }
+  .modal-meta .flag-bad{color:var(--rust); font-weight:700;}
+  .modal-meta .flag-ok{color:var(--green); font-weight:700;}
+  .modal-meta .dot{margin:0 6px; color:#ccc4b0;}
+  .section-label{ font-size:13px; font-weight:800; color:var(--ink); margin:16px 0 10px; padding-top:14px; border-top:1.5px dashed #e7e1cf; }
+  .section-label:first-of-type{border-top:none; padding-top:0;}
+  .teacher-group{margin-bottom:14px;}
+  .teacher-group .tname{font-size:13px; font-weight:800; color:#8a5a13; margin-bottom:7px;}
+  .teacher-group .tname .cnt{color:#a49c88; font-weight:600; font-size:12px;}
+  .assign-row{display:flex; flex-wrap:wrap; gap:8px;}
+  .assign-chip{ display:inline-flex; align-items:center; gap:7px; border:1.5px solid #ece7d8; border-radius:9px; padding:7px 11px; font-size:13px; background:#fffdf8; }
+  .assign-chip .sname{font-weight:700;}
+  .status-tag{ font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; cursor:pointer; border:none; }
+  .status-tag.pending{background:#fbe4dc; color:var(--rust);}
+  .status-tag.done{background:#dcefe3; color:var(--green);}
+
+  .empty-state{ text-align:center; color:#a49c88; padding:30px 10px; font-size:13px; }
+
+  /* ---------- 학생 관리 표 ---------- */
+  .weekday-picker{display:flex; gap:4px;}
+  .weekday-picker button{
+    width:26px; height:26px; border-radius:6px; border:1.5px solid #dcd6c6; background:#fff;
+    font-size:11px; font-weight:700; color:#9a9484; cursor:pointer; padding:0;
+  }
+  .weekday-picker button.active{background:var(--board); color:var(--chalk); border-color:var(--board);}
+  .students-toolbar{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
+  .students-toolbar .search-box{flex:1; min-width:180px;}
+  .count-text{font-size:12px; color:#8a8375; font-weight:600; white-space:nowrap;}
+  .badge-warn{ font-size:11.5px; font-weight:700; background:#fbe4dc; color:var(--rust); padding:5px 11px;
+    border-radius:20px; cursor:pointer; white-space:nowrap; border:none; }
+  .badge-warn.active{background:var(--rust); color:#fff;}
+  .table-scroll{overflow-x:auto;}
+  table.student-table{width:100%; border-collapse:collapse; font-size:13px; min-width:640px;}
+  .student-table th{ text-align:left; font-size:11px; color:#8a8375; font-weight:700; padding:8px 10px; border-bottom:2px solid #ece7d8; white-space:nowrap;}
+  .student-table td{ padding:8px 10px; border-bottom:1px solid #f1ede0; vertical-align:middle;}
+  .student-table tr.incomplete{background:#fdf1ee;}
+  .student-table tr:hover{background:#faf7ee;}
+  .student-table .name-cell{font-weight:700; white-space:nowrap;}
+</style>
 </head>
 <body>
-  <h1>학원 관리 시스템</h1>
-  <p>배포 테스트 중입니다!</p>
+
+<header class="app-head">
+  <div class="head-inner">
+    <div class="eyebrow">KLADI · ACADEMY DESK</div>
+    <h1 class="title">학원 관리 시스템</h1>
+    <p class="subtitle">학교를 고르면 학년별 시험 카드가 자동으로 뜨고, 캘린더·학생 관리와 연동돼요</p>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="calendar">캘린더</button>
+  <button class="tab-btn" data-tab="examinput">시험정보 입력</button>
+  <button class="tab-btn" data-tab="students">학생 관리</button>
+</nav>
+
+<main>
+  <div id="setupBanner">
+    <b>⚠ Firebase 설정이 필요해요.</b> 지금은 임시 저장(브라우저에만 저장)으로 동작 중이에요.
+    코드 상단의 <code>firebaseConfig</code> 부분을 본인 Firebase 프로젝트 값으로 바꾸면 여러 기기에서 실시간으로 동기화됩니다.
+  </div>
+
+  <!-- 캘린더 -->
+  <section class="panel active" id="panel-calendar">
+    <div class="panel-head-row">
+      <div>
+        <h2 class="panel-title">캘린더</h2>
+        <p class="panel-desc">시험 기간 동안 매일 알약이 표시돼요. 알약을 누르면 상세 정보가 열립니다.</p>
+      </div>
+      <button class="btn" id="goToExamTab">+ 시험정보 입력으로 이동</button>
+    </div>
+
+    <div class="filter-bar">
+      <div>
+        <label>선생님별 보기</label>
+        <select id="calFilterTeacher"><option value="">전체 선생님</option></select>
+      </div>
+    </div>
+
+    <div class="cal-head">
+      <div class="month-quick" id="monthQuick"></div>
+      <div class="cal-nav">
+        <button class="arrow" id="prevMonth">‹</button>
+        <div class="month-label" id="monthLabel"></div>
+        <button class="arrow" id="nextMonth">›</button>
+      </div>
+    </div>
+    <p class="hint-line">알약을 클릭하면 상세 정보와 학생 명단이 열립니다.</p>
+    <div class="cal-grid" id="calDow"></div>
+    <div class="cal-grid" id="calGrid" style="margin-top:6px;"></div>
+  </section>
+
+  <!-- 시험정보 입력 -->
+  <section class="panel" id="panel-examinput">
+    <h2 class="panel-title">시험정보 입력</h2>
+    <p class="panel-desc">학교를 선택하면 그 학교에 등록된 학년마다 중간고사·기말고사 카드가 자동으로 생성돼요.</p>
+
+    <div class="exam-school-row">
+      <div>
+        <label>학교</label>
+        <select id="examSchoolSelect"></select>
+      </div>
+      <div class="exam-summary" id="examSummary"></div>
+    </div>
+
+    <div class="exam-grid" id="examCardsGrid"></div>
+  </section>
+
+  <!-- 학생 관리 -->
+  <section class="panel" id="panel-students">
+    <h2 class="panel-title">학생 관리</h2>
+    <p class="panel-desc">학교·학년·담당 선생님·수업요일을 등록해두면, 시험정보 입력과 캘린더에 자동으로 연동돼요.</p>
+
+    <div class="form-row">
+      <div>
+        <label>이름</label>
+        <input type="text" id="stuName" placeholder="예: 김지민">
+      </div>
+      <div>
+        <label>학교</label>
+        <input type="text" id="stuSchool" placeholder="예: 서운중학교" list="schoolList">
+      </div>
+      <div>
+        <label>학년</label>
+        <input type="text" id="stuGrade" placeholder="예: 중2" list="gradeList">
+      </div>
+      <div>
+        <label>담당 선생님</label>
+        <input type="text" id="stuTeacher" placeholder="예: 박유경" list="teacherList">
+      </div>
+      <div>
+        <label>연락처 (선택)</label>
+        <input type="tel" id="stuPhone" placeholder="010-0000-0000">
+      </div>
+    </div>
+    <div class="form-row" style="align-items:center;">
+      <div style="flex:0 0 auto;">
+        <label>수업요일</label>
+        <div class="weekday-picker" id="addWeekdayPicker">
+          <button type="button" data-day="월">월</button>
+          <button type="button" data-day="화">화</button>
+          <button type="button" data-day="수">수</button>
+          <button type="button" data-day="목">목</button>
+          <button type="button" data-day="금">금</button>
+          <button type="button" data-day="토">토</button>
+          <button type="button" data-day="일">일</button>
+        </div>
+      </div>
+    </div>
+    <datalist id="schoolList"></datalist>
+    <datalist id="teacherList"></datalist>
+    <datalist id="gradeList">
+      <option value="중1"><option value="중2"><option value="중3">
+      <option value="고1"><option value="고2"><option value="고3">
+    </datalist>
+    <div class="btn-row">
+      <button class="btn" id="addStudentBtn">+ 학생 추가</button>
+    </div>
+
+    <div style="height:22px;"></div>
+
+    <div class="filter-bar">
+      <div>
+        <label>학교로 보기</label>
+        <select id="filterSchool"><option value="">전체 학교</option></select>
+      </div>
+      <div>
+        <label>학년으로 보기</label>
+        <select id="filterGrade"><option value="">전체 학년</option></select>
+      </div>
+      <div>
+        <label>선생님으로 보기</label>
+        <select id="filterTeacher"><option value="">전체 선생님</option></select>
+      </div>
+      <div>
+        <button class="btn secondary" id="clearFilterBtn">필터 초기화</button>
+      </div>
+    </div>
+
+    <div class="students-toolbar">
+      <div class="search-box">
+        <label>검색</label>
+        <input type="text" id="studentSearch" placeholder="이름 또는 학교">
+      </div>
+      <div class="count-text" id="studentCountText"></div>
+      <button class="badge-warn" id="incompleteBadge">수업요일 미입력 0명</button>
+    </div>
+
+    <div class="table-scroll">
+      <table class="student-table">
+        <thead>
+          <tr>
+            <th>이름</th><th>학교</th><th>학년</th><th>담당</th><th>수업요일</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="studentTableBody"></tbody>
+      </table>
+    </div>
+    <div id="studentEmptyState"></div>
+  </section>
+</main>
+
+<!-- 시험 상세 모달 (캘린더 알약 클릭 시) -->
+<div class="overlay" id="detailModal">
+  <div class="modal">
+    <button class="close-x" id="closeDetailModal">×</button>
+    <button class="icon-btn del" id="deleteExamBtn" style="float:right; margin-right:34px;">삭제</button>
+    <h3 id="detailTitle">시험 상세</h3>
+    <p class="modal-meta" id="detailMeta"></p>
+    <div id="detailTeacherGroups"></div>
+  </div>
+</div>
+
+<script type="module">
+/* ============================================================
+   1) Firebase 설정 — 이미 본인 프로젝트 값으로 채워져 있어요.
+   다른 Firebase 프로젝트를 쓰고 싶다면 이 값만 바꾸면 됩니다.
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCpRPUqNjbN5XZ9dVrbXzd7Bft622iQDsw",
+  authDomain: "calendar-92528.firebaseapp.com",
+  projectId: "calendar-92528",
+  storageBucket: "calendar-92528.firebasestorage.app",
+  messagingSenderId: "75818218230",
+  appId: "1:75818218230:web:9657a5a75f357ac27932d7"
+};
+const isConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
+
+let db, collection, onSnapshot, addDoc, deleteDoc, updateDoc, doc, query, orderBy;
+let students = [];
+let exams = []; // {id, school, grade, examName, notConducted, notConductedReason, startDate, endDate, subject, subjectExamDate, printStatus, inputTeacher, examScope, schoolNotice, makeupDate, statusMap, savedAt}
+
+const GRADE_ORDER = ["초4","초5","초6","중1","중2","중3","고1","고2","고3"];
+const EXAM_TYPES = ["중간고사","기말고사"];
+let currentExamSchool = "";
+let currentDetailExamId = null;
+
+function loadLocal(key){ try{ return JSON.parse(localStorage.getItem(key) || "[]"); }catch(e){ return []; } }
+function saveLocal(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+async function initFirebase(){
+  if(!isConfigured){
+    document.getElementById("setupBanner").style.display = "block";
+    students = loadLocal("kladi_students");
+    exams = loadLocal("kladi_exams");
+    onDataChange();
+    return;
+  }
+  const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+  const fsMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  const app = appMod.initializeApp(firebaseConfig);
+  db = fsMod.getFirestore(app);
+  collection = fsMod.collection; onSnapshot = fsMod.onSnapshot;
+  addDoc = fsMod.addDoc; deleteDoc = fsMod.deleteDoc; updateDoc = fsMod.updateDoc;
+  doc = fsMod.doc; query = fsMod.query; orderBy = fsMod.orderBy;
+
+  onSnapshot(query(collection(db,"students"), orderBy("name")), snap=>{
+    students = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    onDataChange();
+  });
+  onSnapshot(collection(db,"exams"), snap=>{
+    exams = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    onDataChange();
+  });
+}
+
+function onDataChange(){
+  renderStudents();
+  populateDropdowns();
+  renderCalendar();
+  renderExamTab();
+  if(currentDetailExamId) openDetailModal(currentDetailExamId);
+}
+
+async function addStudent(s){
+  if(isConfigured){ await addDoc(collection(db,"students"), s); }
+  else{ students.push({id:"s"+Date.now(), ...s}); saveLocal("kladi_students", students); onDataChange(); }
+}
+async function removeStudent(id){
+  if(isConfigured){ await deleteDoc(doc(db,"students",id)); }
+  else{ students = students.filter(s=>s.id!==id); saveLocal("kladi_students", students); onDataChange(); }
+}
+async function updateStudentDoc(id, payload){
+  if(isConfigured){ await updateDoc(doc(db,"students",id), payload); }
+  else{
+    const s = students.find(st=>st.id===id);
+    if(s) Object.assign(s, payload);
+    saveLocal("kladi_students", students);
+    onDataChange();
+  }
+}
+async function addExam(e){
+  if(isConfigured){ await addDoc(collection(db,"exams"), e); }
+  else{ exams.push({id:"x"+Date.now(), ...e}); saveLocal("kladi_exams", exams); onDataChange(); }
+}
+async function updateExamDoc(id, payload){
+  if(isConfigured){ await updateDoc(doc(db,"exams",id), payload); }
+  else{
+    const ex = exams.find(e=>e.id===id);
+    if(ex) Object.assign(ex, payload);
+    saveLocal("kladi_exams", exams);
+    onDataChange();
+  }
+}
+async function removeExam(id){
+  if(isConfigured){ await deleteDoc(doc(db,"exams",id)); }
+  else{ exams = exams.filter(e=>e.id!==id); saveLocal("kladi_exams", exams); onDataChange(); }
+}
+
+/* ---------- 탭 전환 ---------- */
+function switchTab(tabName){
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active", b.dataset.tab===tabName));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active", p.id==="panel-"+tabName));
+}
+document.querySelectorAll(".tab-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=> switchTab(btn.dataset.tab));
+});
+document.getElementById("goToExamTab").addEventListener("click", ()=> switchTab("examinput"));
+
+function escapeHtml(str){
+  const div = document.createElement("div");
+  div.textContent = str ?? "";
+  return div.innerHTML;
+}
+function uniq(arr){ return [...new Set(arr.filter(Boolean))]; }
+function gradeSortIndex(g){ const i = GRADE_ORDER.indexOf(g); return i===-1 ? 999 : i; }
+function sortGrades(arr){ return [...arr].sort((a,b)=> gradeSortIndex(a)-gradeSortIndex(b) || a.localeCompare(b)); }
+
+/* ---------- 드롭다운/데이터리스트 채우기 ---------- */
+function populateDropdowns(){
+  const schools = uniq(students.map(s=>s.school)).sort();
+  const teachers = uniq(students.map(s=>s.teacher)).sort();
+  const grades = uniq(students.map(s=>s.grade));
+
+  document.getElementById("schoolList").innerHTML = schools.map(s=>`<option value="${escapeHtml(s)}">`).join("");
+  document.getElementById("teacherList").innerHTML = teachers.map(t=>`<option value="${escapeHtml(t)}">`).join("");
+  const gList = document.getElementById("gradeList");
+  const extraGrades = grades.filter(g=>!GRADE_ORDER.includes(g));
+  gList.innerHTML = GRADE_ORDER.map(g=>`<option value="${g}">`).join("") + extraGrades.map(g=>`<option value="${escapeHtml(g)}">`).join("");
+
+  fillSelect("filterSchool", schools, "전체 학교");
+  fillSelect("filterTeacher", teachers, "전체 선생님");
+  fillSelect("filterGrade", sortGrades(grades), "전체 학년");
+  fillSelect("calFilterTeacher", teachers, "전체 선생님");
+
+  fillSelect("examSchoolSelect", schools, "학교 선택");
+  if(!currentExamSchool || !schools.includes(currentExamSchool)) currentExamSchool = schools[0] || "";
+  document.getElementById("examSchoolSelect").value = currentExamSchool;
+}
+function fillSelect(id, values, placeholder){
+  const el = document.getElementById(id);
+  const current = el.value;
+  el.innerHTML = (placeholder? `<option value="">${placeholder}</option>`:"") + values.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+  if(values.includes(current)) el.value = current;
+}
+
+/* ---------- 학생 관리 ---------- */
+const WEEKDAYS = ["월","화","수","목","금","토","일"];
+let showIncompleteOnly = false;
+
+function setupWeekdayPicker(container){
+  container.querySelectorAll("button").forEach(b=>{
+    b.addEventListener("click", ()=> b.classList.toggle("active"));
+  });
+}
+function getPickedDays(container){
+  return Array.from(container.querySelectorAll("button.active")).map(b=>b.dataset.day);
+}
+function resetWeekdayPicker(container){
+  container.querySelectorAll("button").forEach(b=> b.classList.remove("active"));
+}
+setupWeekdayPicker(document.getElementById("addWeekdayPicker"));
+
+function weekdayRowHtml(studentId, classDays){
+  const days = classDays || [];
+  return `<div class="weekday-picker" data-student="${studentId}">` +
+    WEEKDAYS.map(d=>`<button type="button" data-day="${d}" class="${days.includes(d)?"active":""}">${d}</button>`).join("") +
+    `</div>`;
+}
+
+function renderStudents(){
+  const tbody = document.getElementById("studentTableBody");
+  const emptyBox = document.getElementById("studentEmptyState");
+  const fSchool = document.getElementById("filterSchool").value;
+  const fGrade = document.getElementById("filterGrade").value;
+  const fTeacher = document.getElementById("filterTeacher").value;
+  const searchTerm = document.getElementById("studentSearch").value.trim().toLowerCase();
+
+  const incompleteCount = students.filter(s=> !(s.classDays && s.classDays.length)).length;
+  const badge = document.getElementById("incompleteBadge");
+  badge.textContent = `수업요일 미입력 ${incompleteCount}명`;
+  badge.classList.toggle("active", showIncompleteOnly);
+
+  let filtered = students.filter(s=>
+    (!fSchool || s.school===fSchool) && (!fGrade || s.grade===fGrade) && (!fTeacher || s.teacher===fTeacher)
+  );
+  if(searchTerm){
+    filtered = filtered.filter(s=>
+      (s.name||"").toLowerCase().includes(searchTerm) || (s.school||"").toLowerCase().includes(searchTerm)
+    );
+  }
+  if(showIncompleteOnly){
+    filtered = filtered.filter(s=> !(s.classDays && s.classDays.length));
+  }
+
+  document.getElementById("studentCountText").textContent = `표시 ${filtered.length}명 / 전체 ${students.length}명`;
+
+  if(students.length===0){
+    tbody.innerHTML = "";
+    emptyBox.innerHTML = `<div class="empty-state">아직 등록된 학생이 없어요. 위에서 첫 학생을 추가해보세요.</div>`;
+    return;
+  }
+  if(filtered.length===0){
+    tbody.innerHTML = "";
+    emptyBox.innerHTML = `<div class="empty-state">이 조건에 맞는 학생이 없어요.</div>`;
+    return;
+  }
+  emptyBox.innerHTML = "";
+  tbody.innerHTML = filtered.map(s=>`
+    <tr class="${(s.classDays&&s.classDays.length)?"":"incomplete"}">
+      <td class="name-cell">${escapeHtml(s.name)}</td>
+      <td>${s.school? `<span class="tag school clickable" data-school="${escapeHtml(s.school)}">${escapeHtml(s.school)}</span>`:"—"}</td>
+      <td>${s.grade? `<span class="tag grade clickable" data-grade="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:"—"}</td>
+      <td>${s.teacher? `<span class="tag teacher clickable" data-teacher="${escapeHtml(s.teacher)}">${escapeHtml(s.teacher)}T</span>`:"—"}</td>
+      <td>${weekdayRowHtml(s.id, s.classDays)}</td>
+      <td><button class="icon-btn del" data-id="${s.id}">제거</button></td>
+    </tr>
+  `).join("");
+
+  tbody.querySelectorAll(".del").forEach(b=> b.addEventListener("click", ()=>{
+    if(confirm("이 학생을 삭제할까요?")) removeStudent(b.dataset.id);
+  }));
+  tbody.querySelectorAll(".tag.school").forEach(t=> t.addEventListener("click", ()=>{ document.getElementById("filterSchool").value=t.dataset.school; renderStudents(); }));
+  tbody.querySelectorAll(".tag.grade").forEach(t=> t.addEventListener("click", ()=>{ document.getElementById("filterGrade").value=t.dataset.grade; renderStudents(); }));
+  tbody.querySelectorAll(".tag.teacher").forEach(t=> t.addEventListener("click", ()=>{ document.getElementById("filterTeacher").value=t.dataset.teacher; renderStudents(); }));
+  tbody.querySelectorAll(".weekday-picker").forEach(picker=>{
+    picker.querySelectorAll("button").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        const studentId = picker.dataset.student;
+        const s = students.find(st=>st.id===studentId);
+        if(!s) return;
+        let days = s.classDays || [];
+        const day = b.dataset.day;
+        days = days.includes(day) ? days.filter(d=>d!==day) : [...days, day];
+        updateStudentDoc(studentId, {classDays: days});
+      });
+    });
+  });
+}
+document.getElementById("filterSchool").addEventListener("change", renderStudents);
+document.getElementById("filterGrade").addEventListener("change", renderStudents);
+document.getElementById("filterTeacher").addEventListener("change", renderStudents);
+document.getElementById("studentSearch").addEventListener("input", renderStudents);
+document.getElementById("incompleteBadge").addEventListener("click", ()=>{
+  showIncompleteOnly = !showIncompleteOnly;
+  renderStudents();
+});
+document.getElementById("clearFilterBtn").addEventListener("click", ()=>{
+  document.getElementById("filterSchool").value=""; document.getElementById("filterGrade").value=""; document.getElementById("filterTeacher").value="";
+  document.getElementById("studentSearch").value=""; showIncompleteOnly=false;
+  renderStudents();
+});
+document.getElementById("addStudentBtn").addEventListener("click", async ()=>{
+  const name = document.getElementById("stuName").value.trim();
+  const school = document.getElementById("stuSchool").value.trim();
+  const grade = document.getElementById("stuGrade").value.trim();
+  const teacher = document.getElementById("stuTeacher").value.trim();
+  const phone = document.getElementById("stuPhone").value.trim();
+  const picker = document.getElementById("addWeekdayPicker");
+  const classDays = getPickedDays(picker);
+  if(!name){ alert("이름을 입력해주세요."); return; }
+  await addStudent({name, school, grade, teacher, phone, classDays});
+  document.getElementById("stuName").value=""; document.getElementById("stuSchool").value="";
+  document.getElementById("stuGrade").value=""; document.getElementById("stuTeacher").value=""; document.getElementById("stuPhone").value="";
+  resetWeekdayPicker(picker);
+});
+
+/* ---------- 시험정보 입력 탭 ---------- */
+document.getElementById("examSchoolSelect").addEventListener("change", (e)=>{
+  currentExamSchool = e.target.value;
+  renderExamTab();
+});
+
+function findExam(school, grade, examName){
+  return exams.find(e=>e.school===school && e.grade===grade && e.examName===examName);
+}
+
+function examCardHtml(school, grade, examName){
+  const existing = findExam(school, grade, examName);
+  const studentCount = students.filter(s=>s.school===school && s.grade===grade).length;
+  const notConducted = existing?.notConducted || false;
+
+  return `
+    <div class="exam-card" data-school="${escapeHtml(school)}" data-grade="${escapeHtml(grade)}" data-exam-name="${escapeHtml(examName)}">
+      <div class="card-head">
+        <span class="ctitle">${escapeHtml(grade)} ${escapeHtml(examName)}</span>
+        <span class="count-badge">재원생 ${studentCount}명</span>
+      </div>
+
+      <label class="not-held-row">
+        <input type="checkbox" data-field="notConducted" ${notConducted?"checked":""}>
+        이 시험 미실시 (수행평가 대체 등)
+      </label>
+      <div class="reason-box ${notConducted?"show":""}">
+        <input type="text" data-field="notConductedReason" placeholder="사유 — 예: 수행평가로 대체" value="${escapeHtml(existing?.notConductedReason||"")}">
+      </div>
+
+      <div class="mini-row">
+        <div><label class="small">시험 시작</label><input type="date" data-field="startDate" value="${existing?.startDate||""}"></div>
+        <div><label class="small">시험 종료</label><input type="date" data-field="endDate" value="${existing?.endDate||""}"></div>
+      </div>
+
+      <div class="mini-row">
+        <div><label class="small">과목</label><input type="text" data-field="subject" placeholder="예: 수학" value="${escapeHtml(existing?.subject||"")}"></div>
+        <div><label class="small">과목 시험일</label><input type="date" data-field="subjectExamDate" value="${existing?.subjectExamDate||""}"></div>
+      </div>
+      <div class="mini-row">
+        <div>
+          <label class="small">프린트</label>
+          <select data-field="printStatus">
+            <option value="unconfirmed" ${(!existing||existing.printStatus!=="confirmed")?"selected":""}>미확인</option>
+            <option value="confirmed" ${existing?.printStatus==="confirmed"?"selected":""}>확인</option>
+          </select>
+        </div>
+        <div>
+          <label class="small">입력 선생님</label>
+          <input type="text" data-field="inputTeacher" placeholder="예: 강지성" list="teacherList" value="${escapeHtml(existing?.inputTeacher||"")}">
+        </div>
+      </div>
+
+      <div>
+        <label class="small">시험 범위</label>
+        <textarea data-field="examScope" placeholder="예: 수학(상) 2단원 전체 ~ 3-1, 교과서 유인물 포함">${escapeHtml(existing?.examScope||"")}</textarea>
+      </div>
+      <div>
+        <label class="small">학교 안내 사항</label>
+        <textarea data-field="schoolNotice" placeholder="예: 서술형 30%, 프린트 3종 배부, 시험 시간표 안내">${escapeHtml(existing?.schoolNotice||"")}</textarea>
+      </div>
+
+      <div class="save-row">
+        <button class="btn small save-exam-btn">입력 저장</button>
+        <span class="makeup-info">직전보강 ${existing?.makeupDate? escapeHtml(existing.makeupDate) : "--"}</span>
+      </div>
+      <div class="mini-row makeup-row">
+        <input type="date" data-field="makeupDateInput">
+        <button class="btn secondary small apply-makeup-btn">보강일 적용</button>
+      </div>
+
+      <div class="footer-note">${existing?.savedAt? "마지막 저장: "+escapeHtml(existing.savedAt) : "아직 저장 안 됨"}</div>
+    </div>
+  `;
+}
+
+function renderExamTab(){
+  const summaryEl = document.getElementById("examSummary");
+  const gridEl = document.getElementById("examCardsGrid");
+
+  if(!currentExamSchool){
+    summaryEl.textContent = "";
+    gridEl.innerHTML = `<div class="empty-state">먼저 '학생 명단' 탭에서 학교와 학년을 포함해 학생을 등록해주세요.</div>`;
+    return;
+  }
+  const schoolStudents = students.filter(s=>s.school===currentExamSchool);
+  const grades = sortGrades(uniq(schoolStudents.map(s=>s.grade)));
+
+  summaryEl.textContent = `재원생 ${schoolStudents.length}명 · 학년 ${grades.length? grades.join(", ") : "미지정"}`;
+
+  if(grades.length===0){
+    gridEl.innerHTML = `<div class="empty-state">이 학교 학생들의 학년이 아직 입력되지 않았어요. 학생 명단에서 학년을 채워주세요.</div>`;
+    return;
+  }
+  let html = "";
+  grades.forEach(grade=>{
+    EXAM_TYPES.forEach(examName=>{
+      html += examCardHtml(currentExamSchool, grade, examName);
+    });
+  });
+  gridEl.innerHTML = html;
+}
+
+function collectCardData(cardEl){
+  const get = f => cardEl.querySelector(`[data-field="${f}"]`);
+  return {
+    school: cardEl.dataset.school, grade: cardEl.dataset.grade, examName: cardEl.dataset.examName,
+    notConducted: get("notConducted").checked,
+    notConductedReason: get("notConductedReason").value.trim(),
+    startDate: get("startDate").value,
+    endDate: get("endDate").value,
+    subject: get("subject").value.trim(),
+    subjectExamDate: get("subjectExamDate").value,
+    printStatus: get("printStatus").value,
+    inputTeacher: get("inputTeacher").value.trim(),
+    examScope: get("examScope").value.trim(),
+    schoolNotice: get("schoolNotice").value.trim(),
+  };
+}
+
+async function saveExamCard(cardEl, extra={}){
+  const data = collectCardData(cardEl);
+  const existing = findExam(data.school, data.grade, data.examName);
+  const savedAt = new Date().toISOString().slice(0,10);
+  if(existing){
+    await updateExamDoc(existing.id, {...data, ...extra, savedAt});
+  } else {
+    await addExam({...data, makeupDate:"", statusMap:{}, ...extra, savedAt});
+  }
+}
+
+document.getElementById("examCardsGrid").addEventListener("click", (e)=>{
+  const card = e.target.closest(".exam-card");
+  if(!card) return;
+  if(e.target.classList.contains("save-exam-btn")){
+    saveExamCard(card);
+  } else if(e.target.classList.contains("apply-makeup-btn")){
+    const val = card.querySelector('[data-field="makeupDateInput"]').value;
+    if(!val){ alert("적용할 보강 날짜를 먼저 선택해주세요."); return; }
+    saveExamCard(card, {makeupDate: val});
+  }
+});
+document.getElementById("examCardsGrid").addEventListener("change", (e)=>{
+  if(e.target.matches('[data-field="notConducted"]')){
+    e.target.closest(".exam-card").querySelector(".reason-box").classList.toggle("show", e.target.checked);
+  }
+});
+
+/* ---------- 캘린더 ---------- */
+let viewYear, viewMonth;
+const today = new Date();
+viewYear = today.getFullYear();
+viewMonth = today.getMonth();
+
+const dowNames = ["월","화","수","목","금","토","일"];
+document.getElementById("calDow").innerHTML = dowNames.map(d=>`<div class="cal-dow">${d}</div>`).join("");
+
+function pad(n){ return String(n).padStart(2,"0"); }
+function dateKey(y,m,d){ return `${y}-${pad(m+1)}-${pad(d)}`; }
+function toDate(key){ const [y,m,d]=key.split("-").map(Number); return new Date(y,m-1,d); }
+function weekdayShort(dateObj){ return ["일","월","화","수","목","금","토"][dateObj.getDay()]; }
+function fmtWithDow(key){ const d = toDate(key); return `${d.getMonth()+1}/${d.getDate()}(${weekdayShort(d)})`; }
+
+function renderMonthQuick(){
+  const box = document.getElementById("monthQuick");
+  let html = "";
+  for(let i=0;i<4;i++){
+    let m = today.getMonth()+i, y = today.getFullYear();
+    if(m>11){ m-=12; y+=1; }
+    const active = (m===viewMonth && y===viewYear);
+    html += `<button data-y="${y}" data-m="${m}" class="${active?"active":""}">${m+1}월</button>`;
+  }
+  box.innerHTML = html;
+  box.querySelectorAll("button").forEach(b=>{
+    b.addEventListener("click", ()=>{ viewYear=Number(b.dataset.y); viewMonth=Number(b.dataset.m); renderCalendar(); });
+  });
+}
+
+function examsForDate(key){
+  return exams.filter(e=> e.startDate && e.endDate && key>=e.startDate && key<=e.endDate && !e.notConducted);
+}
+function studentsForExam(exam){
+  return students.filter(s=>s.school===exam.school && s.grade===exam.grade);
+}
+
+function renderCalendar(){
+  renderMonthQuick();
+  document.getElementById("monthLabel").textContent = `${viewYear}년 ${viewMonth+1}월`;
+  const grid = document.getElementById("calGrid");
+  const teacherFilter = document.getElementById("calFilterTeacher").value;
+
+  let firstDow = new Date(viewYear, viewMonth, 1).getDay();
+  firstDow = (firstDow===0) ? 6 : firstDow-1;
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+
+  let html = "";
+  for(let i=0;i<firstDow;i++) html += `<div class="cal-cell empty"></div>`;
+  for(let d=1; d<=daysInMonth; d++){
+    const key = dateKey(viewYear, viewMonth, d);
+    let dayExams = examsForDate(key);
+    if(teacherFilter){
+      dayExams = dayExams.filter(e => studentsForExam(e).some(s=>s.teacher===teacherFilter));
+    }
+    const isToday = key === dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+    const pillsHtml = dayExams.map(e=>{
+      const count = studentsForExam(e).length;
+      const label = `${e.school||""} ${e.grade||""} ${e.examName||""}`.trim();
+      return `<div class="exam-pill" data-exam="${e.id}"><span class="label">${escapeHtml(label)}</span><span class="count">${count}</span></div>`;
+    }).join("");
+    html += `<div class="cal-cell ${isToday?"today":""}" data-date="${key}">
+      <div class="num">${d}</div>
+      ${pillsHtml}
+    </div>`;
+  }
+  grid.innerHTML = html;
+  grid.querySelectorAll(".exam-pill").forEach(p=>{
+    p.addEventListener("click", (ev)=>{ ev.stopPropagation(); openDetailModal(p.dataset.exam); });
+  });
+}
+document.getElementById("prevMonth").addEventListener("click", ()=>{ viewMonth--; if(viewMonth<0){viewMonth=11; viewYear--;} renderCalendar(); });
+document.getElementById("nextMonth").addEventListener("click", ()=>{ viewMonth++; if(viewMonth>11){viewMonth=0; viewYear++;} renderCalendar(); });
+document.getElementById("calFilterTeacher").addEventListener("change", renderCalendar);
+
+/* ---------- 시험 상세 모달 ---------- */
+async function toggleAssignmentStatus(examId, studentId){
+  const exam = exams.find(e=>e.id===examId);
+  if(!exam) return;
+  const statusMap = {...(exam.statusMap||{})};
+  statusMap[studentId] = statusMap[studentId]==="done" ? "pending" : "done";
+  await updateExamDoc(examId, {statusMap});
+}
+
+function openDetailModal(examId){
+  const exam = exams.find(e=>e.id===examId);
+  if(!exam) return;
+  currentDetailExamId = examId;
+
+  document.getElementById("detailModal").classList.add("active");
+  document.getElementById("detailTitle").textContent = `${exam.school||""} ${exam.grade||""} ${exam.examName||""}`.trim();
+
+  const period = exam.startDate===exam.endDate ? fmtWithDow(exam.startDate) : `${fmtWithDow(exam.startDate)} ~ ${fmtWithDow(exam.endDate)}`;
+  const subjectHtml = exam.subject ? escapeHtml(exam.subject) : `<span class="flag-bad">과목 미입력</span>`;
+  const makeupHtml = exam.makeupDate ? `직전보강 ${fmtWithDow(exam.makeupDate)}` : `직전보강 <span class="flag-bad">--</span>`;
+  const printHtml = exam.printStatus==="confirmed" ? `<span class="flag-ok">프린트 확인</span>` : `<span class="flag-bad">프린트 미확인</span>`;
+
+  document.getElementById("detailMeta").innerHTML =
+    `시험기간 ${period}<span class="dot">·</span>${subjectHtml}<span class="dot">·</span>${makeupHtml}<span class="dot">·</span>${printHtml}`;
+
+  const relevant = studentsForExam(exam);
+  const byTeacher = {};
+  relevant.forEach(s=>{
+    const teacher = s.teacher || "담당 미지정";
+    if(!byTeacher[teacher]) byTeacher[teacher]=[];
+    byTeacher[teacher].push(s);
+  });
+  const teacherNames = Object.keys(byTeacher).sort();
+  const statusMap = exam.statusMap || {};
+
+  let bodyHtml = `<div class="section-label">담당 선생님별 학생 ${relevant.length}명</div>`;
+  if(teacherNames.length===0){
+    bodyHtml += `<div class="empty-state">이 학교·학년에 해당하는 학생이 없어요.</div>`;
+  } else {
+    bodyHtml += teacherNames.map(t=>{
+      const list = byTeacher[t];
+      return `
+        <div class="teacher-group">
+          <div class="tname">${escapeHtml(t)}T <span class="cnt">${list.length}명</span></div>
+          <div class="assign-row">
+            ${list.map(s=>{
+              const st = statusMap[s.id]==="done" ? "done":"pending";
+              return `
+                <div class="assign-chip">
+                  <span class="sname">${escapeHtml(s.name)}</span>
+                  <button class="status-tag ${st}" data-student="${s.id}">${st==="done"?"입력완료":"미입력"}</button>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+  const box = document.getElementById("detailTeacherGroups");
+  box.innerHTML = bodyHtml;
+  box.querySelectorAll(".status-tag").forEach(btn=>{
+    btn.addEventListener("click", ()=> toggleAssignmentStatus(examId, btn.dataset.student));
+  });
+
+  document.getElementById("deleteExamBtn").onclick = async ()=>{
+    if(confirm("이 시험 정보를 삭제할까요?")){
+      await removeExam(examId);
+      document.getElementById("detailModal").classList.remove("active");
+      currentDetailExamId = null;
+    }
+  };
+}
+document.getElementById("closeDetailModal").addEventListener("click", ()=>{
+  document.getElementById("detailModal").classList.remove("active");
+  currentDetailExamId = null;
+});
+document.getElementById("detailModal").addEventListener("click", (e)=>{
+  if(e.target.id==="detailModal"){ e.currentTarget.classList.remove("active"); currentDetailExamId = null; }
+});
+
+initFirebase();
+</script>
 </body>
 </html>
