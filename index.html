@@ -237,16 +237,62 @@
   }
   .more-pill:hover{background:#f6f3e9; border-color:var(--mustard); color:#7a5518;}
 
-  /* 날짜별 시험 목록 */
-  .day-exam-row{
-    display:flex; justify-content:space-between; align-items:center; gap:10px;
-    border:1.5px solid #ece7d8; border-radius:10px; padding:10px 12px;
-    margin-bottom:8px; background:#fffdf8; cursor:pointer; text-align:left; width:100%;
-    font-family:inherit;
+  /* 시험 범위 표시 블록 (상세 창) */
+  .scope-box{border:1.5px solid #ece7d8; border-left:4px solid var(--mustard); border-radius:9px;
+    padding:11px 13px; background:#fffdf8; margin-bottom:9px;}
+  .scope-box .st{font-size:10.5px; font-weight:800; color:#a08a4d; letter-spacing:.04em; margin-bottom:5px;}
+  .scope-box .sv{font-size:13px; line-height:1.75; white-space:pre-wrap;}
+  .scope-box.notice{border-left-color:var(--blue);}
+  .scope-box.notice .st{color:var(--blue);}
+  .scope-box.missing{border-left-color:var(--rust); background:#fdf1ee;}
+  .scope-box.missing .st{color:var(--rust);}
+  .scope-box.missing .sv{color:var(--rust); font-weight:600;}
+  .mini-btn{border:none; background:#eee9dc; border-radius:7px; padding:5px 10px;
+    font-family:inherit; font-size:11.5px; font-weight:700; cursor:pointer; color:#5c6459; margin-top:7px;}
+  .mini-btn:hover{background:#e0d9c6;}
+
+  /* 날짜별 시험 범위 비교 목록 */
+  .filter-line{display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:11px;}
+  .filter-line .fl{font-size:11px; color:#a49c88; font-weight:700; margin-right:2px;}
+  .fbtn{border:1.5px solid #ddd6c2; background:#fff; padding:5px 11px; border-radius:20px;
+    font-family:inherit; font-weight:700; font-size:11.5px; cursor:pointer; color:#6b7368; white-space:nowrap;}
+  .fbtn:hover{background:#f2eee2;}
+  .fbtn.active{background:var(--board); color:var(--chalk); border-color:var(--board);}
+  .warn-btn{border:none; background:#fbe4dc; color:var(--rust); font-weight:700; font-size:11.5px;
+    padding:5px 11px; border-radius:20px; cursor:pointer; margin-left:auto; white-space:nowrap;}
+  .warn-btn.active{background:var(--rust); color:#fff;}
+
+  .cmp-row{display:flex; gap:12px; align-items:flex-start; border:1.5px solid #ece7d8; border-radius:11px;
+    padding:12px 14px; background:#fffdf8; margin-bottom:9px; cursor:pointer; width:100%;
+    text-align:left; font-family:inherit;}
+  .cmp-row:hover{border-color:var(--mustard); background:#fff8ea;}
+  .cmp-row.missing{background:#fdf1ee; border-color:#f0cfc4;}
+  .cmp-row.missing:hover{background:#fbe9e2;}
+  .cmp-school{flex:0 0 128px; min-width:0;}
+  .cmp-school .sname{font-weight:800; font-size:13.5px; color:var(--ink);}
+  .cmp-school .smeta{margin-top:4px;}
+  .cmp-scope{flex:1; min-width:0; font-size:12.8px; line-height:1.75; color:var(--ink);}
+  .cmp-scope .none{color:var(--rust); font-weight:700;}
+  .cmp-scope .nt{display:block; margin-top:5px; font-size:11.5px; color:var(--blue);}
+  .cmp-scope .period{display:block; margin-top:5px; font-size:11px; color:#a49c88;}
+
+  /* 시험 범위 탭 (표) */
+  table.scope-table{width:100%; border-collapse:collapse; font-size:12.5px; min-width:720px; background:#fffdf8;}
+  .scope-table th{text-align:left; font-size:10.5px; color:#8a8375; font-weight:700; padding:8px 10px;
+    border-bottom:2px solid #ece7d8; white-space:nowrap;}
+  .scope-table td{padding:9px 10px; border-bottom:1px solid #f1ede0; vertical-align:top; line-height:1.7;}
+  .scope-table td.school{font-weight:800; white-space:nowrap;}
+  .scope-table tr.missing{background:#fdf1ee;}
+  .scope-table .none{color:var(--rust); font-weight:700;}
+  .scope-table .muted{color:#a49c88;}
+
+  @media print{
+    header.app-head, nav.tabs, #setupBanner, .filter-line, .print-hide{display:none !important;}
+    section.panel{border:none; padding:0;}
+    body{background:#fff;}
+    .scope-table{min-width:0; font-size:11px;}
+    .scope-table tr.missing{background:#f4f4f4;}
   }
-  .day-exam-row:hover{border-color:var(--mustard); background:#fff8ea;}
-  .day-exam-row .dname{font-weight:700; font-size:13.5px; color:var(--ink);}
-  .day-exam-row .dsub{font-size:11.5px; color:#8a8375; margin-top:3px;}
 
   /* ---------- Overlay / Modal ---------- */
   .overlay{ display:none; position:fixed; inset:0; background:#1b271acc; align-items:center; justify-content:center; z-index:50; padding:20px; }
@@ -310,6 +356,7 @@
 <nav class="tabs">
   <button class="tab-btn active" data-tab="calendar">캘린더</button>
   <button class="tab-btn" data-tab="examinput">시험정보 입력</button>
+  <button class="tab-btn" data-tab="scope">시험 범위</button>
   <button class="tab-btn" data-tab="students">학생 관리</button>
 </nav>
 
@@ -380,6 +427,34 @@
     </div>
 
     <div class="exam-grid" id="examCardsGrid"></div>
+  </section>
+
+  <!-- 시험 범위 (학교별 비교표) -->
+  <section class="panel" id="panel-scope">
+    <div class="panel-head-row">
+      <div>
+        <h2 class="panel-title">시험 범위</h2>
+        <p class="panel-desc">학교별 시험 범위를 한 장에 모아서 봅니다. 범위가 비어 있는 줄은 빨갛게 표시돼요.</p>
+      </div>
+      <button class="btn secondary print-hide" id="scopePrintBtn">🖨 인쇄 / PDF 저장</button>
+    </div>
+
+    <div class="filter-bar print-hide">
+      <div>
+        <label>시험 선택</label>
+        <select id="scopeSeasonSelect"></select>
+      </div>
+      <div>
+        <label>학교로 보기</label>
+        <select id="scopeSchoolFilter"><option value="">전체 학교</option></select>
+      </div>
+    </div>
+
+    <div class="filter-line" id="scopeGradeFilters"></div>
+    <div class="table-scroll">
+      <table class="scope-table" id="scopeTable"></table>
+    </div>
+    <div id="scopeEmptyState"></div>
   </section>
 
   <!-- 학생 관리 -->
@@ -480,6 +555,7 @@
     <button class="close-x" id="closeDayModal">×</button>
     <h3 id="dayTitle">그날의 시험</h3>
     <p class="modal-meta" id="dayMeta"></p>
+    <div class="filter-line" id="dayFilters"></div>
     <div id="dayExamList"></div>
   </div>
 </div>
@@ -491,6 +567,7 @@
     <button class="icon-btn del" id="deleteExamBtn" style="float:right; margin-right:34px;">삭제</button>
     <h3 id="detailTitle">시험 상세</h3>
     <p class="modal-meta" id="detailMeta"></p>
+    <div id="detailScope"></div>
     <div id="detailTeacherGroups"></div>
   </div>
 </div>
@@ -553,7 +630,8 @@ function onDataChange(){
   populateDropdowns();
   renderCalendar();
   renderExamTab();
-  if(currentDayKey && document.getElementById("dayModal").classList.contains("active")) openDayModal(currentDayKey);
+  renderScopeTab();
+  if(currentDayKey && document.getElementById("dayModal").classList.contains("active")) openDayModal(currentDayKey, true);
   if(currentDetailExamId) openDetailModal(currentDetailExamId);
 }
 
@@ -1220,30 +1298,60 @@ document.getElementById("hideEmptyExams").addEventListener("change", renderCalen
 
 /* ---------- 날짜별 시험 목록 모달 ---------- */
 let currentDayKey = null;
-function openDayModal(key){
+let dayGradeFilter = "";
+let dayOnlyMissing = false;
+
+function openDayModal(key, keepFilters){
+  if(!keepFilters && currentDayKey !== key){ dayGradeFilter = ""; dayOnlyMissing = false; }
   currentDayKey = key;
-  const list = visibleExamsForDate(key);
+  const all = visibleExamsForDate(key);
   const d = toDate(key);
   document.getElementById("dayTitle").textContent = `${d.getMonth()+1}월 ${d.getDate()}일 (${weekdayShort(d)}) 시험`;
-  document.getElementById("dayMeta").textContent = `총 ${list.length}건`;
 
+  let list = all;
+  if(dayGradeFilter) list = list.filter(e=> e.grade===dayGradeFilter);
+  if(dayOnlyMissing) list = list.filter(e=> !e.examScope);
+  document.getElementById("dayMeta").textContent = `총 ${all.length}건 · 표시 ${list.length}건`;
+
+  /* 학년 필터 + 범위 미입력만 보기 */
+  const grades = sortGrades(uniq(all.map(e=>e.grade)));
+  const missingCount = all.filter(e=> !e.examScope).length;
+  const fbox = document.getElementById("dayFilters");
+  fbox.innerHTML = `<span class="fl">학년</span>` +
+    `<button class="fbtn ${dayGradeFilter===""?"active":""}" data-g="">전체</button>` +
+    grades.map(g=>`<button class="fbtn ${dayGradeFilter===g?"active":""}" data-g="${escapeHtml(g)}">${escapeHtml(g)}</button>`).join("") +
+    (missingCount ? `<button class="warn-btn ${dayOnlyMissing?"active":""}" id="dayMissingBtn">범위 미입력 ${missingCount}건</button>` : "");
+  fbox.querySelectorAll(".fbtn").forEach(b=> b.addEventListener("click", ()=>{
+    dayGradeFilter = b.dataset.g; openDayModal(key, true);
+  }));
+  const mb = document.getElementById("dayMissingBtn");
+  if(mb) mb.addEventListener("click", ()=>{ dayOnlyMissing = !dayOnlyMissing; openDayModal(key, true); });
+
+  /* 학교별 시험 범위 비교 목록 */
   const box = document.getElementById("dayExamList");
   box.innerHTML = list.length===0
-    ? `<div class="empty-state">이 날짜에 표시할 시험이 없어요.</div>`
+    ? `<div class="empty-state">${all.length? "이 조건에 맞는 시험이 없어요." : "이 날짜에 표시할 시험이 없어요."}</div>`
     : list.map(e=>{
         const count = studentsForExam(e).length;
         const period = (e.startDate===e.endDate) ? fmtWithDow(e.startDate) : `${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)}`;
         const print = e.printStatus==="confirmed" ? "프린트 확인" : "프린트 미확인";
-        return `<button class="day-exam-row" data-exam="${e.id}">
-          <span>
-            <span class="dname">${escapeHtml(`${e.school||""} ${e.grade||""} ${e.examName||""}`.trim())}</span>
-            <span class="dsub">${escapeHtml(period)} · ${print}</span>
+        return `<button class="cmp-row ${e.examScope?"":"missing"}" data-exam="${e.id}">
+          <span class="cmp-school">
+            <span class="sname">${escapeHtml(shortSchool(e.school))}</span>
+            <span class="smeta">
+              <span class="tag grade">${escapeHtml(e.grade||"")}</span>
+              <span class="count-badge">${count}명</span>
+            </span>
           </span>
-          <span class="count-badge">${count}명</span>
+          <span class="cmp-scope">
+            ${e.examScope ? escapeHtml(e.examScope).replace(/\n/g,"<br>") : `<span class="none">시험 범위 미입력</span>`}
+            ${e.schoolNotice ? `<span class="nt">📌 ${escapeHtml(e.schoolNotice)}</span>` : ""}
+            <span class="period">${escapeHtml(period)} · ${print} · ${escapeHtml(e.examName||"")}</span>
+          </span>
         </button>`;
       }).join("");
 
-  box.querySelectorAll(".day-exam-row").forEach(row=>{
+  box.querySelectorAll(".cmp-row").forEach(row=>{
     row.addEventListener("click", ()=>{
       closeDayModal();
       openDetailModal(row.dataset.exam);
@@ -1265,6 +1373,141 @@ document.addEventListener("keydown", (e)=>{
     currentDetailExamId = null;
   }
 });
+
+/* ---------- 시험 범위 탭 (학교별 비교표) ---------- */
+let scopeSeason = "";
+let scopeGrade = "";
+
+function seasonKeyOf(e){
+  if(!e.startDate) return "nodate";
+  const d = toDate(e.startDate);
+  return `${schoolYearOf(d.getFullYear(), d.getMonth())}|${semesterOf(d.getMonth())}|${e.examName||""}`;
+}
+function seasonLabelOf(key){
+  if(key==="nodate") return "날짜 미정";
+  const [sy,sem,nm] = key.split("|");
+  return `${sy}학년도 ${sem}학기 ${nm}`;
+}
+function seasonSortValue(key){
+  if(key==="nodate") return Number.MAX_SAFE_INTEGER;
+  const [sy,sem,nm] = key.split("|");
+  return Number(sy)*100 + Number(sem)*10 + (nm==="중간고사"?1:2);
+}
+
+function renderScopeTab(){
+  const seasons = uniq(exams.map(seasonKeyOf)).sort((a,b)=> seasonSortValue(a)-seasonSortValue(b));
+  const sel = document.getElementById("scopeSeasonSelect");
+
+  if(seasons.length===0){
+    sel.innerHTML = "";
+    document.getElementById("scopeGradeFilters").innerHTML = "";
+    document.getElementById("scopeTable").innerHTML = "";
+    document.getElementById("scopeEmptyState").innerHTML =
+      `<div class="empty-state">아직 등록된 시험이 없어요. '시험정보 입력' 탭에서 먼저 시험을 저장해주세요.</div>`;
+    return;
+  }
+  // 처음 열 때는 오늘과 가장 가까운 시험 시즌을 자동 선택
+  if(!scopeSeason || !seasons.includes(scopeSeason)){
+    const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+    let best = seasons[seasons.length-1], bestDiff = Infinity;
+    seasons.forEach(k=>{
+      const withDate = exams.filter(e=> seasonKeyOf(e)===k && e.startDate);
+      withDate.forEach(e=>{
+        const diff = Math.abs(toDate(e.startDate) - toDate(todayKey));
+        if(diff < bestDiff){ bestDiff = diff; best = k; }
+      });
+    });
+    scopeSeason = best;
+  }
+  sel.innerHTML = seasons.map(k=>`<option value="${escapeHtml(k)}">${escapeHtml(seasonLabelOf(k))}</option>`).join("");
+  sel.value = scopeSeason;
+
+  let rows = exams.filter(e=> seasonKeyOf(e)===scopeSeason);
+
+  // 학교 필터 채우기
+  const schoolSel = document.getElementById("scopeSchoolFilter");
+  const schoolsInSeason = uniq(rows.map(e=>e.school)).sort();
+  const prevSchool = schoolSel.value;
+  schoolSel.innerHTML = `<option value="">전체 학교</option>` +
+    schoolsInSeason.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+  if(schoolsInSeason.includes(prevSchool)) schoolSel.value = prevSchool;
+
+  // 학년 필터
+  const grades = sortGrades(uniq(rows.map(e=>e.grade)));
+  if(scopeGrade && !grades.includes(scopeGrade)) scopeGrade = "";
+  const missingCount = rows.filter(e=> !e.examScope && !e.notConducted).length;
+  document.getElementById("scopeGradeFilters").innerHTML =
+    `<span class="fl">학년</span>` +
+    `<button class="fbtn ${scopeGrade===""?"active":""}" data-g="">전체</button>` +
+    grades.map(g=>`<button class="fbtn ${scopeGrade===g?"active":""}" data-g="${escapeHtml(g)}">${escapeHtml(g)}</button>`).join("") +
+    (missingCount ? `<span class="warn-btn" style="cursor:default;">범위 미입력 ${missingCount}건</span>` : "");
+  document.querySelectorAll("#scopeGradeFilters .fbtn").forEach(b=>
+    b.addEventListener("click", ()=>{ scopeGrade = b.dataset.g; renderScopeTab(); }));
+
+  if(schoolSel.value) rows = rows.filter(e=> e.school===schoolSel.value);
+  if(scopeGrade) rows = rows.filter(e=> e.grade===scopeGrade);
+  rows.sort((a,b)=> (a.school||"").localeCompare(b.school||"") || gradeSortIndex(a.grade)-gradeSortIndex(b.grade));
+
+  const emptyBox = document.getElementById("scopeEmptyState");
+  const table = document.getElementById("scopeTable");
+  if(rows.length===0){
+    table.innerHTML = "";
+    emptyBox.innerHTML = `<div class="empty-state">이 조건에 맞는 시험이 없어요.</div>`;
+    return;
+  }
+  emptyBox.innerHTML = "";
+  table.innerHTML = `
+    <thead><tr>
+      <th>학교</th><th>학년</th><th>인원</th><th>시험 기간</th><th>시험 범위</th><th>학교 안내</th><th>프린트</th>
+    </tr></thead>
+    <tbody>${rows.map(e=>{
+      const count = studentsForExam(e).length;
+      const period = (!e.startDate || !e.endDate) ? `<span class="muted">미정</span>`
+        : (e.startDate===e.endDate ? fmtWithDow(e.startDate) : `${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)}`);
+      const scopeCell = e.notConducted
+        ? `<span class="muted">미실시${e.notConductedReason? " — "+escapeHtml(e.notConductedReason):""}</span>`
+        : (e.examScope ? escapeHtml(e.examScope).replace(/\n/g,"<br>") : `<span class="none">미입력</span>`);
+      const print = e.printStatus==="confirmed"
+        ? `<span style="color:var(--green); font-weight:700;">확인</span>`
+        : `<span style="color:var(--rust); font-weight:700;">미확인</span>`;
+      return `<tr class="${(!e.examScope && !e.notConducted)?"missing":""}">
+        <td class="school">${escapeHtml(shortSchool(e.school))}</td>
+        <td>${escapeHtml(e.grade||"")}</td>
+        <td>${count}명</td>
+        <td style="white-space:nowrap;">${period}</td>
+        <td>${scopeCell}</td>
+        <td class="muted">${e.schoolNotice? escapeHtml(e.schoolNotice) : "—"}</td>
+        <td>${print}</td>
+      </tr>`;
+    }).join("")}</tbody>`;
+}
+document.getElementById("scopeSeasonSelect").addEventListener("change", (e)=>{
+  scopeSeason = e.target.value; scopeGrade = ""; renderScopeTab();
+});
+document.getElementById("scopeSchoolFilter").addEventListener("change", renderScopeTab);
+document.getElementById("scopePrintBtn").addEventListener("click", ()=> window.print());
+
+/* 상세 창에서 '시험정보 입력' 탭의 해당 카드로 이동 */
+function jumpToExamInput(exam){
+  document.getElementById("detailModal").classList.remove("active");
+  currentDetailExamId = null;
+  closeDayModal();
+  currentExamSchool = exam.school;
+  const sel = document.getElementById("examSchoolSelect");
+  if(sel) sel.value = exam.school;
+  switchTab("examinput");
+  renderExamTab();
+  const card = [...document.querySelectorAll("#examCardsGrid .exam-card")]
+    .find(c=> c.dataset.school===exam.school && c.dataset.grade===exam.grade && c.dataset.examName===exam.examName);
+  if(card){
+    card.scrollIntoView({behavior:"smooth", block:"center"});
+    card.style.borderColor = "var(--mustard)";
+    card.style.boxShadow = "0 0 0 4px var(--mustard-dim)";
+    setTimeout(()=>{ card.style.borderColor=""; card.style.boxShadow=""; }, 2200);
+    const ta = card.querySelector('[data-field="examScope"]');
+    if(ta) ta.focus();
+  }
+}
 
 /* ---------- 시험 상세 모달 ---------- */
 async function toggleAssignmentStatus(examId, studentId){
@@ -1289,6 +1532,20 @@ function openDetailModal(examId){
 
   document.getElementById("detailMeta").innerHTML =
     `시험기간 ${period}<span class="dot">·</span>${makeupHtml}<span class="dot">·</span>${printHtml}`;
+
+  /* 시험 범위 · 학교 안내 (없으면 경고 + 입력 화면 바로가기) */
+  const scopeBox = document.getElementById("detailScope");
+  scopeBox.innerHTML = `<div class="section-label">시험 범위 · 안내</div>` +
+    (exam.examScope
+      ? `<div class="scope-box"><div class="st">시험 범위</div><div class="sv">${escapeHtml(exam.examScope)}</div></div>`
+      : `<div class="scope-box missing"><div class="st">시험 범위</div>
+           <div class="sv">아직 입력되지 않았어요</div>
+           <button class="mini-btn" id="goFillScope">시험정보 입력에서 채우기 →</button></div>`) +
+    (exam.schoolNotice
+      ? `<div class="scope-box notice"><div class="st">학교 안내 사항</div><div class="sv">${escapeHtml(exam.schoolNotice)}</div></div>`
+      : "");
+  const fillBtn = document.getElementById("goFillScope");
+  if(fillBtn) fillBtn.addEventListener("click", ()=> jumpToExamInput(exam));
 
   const relevant = studentsForExam(exam);
   const byTeacher = {};
