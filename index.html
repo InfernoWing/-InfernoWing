@@ -185,13 +185,19 @@
   /* 학기 바로가기 칩 */
   .season-row{display:flex; gap:6px; flex-wrap:wrap; align-items:center; flex:1 1 auto; min-width:0;}
   .season-row .sy-label{font-size:11px; color:#a49c88; font-weight:700; margin-right:2px; white-space:nowrap;}
-  .season-chip{
-    border:1.5px solid #ddd6c2; background:#fff; padding:7px 13px; border-radius:20px;
+  /* 칩 하나 = 한 시험 시즌. 여러 달에 걸치면 달 버튼이 나란히 들어갑니다. */
+  .seg{display:inline-flex; align-items:stretch; border:1.5px solid #ddd6c2; background:#fff; border-radius:20px; overflow:hidden;}
+  .seg .seg-label{display:flex; align-items:center; padding:7px 4px 7px 13px; font-size:12.5px; font-weight:700; color:#6b7368; white-space:nowrap;}
+  .seg.single .seg-label{padding-right:2px;}
+  .seg .seg-btn{
+    border:none; border-left:1.5px solid #eee7d6; background:transparent; padding:7px 11px;
     font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer; color:#6b7368; white-space:nowrap;
   }
-  .season-chip:hover{background:#f2eee2;}
-  .season-chip.active{background:var(--board); color:var(--chalk); border-color:var(--board);}
-  .season-chip .n{font-size:10.5px; opacity:.75; margin-left:4px;}
+  .seg.single .seg-btn{border-left:none; padding-left:4px;}
+  .seg .seg-btn:hover{background:#f2eee2;}
+  .seg .seg-btn.active{background:var(--board); color:var(--chalk);}
+  .seg .seg-btn .n{background:var(--pill-count); color:#fff; border-radius:999px; font-size:9.5px; padding:1px 5px; margin-left:4px;}
+  .seg .seg-btn.active .n{background:var(--mustard); color:#3b2a08;}
   .hint-line{font-size:12px; color:#a49c88; margin:0 0 14px;}
 
   /* 좁은 화면에서 셀이 찌그러지지 않도록 가로 스크롤 */
@@ -1114,16 +1120,22 @@ function renderSeasonChips(){
       return semesterOf(d.getMonth())===def.sem && e.examName===def.examName;
     });
     if(list.length===0) return null;
-    // 시험이 가장 많이 몰린 달로 이동
-    const tally = {};
+
+    // 시험 기간이 걸쳐 있는 '모든 달'을 집계 (9·10월에 나뉘어 있으면 둘 다 나옵니다)
+    const tally = new Map();
     list.forEach(e=>{
-      const d = toDate(e.startDate);
-      const k = `${d.getFullYear()}-${d.getMonth()}`;
-      tally[k] = (tally[k]||0)+1;
+      const s = toDate(e.startDate), en = toDate(e.endDate);
+      let y = s.getFullYear(), m = s.getMonth(), guard = 0;
+      while(guard++ < 24 && (y < en.getFullYear() || (y===en.getFullYear() && m <= en.getMonth()))){
+        const k = `${y}-${m}`;
+        tally.set(k, (tally.get(k)||0) + 1);
+        m++; if(m>11){ m=0; y++; }
+      }
     });
-    const best = Object.keys(tally).sort((a,b)=> tally[b]-tally[a] || a.localeCompare(b))[0];
-    const [ty,tm] = best.split("-").map(Number);
-    return {label:def.label, count:list.length, y:ty, m:tm};
+    const months = [...tally.entries()]
+      .map(([k,c])=>{ const [y,m]=k.split("-").map(Number); return {y,m,count:c}; })
+      .sort((a,b)=> a.y-b.y || a.m-b.m);
+    return {label:def.label, months};
   }).filter(Boolean);
 
   if(chips.length===0){ row.innerHTML = ""; return; }
@@ -1131,10 +1143,17 @@ function renderSeasonChips(){
   const syTag = (sy !== schoolYearOf(today.getFullYear(), today.getMonth()))
     ? `<span class="sy-label">${sy}학년도</span>` : "";
   row.innerHTML = syTag + chips.map(c=>{
-    const active = (c.y===viewYear && c.m===viewMonth);
-    return `<button class="season-chip ${active?"active":""}" data-y="${c.y}" data-m="${c.m}">${c.label}<span class="n">${c.count}</span></button>`;
+    const multi = c.months.length > 1;
+    const btns = c.months.map(mm=>{
+      const active = (mm.y===viewYear && mm.m===viewMonth);
+      const monthTxt = multi ? `${mm.m+1}월` : "";
+      const title = `${c.label} · ${mm.y}년 ${mm.m+1}월 ${mm.count}건`;
+      return `<button class="seg-btn ${active?"active":""}" data-y="${mm.y}" data-m="${mm.m}" title="${escapeHtml(title)}">${monthTxt}<span class="n">${mm.count}</span></button>`;
+    }).join("");
+    return `<span class="seg ${multi?"":"single"}"><span class="seg-label">${c.label}</span>${btns}</span>`;
   }).join("");
-  row.querySelectorAll("button").forEach(b=>{
+
+  row.querySelectorAll(".seg-btn").forEach(b=>{
     b.addEventListener("click", ()=> goToMonth(Number(b.dataset.y), Number(b.dataset.m)));
   });
 }
