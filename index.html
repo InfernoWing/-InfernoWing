@@ -143,33 +143,52 @@
   .footer-note{font-size:10px; color:#b3ab97; margin-top:2px;}
 
   /* ---------- Calendar ---------- */
-  .cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:10px;}
-  .cal-head .month-label{font-family:'Gowun Batang',serif; font-size:19px;}
-  .cal-nav{display:flex; gap:6px; align-items:center;}
+  .cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:10px;}
+  .cal-head .month-label{font-family:'Gowun Batang',serif; font-size:19px; min-width:112px; text-align:center; white-space:nowrap;}
+  .cal-nav{display:flex; gap:6px; align-items:center; flex:0 0 auto;}
   .cal-nav button.arrow{ background:#f2eee2; border:none; width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:15px; font-weight:700; }
-  .month-quick{display:flex; gap:6px;}
+  .cal-nav button.arrow:hover{background:#e5dfcd;}
+  .cal-nav button.today-btn{
+    border:1.5px solid #ddd6c2; background:#fff; padding:6px 12px; border-radius:20px;
+    font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer; color:#6b7368;
+  }
+  .cal-nav button.today-btn:hover{background:#f6f3e9;}
+  .month-quick{
+    display:flex; gap:6px; flex:1 1 240px; min-width:0;
+    overflow-x:auto; padding-bottom:5px; scrollbar-width:thin;
+  }
   .month-quick button{
+    flex:0 0 auto; white-space:nowrap;
     border:1.5px solid #ddd6c2; background:#fff; padding:7px 13px; border-radius:20px;
     font-family:inherit; font-weight:700; font-size:13px; cursor:pointer; color:#6b7368;
   }
   .month-quick button.active{background:var(--board); color:var(--chalk); border-color:var(--board);}
+  .month-quick button .yr{font-size:10.5px; opacity:.7; margin-right:3px;}
   .hint-line{font-size:12px; color:#a49c88; margin:0 0 14px;}
 
+  /* 좁은 화면에서 셀이 찌그러지지 않도록 가로 스크롤 */
+  .cal-scroll{ overflow-x:auto; padding-bottom:6px; }
+  .cal-inner{ min-width:700px; }
   .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
   .cal-dow{ text-align:center; font-size:11.5px; font-weight:700; color:#9a9484; padding-bottom:4px; }
+  .cal-dow.sat{color:var(--blue);} .cal-dow.sun{color:var(--rust);}
   .cal-cell{
-    min-height:88px; border:1.5px solid #ece7d8; border-radius:9px; padding:6px;
-    position:relative; background:#fffdf8;
+    min-height:96px; border:1.5px solid #ece7d8; border-radius:9px; padding:6px;
+    position:relative; background:#fffdf8; display:flex; flex-direction:column;
   }
   .cal-cell.empty{background:transparent; border:none;}
-  .cal-cell .num{font-size:12px; font-weight:700; color:#a49c88;}
+  .cal-cell .num{font-size:12px; font-weight:700; color:#a49c88; flex:0 0 auto;}
+  .cal-cell.today{border-color:var(--mustard); background:#fffaf0;}
   .cal-cell.today .num{color:var(--rust);}
+  .cal-cell.sat .num{color:var(--blue);}
+  .cal-cell.sun .num{color:var(--rust);}
+  .cal-cell .pills{display:flex; flex-direction:column; gap:3px; margin-top:3px;}
 
   .exam-pill{
     display:flex; align-items:center; justify-content:space-between; gap:5px;
     background:var(--pill-bg); border:1px solid var(--pill-border); color:var(--pill-text);
     border-radius:7px; padding:3px 7px; font-size:11px; font-weight:700;
-    margin-top:3px; cursor:pointer; overflow:hidden;
+    cursor:pointer; overflow:hidden;
   }
   .exam-pill:hover{filter:brightness(0.97); border-color:var(--mustard);}
   .exam-pill .label{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -177,6 +196,23 @@
     background:var(--pill-count); color:#fff; border-radius:999px; min-width:16px; height:16px;
     font-size:10px; display:flex; align-items:center; justify-content:center; padding:0 4px; flex-shrink:0;
   }
+  .more-pill{
+    border:1px dashed #ddd6c2; background:#fff; color:#8a8375; border-radius:7px;
+    padding:3px 7px; font-size:10.5px; font-weight:700; cursor:pointer;
+    font-family:inherit; text-align:center; width:100%;
+  }
+  .more-pill:hover{background:#f6f3e9; border-color:var(--mustard); color:#7a5518;}
+
+  /* 날짜별 시험 목록 */
+  .day-exam-row{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    border:1.5px solid #ece7d8; border-radius:10px; padding:10px 12px;
+    margin-bottom:8px; background:#fffdf8; cursor:pointer; text-align:left; width:100%;
+    font-family:inherit;
+  }
+  .day-exam-row:hover{border-color:var(--mustard); background:#fff8ea;}
+  .day-exam-row .dname{font-weight:700; font-size:13.5px; color:var(--ink);}
+  .day-exam-row .dsub{font-size:11.5px; color:#8a8375; margin-top:3px;}
 
   /* ---------- Overlay / Modal ---------- */
   .overlay{ display:none; position:fixed; inset:0; background:#1b271acc; align-items:center; justify-content:center; z-index:50; padding:20px; }
@@ -273,14 +309,19 @@
     <div class="cal-head">
       <div class="month-quick" id="monthQuick"></div>
       <div class="cal-nav">
+        <button class="today-btn" id="todayBtn">오늘</button>
         <button class="arrow" id="prevMonth">‹</button>
         <div class="month-label" id="monthLabel"></div>
         <button class="arrow" id="nextMonth">›</button>
       </div>
     </div>
-    <p class="hint-line">알약을 클릭하면 상세 정보와 학생 명단이 열립니다.</p>
-    <div class="cal-grid" id="calDow"></div>
-    <div class="cal-grid" id="calGrid" style="margin-top:6px;"></div>
+    <p class="hint-line">알약을 클릭하면 상세 정보와 학생 명단이 열립니다. 시험이 많은 날은 “+N개 더”를 누르면 전체 목록이 열려요.</p>
+    <div class="cal-scroll">
+      <div class="cal-inner">
+        <div class="cal-grid" id="calDow"></div>
+        <div class="cal-grid" id="calGrid" style="margin-top:6px;"></div>
+      </div>
+    </div>
   </section>
 
   <!-- 시험정보 입력 -->
@@ -391,6 +432,16 @@
   </section>
 </main>
 
+<!-- 날짜별 시험 목록 모달 -->
+<div class="overlay" id="dayModal">
+  <div class="modal">
+    <button class="close-x" id="closeDayModal">×</button>
+    <h3 id="dayTitle">그날의 시험</h3>
+    <p class="modal-meta" id="dayMeta"></p>
+    <div id="dayExamList"></div>
+  </div>
+</div>
+
 <!-- 시험 상세 모달 (캘린더 알약 클릭 시) -->
 <div class="overlay" id="detailModal">
   <div class="modal">
@@ -460,6 +511,7 @@ function onDataChange(){
   populateDropdowns();
   renderCalendar();
   renderExamTab();
+  if(currentDayKey && document.getElementById("dayModal").classList.contains("active")) openDayModal(currentDayKey);
   if(currentDetailExamId) openDetailModal(currentDetailExamId);
 }
 
@@ -928,7 +980,8 @@ viewYear = today.getFullYear();
 viewMonth = today.getMonth();
 
 const dowNames = ["월","화","수","목","금","토","일"];
-document.getElementById("calDow").innerHTML = dowNames.map(d=>`<div class="cal-dow">${d}</div>`).join("");
+document.getElementById("calDow").innerHTML = dowNames
+  .map((d,i)=>`<div class="cal-dow ${i===5?"sat":i===6?"sun":""}">${d}</div>`).join("");
 
 function pad(n){ return String(n).padStart(2,"0"); }
 function dateKey(y,m,d){ return `${y}-${pad(m+1)}-${pad(d)}`; }
@@ -936,19 +989,32 @@ function toDate(key){ const [y,m,d]=key.split("-").map(Number); return new Date(
 function weekdayShort(dateObj){ return ["일","월","화","수","목","금","토"][dateObj.getDay()]; }
 function fmtWithDow(key){ const d = toDate(key); return `${d.getMonth()+1}/${d.getDate()}(${weekdayShort(d)})`; }
 
+/* 월 버튼: 지난달 ~ 11개월 뒤까지 항상 만들고,
+   화살표로 그 범위를 벗어나면 보고 있는 달까지 자동으로 늘려줍니다.
+   (예전엔 4개만 만들어서 12월부터는 누를 버튼이 아예 없었어요) */
+function monthIndex(y,m){ return y*12+m; }
 function renderMonthQuick(){
   const box = document.getElementById("monthQuick");
+  const base = monthIndex(today.getFullYear(), today.getMonth());
+  const view = monthIndex(viewYear, viewMonth);
+  let from = base - 1, to = base + 11;
+  if(view < from) from = view;
+  if(view > to) to = view;
+
   let html = "";
-  for(let i=0;i<4;i++){
-    let m = today.getMonth()+i, y = today.getFullYear();
-    if(m>11){ m-=12; y+=1; }
-    const active = (m===viewMonth && y===viewYear);
-    html += `<button data-y="${y}" data-m="${m}" class="${active?"active":""}">${m+1}월</button>`;
+  for(let idx=from; idx<=to; idx++){
+    const y = Math.floor(idx/12), m = idx%12;
+    const active = (idx === view);
+    const yrTag = (y !== today.getFullYear()) ? `<span class="yr">${String(y).slice(2)}년</span>` : "";
+    html += `<button data-y="${y}" data-m="${m}" class="${active?"active":""}">${yrTag}${m+1}월</button>`;
   }
   box.innerHTML = html;
   box.querySelectorAll("button").forEach(b=>{
     b.addEventListener("click", ()=>{ viewYear=Number(b.dataset.y); viewMonth=Number(b.dataset.m); renderCalendar(); });
   });
+  // 선택된 달이 보이도록 가로 스크롤 위치만 조정 (페이지는 움직이지 않음)
+  const act = box.querySelector("button.active");
+  if(act) box.scrollLeft = act.offsetLeft - box.clientWidth/2 + act.offsetWidth/2;
 }
 
 function examsForDate(key){
@@ -957,13 +1023,33 @@ function examsForDate(key){
 function studentsForExam(exam){
   return students.filter(s=>s.school===exam.school && s.grade===exam.grade);
 }
+/* 화면 필터(학생 없는 시험 숨기기 / 선생님별 보기)를 적용한 목록 */
+function visibleExamsForDate(key){
+  const teacherFilter = document.getElementById("calFilterTeacher").value;
+  const hideEmpty = document.getElementById("hideEmptyExams").checked;
+  let list = examsForDate(key);
+  if(hideEmpty) list = list.filter(e => studentsForExam(e).length > 0);
+  if(teacherFilter) list = list.filter(e => studentsForExam(e).some(s=>s.teacher===teacherFilter));
+  return list.sort((a,b)=>
+    (a.school||"").localeCompare(b.school||"") ||
+    gradeSortIndex(a.grade)-gradeSortIndex(b.grade) ||
+    (a.examName||"").localeCompare(b.examName||"")
+  );
+}
+/* 알약 안에서는 학교명을 줄여서 표시 (가락중학교 → 가락중) */
+function shortSchool(name){
+  return (name||"").replace(/초등학교$/,"초").replace(/중학교$/,"중").replace(/고등학교$/,"고");
+}
+function shortExamName(name){
+  return (name||"").replace(/고사$/,"");
+}
+
+const MAX_PILLS = 3; // 한 칸에 최대 3개까지만 보여주고 나머지는 "+N개 더"
 
 function renderCalendar(){
   renderMonthQuick();
   document.getElementById("monthLabel").textContent = `${viewYear}년 ${viewMonth+1}월`;
   const grid = document.getElementById("calGrid");
-  const teacherFilter = document.getElementById("calFilterTeacher").value;
-  const hideEmpty = document.getElementById("hideEmptyExams").checked;
 
   let firstDow = new Date(viewYear, viewMonth, 1).getDay();
   firstDow = (firstDow===0) ? 6 : firstDow-1;
@@ -973,33 +1059,89 @@ function renderCalendar(){
   for(let i=0;i<firstDow;i++) html += `<div class="cal-cell empty"></div>`;
   for(let d=1; d<=daysInMonth; d++){
     const key = dateKey(viewYear, viewMonth, d);
-    let dayExams = examsForDate(key);
-    if(hideEmpty){
-      dayExams = dayExams.filter(e => studentsForExam(e).length > 0);
-    }
-    if(teacherFilter){
-      dayExams = dayExams.filter(e => studentsForExam(e).some(s=>s.teacher===teacherFilter));
-    }
+    const dayExams = visibleExamsForDate(key);
     const isToday = key === dateKey(today.getFullYear(), today.getMonth(), today.getDate());
-    const pillsHtml = dayExams.map(e=>{
+    const dowIdx = (firstDow + d - 1) % 7; // 0=월 ... 5=토, 6=일
+    const dowClass = dowIdx===5 ? "sat" : dowIdx===6 ? "sun" : "";
+
+    const shown = dayExams.slice(0, MAX_PILLS);
+    const restCount = dayExams.length - shown.length;
+    const pillsHtml = shown.map(e=>{
       const count = studentsForExam(e).length;
-      const label = `${e.school||""} ${e.grade||""} ${e.examName||""}`.trim();
-      return `<div class="exam-pill" data-exam="${e.id}"><span class="label">${escapeHtml(label)}</span><span class="count">${count}</span></div>`;
+      const label = `${shortSchool(e.school)} ${e.grade||""} ${shortExamName(e.examName)}`.trim();
+      const full = `${e.school||""} ${e.grade||""} ${e.examName||""}`.trim();
+      return `<div class="exam-pill" data-exam="${e.id}" title="${escapeHtml(full)} · ${count}명"><span class="label">${escapeHtml(label)}</span><span class="count">${count}</span></div>`;
     }).join("");
-    html += `<div class="cal-cell ${isToday?"today":""}" data-date="${key}">
+    const moreHtml = restCount>0
+      ? `<button class="more-pill" data-more="${key}">+${restCount}개 더</button>`
+      : "";
+
+    html += `<div class="cal-cell ${isToday?"today":""} ${dowClass}" data-date="${key}">
       <div class="num">${d}</div>
-      ${pillsHtml}
+      <div class="pills">${pillsHtml}${moreHtml}</div>
     </div>`;
   }
   grid.innerHTML = html;
   grid.querySelectorAll(".exam-pill").forEach(p=>{
     p.addEventListener("click", (ev)=>{ ev.stopPropagation(); openDetailModal(p.dataset.exam); });
   });
+  grid.querySelectorAll(".more-pill").forEach(b=>{
+    b.addEventListener("click", (ev)=>{ ev.stopPropagation(); openDayModal(b.dataset.more); });
+  });
 }
+function goToMonth(y,m){ viewYear=y; viewMonth=m; renderCalendar(); }
 document.getElementById("prevMonth").addEventListener("click", ()=>{ viewMonth--; if(viewMonth<0){viewMonth=11; viewYear--;} renderCalendar(); });
 document.getElementById("nextMonth").addEventListener("click", ()=>{ viewMonth++; if(viewMonth>11){viewMonth=0; viewYear++;} renderCalendar(); });
+document.getElementById("todayBtn").addEventListener("click", ()=> goToMonth(today.getFullYear(), today.getMonth()));
 document.getElementById("calFilterTeacher").addEventListener("change", renderCalendar);
 document.getElementById("hideEmptyExams").addEventListener("change", renderCalendar);
+
+/* ---------- 날짜별 시험 목록 모달 ---------- */
+let currentDayKey = null;
+function openDayModal(key){
+  currentDayKey = key;
+  const list = visibleExamsForDate(key);
+  const d = toDate(key);
+  document.getElementById("dayTitle").textContent = `${d.getMonth()+1}월 ${d.getDate()}일 (${weekdayShort(d)}) 시험`;
+  document.getElementById("dayMeta").textContent = `총 ${list.length}건`;
+
+  const box = document.getElementById("dayExamList");
+  box.innerHTML = list.length===0
+    ? `<div class="empty-state">이 날짜에 표시할 시험이 없어요.</div>`
+    : list.map(e=>{
+        const count = studentsForExam(e).length;
+        const period = (e.startDate===e.endDate) ? fmtWithDow(e.startDate) : `${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)}`;
+        const print = e.printStatus==="confirmed" ? "프린트 확인" : "프린트 미확인";
+        return `<button class="day-exam-row" data-exam="${e.id}">
+          <span>
+            <span class="dname">${escapeHtml(`${e.school||""} ${e.grade||""} ${e.examName||""}`.trim())}</span>
+            <span class="dsub">${escapeHtml(period)} · ${print}</span>
+          </span>
+          <span class="count-badge">${count}명</span>
+        </button>`;
+      }).join("");
+
+  box.querySelectorAll(".day-exam-row").forEach(row=>{
+    row.addEventListener("click", ()=>{
+      closeDayModal();
+      openDetailModal(row.dataset.exam);
+    });
+  });
+  document.getElementById("dayModal").classList.add("active");
+}
+function closeDayModal(){
+  document.getElementById("dayModal").classList.remove("active");
+  currentDayKey = null;
+}
+document.getElementById("closeDayModal").addEventListener("click", closeDayModal);
+document.getElementById("dayModal").addEventListener("click", (e)=>{ if(e.target.id==="dayModal") closeDayModal(); });
+document.addEventListener("keydown", (e)=>{
+  if(e.key==="Escape"){
+    closeDayModal();
+    document.getElementById("detailModal").classList.remove("active");
+    currentDetailExamId = null;
+  }
+});
 
 /* ---------- 시험 상세 모달 ---------- */
 async function toggleAssignmentStatus(examId, studentId){
