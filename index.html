@@ -221,8 +221,10 @@
   .student-table th{ text-align:left; font-size:11px; color:#8a8375; font-weight:700; padding:8px 10px; border-bottom:2px solid #ece7d8; white-space:nowrap;}
   .student-table td{ padding:8px 10px; border-bottom:1px solid #f1ede0; vertical-align:middle;}
   .student-table tr.incomplete{background:#fdf1ee;}
+  .student-table tr.editing{background:#fff8ea;}
   .student-table tr:hover{background:#faf7ee;}
   .student-table .name-cell{font-weight:700; white-space:nowrap;}
+  .student-table .edit-field{padding:5px 7px; font-size:12px; width:100%;}
 </style>
 </head>
 <body>
@@ -317,7 +319,7 @@
       </div>
       <div>
         <label>담당 선생님</label>
-        <input type="text" id="stuTeacher" placeholder="예: 박유경" list="teacherList">
+        <input type="text" id="stuTeacher" placeholder="예: 김도윤" list="teacherList">
       </div>
     </div>
     <div class="form-row" style="align-items:center;">
@@ -413,7 +415,7 @@ const isConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
 
 let db, collection, onSnapshot, addDoc, deleteDoc, updateDoc, doc, query, orderBy;
 let students = [];
-let exams = []; // {id, school, grade, examName, notConducted, notConductedReason, startDate, endDate, subject, subjectExamDate, printStatus, inputTeacher, examScope, schoolNotice, makeupDate, statusMap, savedAt}
+let exams = []; // {id, school, grade, examName, notConducted, notConductedReason, startDate, endDate, printStatus, inputTeacher, examScope, schoolNotice, makeupDate, statusMap, savedAt}
 
 const GRADE_ORDER = ["초4","초5","초6","중1","중2","중3","고1","고2","고3"];
 const EXAM_TYPES = ["중간고사","기말고사"];
@@ -551,6 +553,7 @@ function fillSelect(id, values, placeholder){
 /* ---------- 학생 관리 ---------- */
 const WEEKDAYS = ["월","화","수","목","금","토","일"];
 let showIncompleteOnly = false;
+let editingStudentId = null;
 
 function setupDayGroupPicker(container){
   container.querySelectorAll("button").forEach(b=>{
@@ -614,7 +617,24 @@ function renderStudents(){
     return;
   }
   emptyBox.innerHTML = "";
-  tbody.innerHTML = filtered.map(s=>`
+  tbody.innerHTML = filtered.map(s=>{
+    if(s.id === editingStudentId){
+      return `
+        <tr class="editing">
+          <td><input type="text" class="edit-field" data-field="studentNumber" value="${escapeHtml(s.studentNumber||"")}" style="width:80px;"></td>
+          <td><input type="text" class="edit-field" data-field="name" value="${escapeHtml(s.name||"")}" style="width:90px;"></td>
+          <td><input type="text" class="edit-field" data-field="school" value="${escapeHtml(s.school||"")}" list="schoolList" style="width:110px;"></td>
+          <td><input type="text" class="edit-field" data-field="grade" value="${escapeHtml(s.grade||"")}" list="gradeList" style="width:60px;"></td>
+          <td><input type="text" class="edit-field" data-field="teacher" value="${escapeHtml(s.teacher||"")}" list="teacherList" style="width:80px;"></td>
+          <td>${dayGroupRowHtml(s.id, s.classDayGroup)}</td>
+          <td style="white-space:nowrap;">
+            <button class="icon-btn save-edit" data-id="${s.id}">저장</button>
+            <button class="icon-btn cancel-edit" data-id="${s.id}">취소</button>
+          </td>
+        </tr>
+      `;
+    }
+    return `
     <tr class="${s.classDayGroup?"":"incomplete"}">
       <td>${s.studentNumber? escapeHtml(s.studentNumber) : "—"}</td>
       <td class="name-cell">${escapeHtml(s.name)}</td>
@@ -622,9 +642,36 @@ function renderStudents(){
       <td>${s.grade? `<span class="tag grade clickable" data-grade="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:"—"}</td>
       <td>${s.teacher? `<span class="tag teacher clickable" data-teacher="${escapeHtml(s.teacher)}">${escapeHtml(s.teacher)}T</span>`:"—"}</td>
       <td>${dayGroupRowHtml(s.id, s.classDayGroup)}</td>
-      <td><button class="icon-btn del" data-id="${s.id}">제거</button></td>
+      <td style="white-space:nowrap;">
+        <button class="icon-btn edit-btn" data-id="${s.id}">수정</button>
+        <button class="icon-btn del" data-id="${s.id}">제거</button>
+      </td>
     </tr>
-  `).join("");
+  `;
+  }).join("");
+
+  tbody.querySelectorAll(".edit-btn").forEach(b=> b.addEventListener("click", ()=>{
+    editingStudentId = b.dataset.id;
+    renderStudents();
+  }));
+  tbody.querySelectorAll(".cancel-edit").forEach(b=> b.addEventListener("click", ()=>{
+    editingStudentId = null;
+    renderStudents();
+  }));
+  tbody.querySelectorAll(".save-edit").forEach(b=> b.addEventListener("click", ()=>{
+    const row = b.closest("tr");
+    const get = f => row.querySelector(`[data-field="${f}"]`).value.trim();
+    const payload = {
+      studentNumber: get("studentNumber"),
+      name: get("name"),
+      school: get("school"),
+      grade: get("grade"),
+      teacher: get("teacher"),
+    };
+    if(!payload.name){ alert("이름은 비워둘 수 없어요."); return; }
+    updateStudentDoc(b.dataset.id, payload);
+    editingStudentId = null;
+  }));
 
   tbody.querySelectorAll(".del").forEach(b=> b.addEventListener("click", ()=>{
     if(confirm("이 학생을 삭제할까요?")) removeStudent(b.dataset.id);
@@ -764,10 +811,6 @@ function examCardHtml(school, grade, examName){
       </div>
 
       <div class="mini-row">
-        <div><label class="small">과목</label><input type="text" data-field="subject" placeholder="예: 수학" value="${escapeHtml(existing?.subject||"")}"></div>
-        <div><label class="small">과목 시험일</label><input type="date" data-field="subjectExamDate" value="${existing?.subjectExamDate||""}"></div>
-      </div>
-      <div class="mini-row">
         <div>
           <label class="small">프린트</label>
           <select data-field="printStatus">
@@ -839,8 +882,6 @@ function collectCardData(cardEl){
     notConductedReason: get("notConductedReason").value.trim(),
     startDate: get("startDate").value,
     endDate: get("endDate").value,
-    subject: get("subject").value.trim(),
-    subjectExamDate: get("subjectExamDate").value,
     printStatus: get("printStatus").value,
     inputTeacher: get("inputTeacher").value.trim(),
     examScope: get("examScope").value.trim(),
@@ -969,12 +1010,11 @@ function openDetailModal(examId){
   document.getElementById("detailTitle").textContent = `${exam.school||""} ${exam.grade||""} ${exam.examName||""}`.trim();
 
   const period = exam.startDate===exam.endDate ? fmtWithDow(exam.startDate) : `${fmtWithDow(exam.startDate)} ~ ${fmtWithDow(exam.endDate)}`;
-  const subjectHtml = exam.subject ? escapeHtml(exam.subject) : `<span class="flag-bad">과목 미입력</span>`;
   const makeupHtml = exam.makeupDate ? `직전보강 ${fmtWithDow(exam.makeupDate)}` : `직전보강 <span class="flag-bad">--</span>`;
   const printHtml = exam.printStatus==="confirmed" ? `<span class="flag-ok">프린트 확인</span>` : `<span class="flag-bad">프린트 미확인</span>`;
 
   document.getElementById("detailMeta").innerHTML =
-    `시험기간 ${period}<span class="dot">·</span>${subjectHtml}<span class="dot">·</span>${makeupHtml}<span class="dot">·</span>${printHtml}`;
+    `시험기간 ${period}<span class="dot">·</span>${makeupHtml}<span class="dot">·</span>${printHtml}`;
 
   const relevant = studentsForExam(exam);
   const byTeacher = {};
