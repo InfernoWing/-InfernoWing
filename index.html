@@ -145,7 +145,7 @@
   /* ---------- Calendar ---------- */
   .cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:10px;}
   .cal-head .month-label{font-family:'Gowun Batang',serif; font-size:19px; min-width:112px; text-align:center; white-space:nowrap;}
-  .cal-nav{display:flex; gap:6px; align-items:center; flex:0 0 auto;}
+  .cal-nav{display:flex; gap:6px; align-items:center; flex:0 0 auto; position:relative;}
   .cal-nav button.arrow{ background:#f2eee2; border:none; width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:15px; font-weight:700; }
   .cal-nav button.arrow:hover{background:#e5dfcd;}
   .cal-nav button.today-btn{
@@ -153,17 +153,45 @@
     font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer; color:#6b7368;
   }
   .cal-nav button.today-btn:hover{background:#f6f3e9;}
-  .month-quick{
-    display:flex; gap:6px; flex:1 1 240px; min-width:0;
-    overflow-x:auto; padding-bottom:5px; scrollbar-width:thin;
+
+  /* 월 이름을 눌러 여는 월 피커 (구글 캘린더 방식) */
+  .month-label.tappable{cursor:pointer; padding:4px 10px; border-radius:9px; border:1.5px solid transparent;}
+  .month-label.tappable:hover{background:#f6f3e9; border-color:#ddd6c2;}
+  .month-label .caret{font-size:10px; color:#a49c88; margin-left:4px;}
+  .month-picker{
+    display:none; position:absolute; top:44px; right:0;
+    background:#fff; border:1.5px solid #ddd6c2; border-radius:13px; padding:13px;
+    box-shadow:0 12px 28px #1b271a26; z-index:30; width:264px;
   }
-  .month-quick button{
-    flex:0 0 auto; white-space:nowrap;
+  .month-picker.open{display:block;}
+  .yr-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .yr-row .yr{font-weight:800; font-size:14.5px;}
+  .yr-row button{background:#f2eee2; border:none; width:26px; height:26px; border-radius:7px; cursor:pointer; font-weight:700; color:#5c6459;}
+  .yr-row button:hover{background:#e5dfcd;}
+  .mgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:6px;}
+  .mgrid button{
+    position:relative; border:1.5px solid transparent; background:#f7f4ea; border-radius:9px;
+    padding:9px 0 12px; font-family:inherit; font-weight:700; font-size:13px; cursor:pointer; color:#4c5450;
+  }
+  .mgrid button:hover{background:#fff; border-color:var(--mustard);}
+  .mgrid button.active{background:var(--board); color:var(--chalk);}
+  .mgrid button.now{border-color:var(--rust);}
+  .mgrid button .dot{
+    position:absolute; bottom:4px; left:50%; transform:translateX(-50%);
+    font-size:9px; font-weight:800; color:var(--pill-count); letter-spacing:-.02em;
+  }
+  .mgrid button.active .dot{color:var(--mustard);}
+
+  /* 학기 바로가기 칩 */
+  .season-row{display:flex; gap:6px; flex-wrap:wrap; align-items:center; flex:1 1 auto; min-width:0;}
+  .season-row .sy-label{font-size:11px; color:#a49c88; font-weight:700; margin-right:2px; white-space:nowrap;}
+  .season-chip{
     border:1.5px solid #ddd6c2; background:#fff; padding:7px 13px; border-radius:20px;
-    font-family:inherit; font-weight:700; font-size:13px; cursor:pointer; color:#6b7368;
+    font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer; color:#6b7368; white-space:nowrap;
   }
-  .month-quick button.active{background:var(--board); color:var(--chalk); border-color:var(--board);}
-  .month-quick button .yr{font-size:10.5px; opacity:.7; margin-right:3px;}
+  .season-chip:hover{background:#f2eee2;}
+  .season-chip.active{background:var(--board); color:var(--chalk); border-color:var(--board);}
+  .season-chip .n{font-size:10.5px; opacity:.75; margin-left:4px;}
   .hint-line{font-size:12px; color:#a49c88; margin:0 0 14px;}
 
   /* 좁은 화면에서 셀이 찌그러지지 않도록 가로 스크롤 */
@@ -307,12 +335,20 @@
     </div>
 
     <div class="cal-head">
-      <div class="month-quick" id="monthQuick"></div>
+      <div class="season-row" id="seasonRow"></div>
       <div class="cal-nav">
         <button class="today-btn" id="todayBtn">오늘</button>
         <button class="arrow" id="prevMonth">‹</button>
-        <div class="month-label" id="monthLabel"></div>
+        <div class="month-label tappable" id="monthLabel"></div>
         <button class="arrow" id="nextMonth">›</button>
+        <div class="month-picker" id="monthPicker">
+          <div class="yr-row">
+            <button id="pickerPrevYear">‹</button>
+            <span class="yr" id="pickerYear"></span>
+            <button id="pickerNextYear">›</button>
+          </div>
+          <div class="mgrid" id="pickerGrid"></div>
+        </div>
       </div>
     </div>
     <p class="hint-line">알약을 클릭하면 상세 정보와 학생 명단이 열립니다. 시험이 많은 날은 “+N개 더”를 누르면 전체 목록이 열려요.</p>
@@ -989,52 +1025,118 @@ function toDate(key){ const [y,m,d]=key.split("-").map(Number); return new Date(
 function weekdayShort(dateObj){ return ["일","월","화","수","목","금","토"][dateObj.getDay()]; }
 function fmtWithDow(key){ const d = toDate(key); return `${d.getMonth()+1}/${d.getDate()}(${weekdayShort(d)})`; }
 
-/* 월 버튼: 지난달 ~ 11개월 뒤까지 항상 만들고,
-   화살표로 그 범위를 벗어나면 보고 있는 달까지 자동으로 늘려줍니다.
-   (예전엔 4개만 만들어서 12월부터는 누를 버튼이 아예 없었어요) */
-function monthIndex(y,m){ return y*12+m; }
-function renderMonthQuick(){
-  const box = document.getElementById("monthQuick");
-  const base = monthIndex(today.getFullYear(), today.getMonth());
-  const view = monthIndex(viewYear, viewMonth);
-  let from = base - 1, to = base + 11;
-  if(view < from) from = view;
-  if(view > to) to = view;
-
-  let html = "";
-  for(let idx=from; idx<=to; idx++){
-    const y = Math.floor(idx/12), m = idx%12;
-    const active = (idx === view);
-    const yrTag = (y !== today.getFullYear()) ? `<span class="yr">${String(y).slice(2)}년</span>` : "";
-    html += `<button data-y="${y}" data-m="${m}" class="${active?"active":""}">${yrTag}${m+1}월</button>`;
-  }
-  box.innerHTML = html;
-  box.querySelectorAll("button").forEach(b=>{
-    b.addEventListener("click", ()=>{ viewYear=Number(b.dataset.y); viewMonth=Number(b.dataset.m); renderCalendar(); });
-  });
-  // 선택된 달이 보이도록 가로 스크롤 위치만 조정 (페이지는 움직이지 않음)
-  const act = box.querySelector("button.active");
-  if(act) box.scrollLeft = act.offsetLeft - box.clientWidth/2 + act.offsetWidth/2;
-}
-
-function examsForDate(key){
-  return exams.filter(e=> e.startDate && e.endDate && key>=e.startDate && key<=e.endDate && !e.notConducted);
-}
 function studentsForExam(exam){
   return students.filter(s=>s.school===exam.school && s.grade===exam.grade);
 }
-/* 화면 필터(학생 없는 시험 숨기기 / 선생님별 보기)를 적용한 목록 */
-function visibleExamsForDate(key){
+/* 화면 필터(학생 없는 시험 숨기기 / 선생님별 보기)를 적용한 전체 시험 목록 */
+function visibleExams(){
   const teacherFilter = document.getElementById("calFilterTeacher").value;
   const hideEmpty = document.getElementById("hideEmptyExams").checked;
-  let list = examsForDate(key);
-  if(hideEmpty) list = list.filter(e => studentsForExam(e).length > 0);
-  if(teacherFilter) list = list.filter(e => studentsForExam(e).some(s=>s.teacher===teacherFilter));
-  return list.sort((a,b)=>
+  return exams.filter(e=>{
+    if(!e.startDate || !e.endDate || e.notConducted) return false;
+    if(hideEmpty && studentsForExam(e).length === 0) return false;
+    if(teacherFilter && !studentsForExam(e).some(s=>s.teacher===teacherFilter)) return false;
+    return true;
+  });
+}
+function sortExams(list){
+  return [...list].sort((a,b)=>
     (a.school||"").localeCompare(b.school||"") ||
     gradeSortIndex(a.grade)-gradeSortIndex(b.grade) ||
     (a.examName||"").localeCompare(b.examName||"")
   );
+}
+function visibleExamsForDate(key){
+  return sortExams(visibleExams().filter(e=> key>=e.startDate && key<=e.endDate));
+}
+/* 그 달과 하루라도 겹치는 시험 (월 피커의 건수 표시용) */
+function examsInMonth(y,m){
+  const first = dateKey(y,m,1);
+  const last  = dateKey(y,m,new Date(y,m+1,0).getDate());
+  return visibleExams().filter(e=> e.startDate<=last && e.endDate>=first);
+}
+
+/* ---------- 월 피커 (방안 A) ---------- */
+let pickerYear = viewYear;
+const monthPicker = document.getElementById("monthPicker");
+
+function renderMonthPicker(){
+  document.getElementById("pickerYear").textContent = `${pickerYear}년`;
+  const grid = document.getElementById("pickerGrid");
+  grid.innerHTML = Array.from({length:12}, (_,i)=>{
+    const cnt = examsInMonth(pickerYear, i).length;
+    const active = (pickerYear===viewYear && i===viewMonth);
+    const now = (pickerYear===today.getFullYear() && i===today.getMonth());
+    return `<button data-m="${i}" class="${active?"active":""} ${now?"now":""}">${i+1}월${cnt? `<span class="dot">${cnt}건</span>`:""}</button>`;
+  }).join("");
+  grid.querySelectorAll("button").forEach(b=>{
+    b.addEventListener("click", (ev)=>{
+      ev.stopPropagation();
+      closeMonthPicker();
+      goToMonth(pickerYear, Number(b.dataset.m));
+    });
+  });
+}
+function openMonthPicker(){ pickerYear = viewYear; monthPicker.classList.add("open"); renderMonthPicker(); }
+function closeMonthPicker(){ monthPicker.classList.remove("open"); }
+document.getElementById("monthLabel").addEventListener("click", (e)=>{
+  e.stopPropagation();
+  monthPicker.classList.contains("open") ? closeMonthPicker() : openMonthPicker();
+});
+monthPicker.addEventListener("click", e=> e.stopPropagation());
+document.getElementById("pickerPrevYear").addEventListener("click", (e)=>{ e.stopPropagation(); pickerYear--; renderMonthPicker(); });
+document.getElementById("pickerNextYear").addEventListener("click", (e)=>{ e.stopPropagation(); pickerYear++; renderMonthPicker(); });
+document.addEventListener("click", closeMonthPicker);
+
+/* ---------- 학기 바로가기 칩 (방안 B) ----------
+   학년도는 3월 시작 기준. 1학기 = 3~7월, 2학기 = 8월~다음해 2월.
+   등록된 시험에서 자동으로 만들어지고, 시험이 없는 학기는 칩이 생기지 않아요. */
+function schoolYearOf(y,m){ return m>=2 ? y : y-1; }        // 0-based month
+function semesterOf(m){ return (m>=2 && m<=6) ? 1 : 2; }     // 3~7월=1학기
+const SEASON_DEFS = [
+  {sem:1, examName:"중간고사", label:"1학기 중간"},
+  {sem:1, examName:"기말고사", label:"1학기 기말"},
+  {sem:2, examName:"중간고사", label:"2학기 중간"},
+  {sem:2, examName:"기말고사", label:"2학기 기말"},
+];
+
+function renderSeasonChips(){
+  const row = document.getElementById("seasonRow");
+  const sy = schoolYearOf(viewYear, viewMonth);
+  const pool = visibleExams().filter(e=>{
+    const d = toDate(e.startDate);
+    return schoolYearOf(d.getFullYear(), d.getMonth()) === sy;
+  });
+
+  const chips = SEASON_DEFS.map(def=>{
+    const list = pool.filter(e=>{
+      const d = toDate(e.startDate);
+      return semesterOf(d.getMonth())===def.sem && e.examName===def.examName;
+    });
+    if(list.length===0) return null;
+    // 시험이 가장 많이 몰린 달로 이동
+    const tally = {};
+    list.forEach(e=>{
+      const d = toDate(e.startDate);
+      const k = `${d.getFullYear()}-${d.getMonth()}`;
+      tally[k] = (tally[k]||0)+1;
+    });
+    const best = Object.keys(tally).sort((a,b)=> tally[b]-tally[a] || a.localeCompare(b))[0];
+    const [ty,tm] = best.split("-").map(Number);
+    return {label:def.label, count:list.length, y:ty, m:tm};
+  }).filter(Boolean);
+
+  if(chips.length===0){ row.innerHTML = ""; return; }
+
+  const syTag = (sy !== schoolYearOf(today.getFullYear(), today.getMonth()))
+    ? `<span class="sy-label">${sy}학년도</span>` : "";
+  row.innerHTML = syTag + chips.map(c=>{
+    const active = (c.y===viewYear && c.m===viewMonth);
+    return `<button class="season-chip ${active?"active":""}" data-y="${c.y}" data-m="${c.m}">${c.label}<span class="n">${c.count}</span></button>`;
+  }).join("");
+  row.querySelectorAll("button").forEach(b=>{
+    b.addEventListener("click", ()=> goToMonth(Number(b.dataset.y), Number(b.dataset.m)));
+  });
 }
 /* 알약 안에서는 학교명을 줄여서 표시 (가락중학교 → 가락중) */
 function shortSchool(name){
@@ -1047,8 +1149,9 @@ function shortExamName(name){
 const MAX_PILLS = 3; // 한 칸에 최대 3개까지만 보여주고 나머지는 "+N개 더"
 
 function renderCalendar(){
-  renderMonthQuick();
-  document.getElementById("monthLabel").textContent = `${viewYear}년 ${viewMonth+1}월`;
+  renderSeasonChips();
+  document.getElementById("monthLabel").innerHTML = `${viewYear}년 ${viewMonth+1}월 <span class="caret">▾</span>`;
+  if(monthPicker.classList.contains("open")) renderMonthPicker();
   const grid = document.getElementById("calGrid");
 
   let firstDow = new Date(viewYear, viewMonth, 1).getDay();
@@ -1137,6 +1240,7 @@ document.getElementById("closeDayModal").addEventListener("click", closeDayModal
 document.getElementById("dayModal").addEventListener("click", (e)=>{ if(e.target.id==="dayModal") closeDayModal(); });
 document.addEventListener("keydown", (e)=>{
   if(e.key==="Escape"){
+    closeMonthPicker();
     closeDayModal();
     document.getElementById("detailModal").classList.remove("active");
     currentDetailExamId = null;
