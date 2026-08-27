@@ -333,7 +333,83 @@
     border-radius:20px; cursor:pointer; white-space:nowrap; border:none; }
   .badge-warn.active{background:var(--rust); color:#fff;}
   .table-scroll{overflow-x:auto;}
-  table.student-table{width:100%; border-collapse:collapse; font-size:13px; min-width:640px;}
+
+  /* ---------- 학생 관리: 색인 · 일괄선택 ---------- */
+  .cho-bar{display:flex; gap:4px; flex-wrap:wrap; align-items:center; margin-bottom:11px;
+    background:#fff; border:1.5px solid #e7e1cf; border-radius:10px; padding:8px 10px;}
+  .cho-bar .fl{font-size:11px; color:#a49c88; font-weight:700; margin-right:3px;}
+  .cho{border:none; background:transparent; font-family:inherit; font-weight:800; font-size:12.5px;
+    color:#6b7368; padding:4px 8px; border-radius:7px; cursor:pointer; min-width:28px;}
+  .cho:hover{background:#f2eee2;}
+  .cho.active{background:var(--board); color:var(--chalk);}
+  .cho.empty{color:#d8d2c0; cursor:default;}
+  .cho.empty:hover{background:transparent;}
+
+  .split{display:flex; gap:12px; align-items:flex-start;}
+  .idx-panel{flex:0 0 190px; background:#fff; border:1.5px solid #e7e1cf; border-radius:10px; padding:8px;}
+  .idx-tabs{display:flex; gap:3px; margin-bottom:7px; background:#f2eee2; border-radius:9px; padding:3px;}
+  .idx-tabs button{flex:1; border:none; background:transparent; font-family:inherit; font-weight:800;
+    font-size:11.5px; color:#6b7368; padding:6px 0; border-radius:7px; cursor:pointer;}
+  .idx-tabs button.active{background:var(--board); color:var(--chalk);}
+  .sub-toggle{display:flex; gap:4px; margin-bottom:7px;}
+  .sub-toggle button{flex:1; border:1.5px solid #ddd6c2; background:#fff; font-family:inherit;
+    font-weight:700; font-size:10.5px; color:#6b7368; padding:5px 0; border-radius:7px; cursor:pointer;}
+  .sub-toggle button.active{background:var(--mustard); color:#3b2a08; border-color:var(--mustard);}
+  .idx-list{max-height:430px; overflow-y:auto;}
+  .idx-item{display:flex; justify-content:space-between; align-items:center; gap:6px; width:100%;
+    border:none; background:transparent; font-family:inherit; font-size:12.5px; font-weight:700; color:#5c6459;
+    padding:7px 8px; border-radius:8px; cursor:pointer; text-align:left;}
+  .idx-item:hover{background:#f2eee2;}
+  .idx-item.active{background:var(--board); color:var(--chalk);}
+  .idx-item.none-item{color:var(--rust);}
+  .idx-item.none-item.active{background:var(--rust); color:#fff;}
+  .idx-item .c{font-size:10.5px; background:#eee9dc; color:#8a8375; border-radius:999px; padding:1px 7px; flex-shrink:0;}
+  .idx-item.active .c{background:var(--mustard); color:#3b2a08;}
+  .table-wrap{flex:1; min-width:0;}
+
+  .crumbs{display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:10px; min-height:26px;}
+  .crumb{background:#fff; border:1.5px solid var(--mustard); color:#8a5a13; font-size:11.5px; font-weight:700;
+    padding:4px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:6px;}
+  .crumb button{border:none; background:transparent; color:#b08432; font-weight:800; cursor:pointer;
+    font-size:13px; line-height:1; padding:0;}
+  .crumb-none{font-size:11.5px; color:#b3ab97;}
+
+  .selall{background:#fff8e8; border:1.5px dashed var(--mustard); border-radius:9px; padding:8px 12px;
+    font-size:12px; margin-bottom:10px; display:none;}
+  .selall.show{display:block;}
+  .selall button{border:none; background:transparent; color:#8a5a13; font-weight:800; font-family:inherit;
+    font-size:12px; cursor:pointer; text-decoration:underline; padding:0 2px;}
+
+  .bulkbar{position:sticky; bottom:10px; margin-top:12px; background:var(--board); color:var(--chalk);
+    border-radius:12px; padding:11px 14px; display:none; align-items:center; gap:9px; flex-wrap:wrap;
+    box-shadow:0 6px 20px #1b271a33; z-index:10;}
+  .bulkbar.show{display:flex;}
+  .bulkbar .cnt{font-weight:800; font-size:13px; white-space:nowrap;}
+  .bulkbar select, .bulkbar input{padding:6px 9px; border-radius:8px; border:none; font-family:inherit;
+    font-size:12px; background:#fffdf8; color:var(--ink); width:auto;}
+  .bulkbar input{width:132px;}
+  .bulkbar .bb{border:1.5px solid #ffffff44; background:#ffffff14; color:var(--chalk); font-family:inherit;
+    font-weight:700; font-size:12px; padding:6px 11px; border-radius:8px; cursor:pointer;}
+  .bulkbar .bb:hover{background:#ffffff26;}
+  .bulkbar .bb.danger{border-color:#e0836a66; color:#ffd9cd;}
+  .bulkbar .spacer{flex:1;}
+  .bulk-log{font-size:11.5px; color:#8a8375; margin-top:9px; min-height:17px;}
+
+  .tag.cls{background:#e2eee7; color:var(--green);}
+  .tag.none{background:#f3f0e6; color:#b3ab97;}
+
+  @media (max-width:820px){
+    .split{flex-direction:column; align-items:stretch;}
+    .idx-panel{flex:0 0 auto; width:100%;}
+    .idx-list{max-height:210px;}
+    .table-wrap{width:100%;}
+  }
+
+  table.student-table{width:100%; border-collapse:collapse; font-size:13px; min-width:940px;}
+  .student-table th.chk, .student-table td.chk{width:34px; text-align:center; padding-left:6px; padding-right:6px;}
+  .student-table input[type=checkbox]{width:15px; height:15px; cursor:pointer;}
+  .student-table tr.sel td{background:#fff5e2;}
+  .student-table tr.sel:hover td{background:#ffefd2;}
   .student-table th{ text-align:left; font-size:11px; color:#8a8375; font-weight:700; padding:8px 10px; border-bottom:2px solid #ece7d8; white-space:nowrap;}
   .student-table td{ padding:8px 10px; border-bottom:1px solid #f1ede0; vertical-align:middle;}
   .student-table tr.incomplete{background:#fdf1ee;}
@@ -480,11 +556,19 @@
         <input type="text" id="stuGrade" placeholder="예: 중2" list="gradeList">
       </div>
       <div>
-        <label>담당 선생님</label>
+        <label>담임 선생님</label>
         <input type="text" id="stuTeacher" placeholder="예: 김도윤" list="teacherList">
       </div>
     </div>
-    <div class="form-row" style="align-items:center;">
+    <div class="form-row" style="align-items:flex-end;">
+      <div>
+        <label>학기중 반</label>
+        <input type="text" id="stuRegularClass" placeholder="나중에 채워도 돼요" list="regularClassList">
+      </div>
+      <div>
+        <label>시험대비 반</label>
+        <input type="text" id="stuExamClass" placeholder="나중에 채워도 돼요" list="examClassList">
+      </div>
       <div style="flex:0 0 auto;">
         <label>수업요일</label>
         <div class="daygroup-picker" id="addDayGroupPicker">
@@ -495,6 +579,8 @@
     </div>
     <datalist id="schoolList"></datalist>
     <datalist id="teacherList"></datalist>
+    <datalist id="regularClassList"></datalist>
+    <datalist id="examClassList"></datalist>
     <datalist id="gradeList">
       <option value="중1"><option value="중2"><option value="중3">
       <option value="고1"><option value="고2"><option value="고3">
@@ -508,44 +594,69 @@
 
     <div style="height:22px;"></div>
 
-    <div class="filter-bar">
-      <div>
-        <label>학교로 보기</label>
-        <select id="filterSchool"><option value="">전체 학교</option></select>
-      </div>
-      <div>
-        <label>학년으로 보기</label>
-        <select id="filterGrade"><option value="">전체 학년</option></select>
-      </div>
-      <div>
-        <label>선생님으로 보기</label>
-        <select id="filterTeacher"><option value="">전체 선생님</option></select>
-      </div>
-      <div>
-        <button class="btn secondary" id="clearFilterBtn">필터 초기화</button>
-      </div>
-    </div>
-
     <div class="students-toolbar">
       <div class="search-box">
         <label>검색</label>
-        <input type="text" id="studentSearch" placeholder="이름 또는 학교">
+        <input type="text" id="studentSearch" placeholder="이름 · 학교 · 담임">
       </div>
       <div class="count-text" id="studentCountText"></div>
+      <button class="btn secondary small" id="clearFilterBtn">조건 모두 해제</button>
       <button class="badge-warn" id="incompleteBadge">수업요일 미입력 0명</button>
     </div>
 
-    <div class="table-scroll">
-      <table class="student-table">
-        <thead>
-          <tr>
-            <th>학번</th><th>이름</th><th>학교</th><th>학년</th><th>담당</th><th>수업요일</th><th></th>
-          </tr>
-        </thead>
-        <tbody id="studentTableBody"></tbody>
-      </table>
+    <div class="filter-line" id="stuGradeFilters"></div>
+    <div class="cho-bar" id="stuChoBar"></div>
+    <div class="crumbs" id="stuCrumbs"></div>
+    <div class="selall" id="stuSelAll"></div>
+
+    <div class="split">
+      <div class="idx-panel">
+        <div class="idx-tabs" id="stuIdxTabs">
+          <button data-tab="school" class="active">학교</button>
+          <button data-tab="teacher">담임</button>
+          <button data-tab="class">반</button>
+        </div>
+        <div class="sub-toggle" id="stuSubToggle" style="display:none;">
+          <button data-cf="regularClass" class="active">학기중</button>
+          <button data-cf="examClass">시험대비</button>
+        </div>
+        <div class="idx-list" id="stuIdxList"></div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table class="student-table">
+            <thead>
+              <tr>
+                <th class="chk"><input type="checkbox" id="stuChkAll"></th>
+                <th>학번</th><th>이름</th><th>학교</th><th>학년</th><th>담임</th>
+                <th>수업요일</th><th>학기중 반</th><th>시험대비 반</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="studentTableBody"></tbody>
+          </table>
+        </div>
+        <div id="studentEmptyState"></div>
+      </div>
     </div>
-    <div id="studentEmptyState"></div>
+
+    <div class="bulkbar" id="stuBulk">
+      <span class="cnt" id="stuBulkCount">0명 선택됨</span>
+      <select id="stuBulkField">
+        <option value="teacher">담임 선생님</option>
+        <option value="classDayGroup">수업요일</option>
+        <option value="grade">학년</option>
+        <option value="school">학교</option>
+        <option value="regularClass">학기중 반</option>
+        <option value="examClass">시험대비 반</option>
+      </select>
+      <span id="stuBulkValueWrap"></span>
+      <button class="bb" id="stuBulkApply">적용</button>
+      <span class="spacer"></span>
+      <button class="bb" id="stuBulkClear">선택 해제</button>
+      <button class="bb danger" id="stuBulkDelete">선택 삭제</button>
+    </div>
+    <div class="bulk-log" id="stuBulkLog"></div>
   </section>
 </main>
 
@@ -652,6 +763,22 @@ async function removeStudent(id){
   if(isConfigured){ await deleteDoc(doc(db,"students",id)); }
   else{ students = students.filter(s=>s.id!==id); saveLocal("kladi_students", students); onDataChange(); }
 }
+async function updateStudentsBulk(ids, payload){
+  if(isConfigured){
+    for(const id of ids){ await updateDoc(doc(db,"students",id), payload); }
+  } else {
+    students.forEach(s=>{ if(ids.includes(s.id)) Object.assign(s, payload); });
+    saveLocal("kladi_students", students); onDataChange();
+  }
+}
+async function removeStudentsBulk(ids){
+  if(isConfigured){
+    for(const id of ids){ await deleteDoc(doc(db,"students",id)); }
+  } else {
+    students = students.filter(s=> !ids.includes(s.id));
+    saveLocal("kladi_students", students); onDataChange();
+  }
+}
 async function updateStudentDoc(id, payload){
   if(isConfigured){ await updateDoc(doc(db,"students",id), payload); }
   else{
@@ -710,9 +837,11 @@ function populateDropdowns(){
   const extraGrades = grades.filter(g=>!GRADE_ORDER.includes(g));
   gList.innerHTML = GRADE_ORDER.map(g=>`<option value="${g}">`).join("") + extraGrades.map(g=>`<option value="${escapeHtml(g)}">`).join("");
 
-  fillSelect("filterSchool", schools, "전체 학교");
-  fillSelect("filterTeacher", teachers, "전체 선생님");
-  fillSelect("filterGrade", sortGrades(grades), "전체 학년");
+  document.getElementById("regularClassList").innerHTML =
+    uniq(students.map(s=>s.regularClass)).sort().map(v=>`<option value="${escapeHtml(v)}">`).join("");
+  document.getElementById("examClassList").innerHTML =
+    uniq(students.map(s=>s.examClass)).sort().map(v=>`<option value="${escapeHtml(v)}">`).join("");
+
   fillSelect("calFilterTeacher", teachers, "전체 선생님");
 
   fillSelect("examSchoolSelect", schools, "학교 선택");
@@ -755,106 +884,264 @@ function dayGroupRowHtml(studentId, classDayGroup){
     `</div>`;
 }
 
+/* ---------- 색인 (초성 / 학교 · 담임 · 반) ---------- */
+const CHO_ALL = ["ㄱ","ㄴ","ㄷ","ㄹ","ㅁ","ㅂ","ㅅ","ㅇ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+const CHO_TBL = ["ㄱ","ㄱ","ㄴ","ㄷ","ㄷ","ㄹ","ㅁ","ㅂ","ㅂ","ㅅ","ㅅ","ㅇ","ㅈ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+function chosungOf(name){
+  const c = (name||"").charCodeAt(0) - 0xAC00;
+  if(isNaN(c) || c < 0 || c > 11171) return "";
+  return CHO_TBL[Math.floor(c/588)];
+}
+
+let stuIdxTab = "school";           // school | teacher | class
+let stuClassField = "regularClass"; // regularClass | examClass
+// null = 조건 미적용, "" = 미배정/미지정만 보기
+let stuF = {cho:"", school:"", grade:"", teacher:null, regularClass:null, examClass:null};
+let selectedStudents = new Set();
+let lastStuRow = null;
+
+function filteredStudents(){
+  const searchTerm = document.getElementById("studentSearch").value.trim().toLowerCase();
+  return students.filter(s=>{
+    if(stuF.cho && chosungOf(s.name)!==stuF.cho) return false;
+    if(stuF.school && s.school!==stuF.school) return false;
+    if(stuF.grade && s.grade!==stuF.grade) return false;
+    if(stuF.teacher!==null && (s.teacher||"")!==stuF.teacher) return false;
+    if(stuF.regularClass!==null && (s.regularClass||"")!==stuF.regularClass) return false;
+    if(stuF.examClass!==null && (s.examClass||"")!==stuF.examClass) return false;
+    if(showIncompleteOnly && s.classDayGroup) return false;
+    if(searchTerm){
+      const hay = `${s.name||""} ${s.school||""} ${s.teacher||""} ${s.studentNumber||""}`.toLowerCase();
+      if(!hay.includes(searchTerm)) return false;
+    }
+    return true;
+  });
+}
+function stuHasFilter(){
+  return !!(stuF.cho || stuF.school || stuF.grade || stuF.teacher!==null ||
+    stuF.regularClass!==null || stuF.examClass!==null || showIncompleteOnly ||
+    document.getElementById("studentSearch").value.trim());
+}
+
+function renderChoBar(){
+  const counts = {};
+  students.forEach(s=>{ const c = chosungOf(s.name); if(c) counts[c] = (counts[c]||0)+1; });
+  document.getElementById("stuChoBar").innerHTML = `<span class="fl">이름</span>` +
+    `<button class="cho ${stuF.cho===""?"active":""}" data-c="">전체</button>` +
+    CHO_ALL.map(c=>`<button class="cho ${counts[c]?"":"empty"} ${stuF.cho===c?"active":""}" data-c="${c}" ${counts[c]?"":"disabled"}>${c}</button>`).join("");
+  document.querySelectorAll("#stuChoBar .cho").forEach(b=> b.addEventListener("click", ()=>{
+    if(b.disabled) return;
+    stuF.cho = b.dataset.c; renderStudents();
+  }));
+}
+
+function renderGradeFilters(){
+  const grades = sortGrades(uniq(students.map(s=>s.grade)));
+  document.getElementById("stuGradeFilters").innerHTML = grades.length===0 ? "" :
+    `<span class="fl">학년</span>` +
+    `<button class="fbtn ${stuF.grade===""?"active":""}" data-g="">전체</button>` +
+    grades.map(g=>`<button class="fbtn ${stuF.grade===g?"active":""}" data-g="${escapeHtml(g)}">${escapeHtml(g)}</button>`).join("");
+  document.querySelectorAll("#stuGradeFilters .fbtn").forEach(b=> b.addEventListener("click", ()=>{
+    stuF.grade = b.dataset.g; renderStudents();
+  }));
+}
+
+function renderIdxPanel(){
+  document.getElementById("stuSubToggle").style.display = stuIdxTab==="class" ? "flex" : "none";
+  document.querySelectorAll("#stuIdxTabs button").forEach(b=> b.classList.toggle("active", b.dataset.tab===stuIdxTab));
+  document.querySelectorAll("#stuSubToggle button").forEach(b=> b.classList.toggle("active", b.dataset.cf===stuClassField));
+
+  const box = document.getElementById("stuIdxList");
+  let html = "";
+  if(stuIdxTab==="school"){
+    const counts = {}; students.forEach(s=> { const v=s.school||"__none"; counts[v]=(counts[v]||0)+1; });
+    const names = uniq(students.map(s=>s.school)).sort();
+    html = `<button class="idx-item ${stuF.school===""?"active":""}" data-k="school" data-v="__all">전체 <span class="c">${students.length}</span></button>` +
+      names.map(v=>`<button class="idx-item ${stuF.school===v?"active":""}" data-k="school" data-v="${escapeHtml(v)}">${escapeHtml(shortSchool(v))} <span class="c">${counts[v]||0}</span></button>`).join("");
+  } else if(stuIdxTab==="teacher"){
+    const counts = {}; students.forEach(s=> { const v=s.teacher||"__none"; counts[v]=(counts[v]||0)+1; });
+    const names = uniq(students.map(s=>s.teacher)).sort();
+    html = `<button class="idx-item ${stuF.teacher===null?"active":""}" data-k="teacher" data-v="__all">전체 <span class="c">${students.length}</span></button>` +
+      names.map(v=>`<button class="idx-item ${stuF.teacher===v?"active":""}" data-k="teacher" data-v="${escapeHtml(v)}">${escapeHtml(v)}T <span class="c">${counts[v]||0}</span></button>`).join("") +
+      (counts["__none"] ? `<button class="idx-item none-item ${stuF.teacher===""?"active":""}" data-k="teacher" data-v="__none">담임 미지정 <span class="c">${counts["__none"]}</span></button>` : "");
+  } else {
+    const k = stuClassField;
+    const counts = {}; students.forEach(s=> { const v=s[k]||"__none"; counts[v]=(counts[v]||0)+1; });
+    const names = uniq(students.map(s=>s[k])).sort();
+    const cur = stuF[k];
+    html = `<button class="idx-item ${cur===null?"active":""}" data-k="${k}" data-v="__all">전체 <span class="c">${students.length}</span></button>` +
+      names.map(v=>`<button class="idx-item ${cur===v?"active":""}" data-k="${k}" data-v="${escapeHtml(v)}">${escapeHtml(v)} <span class="c">${counts[v]||0}</span></button>`).join("") +
+      (counts["__none"] ? `<button class="idx-item none-item ${cur===""?"active":""}" data-k="${k}" data-v="__none">미배정 <span class="c">${counts["__none"]}</span></button>` : "");
+  }
+  box.innerHTML = html;
+  box.querySelectorAll(".idx-item").forEach(b=> b.addEventListener("click", ()=>{
+    const k = b.dataset.k, v = b.dataset.v;
+    if(k==="school") stuF.school = (v==="__all") ? "" : v;
+    else stuF[k] = (v==="__all") ? null : (v==="__none" ? "" : v);
+    renderStudents();
+  }));
+}
+
+function renderCrumbs(){
+  const searchTerm = document.getElementById("studentSearch").value.trim();
+  const items = [];
+  if(stuF.cho) items.push({label:`이름 ${stuF.cho}`, k:"cho"});
+  if(stuF.school) items.push({label:`학교 ${shortSchool(stuF.school)}`, k:"school"});
+  if(stuF.grade) items.push({label:`학년 ${stuF.grade}`, k:"grade"});
+  if(stuF.teacher!==null) items.push({label: stuF.teacher? `담임 ${stuF.teacher}T` : "담임 미지정", k:"teacher"});
+  if(stuF.regularClass!==null) items.push({label: stuF.regularClass? `학기중 ${stuF.regularClass}` : "학기중 미배정", k:"regularClass"});
+  if(stuF.examClass!==null) items.push({label: stuF.examClass? `시험대비 ${stuF.examClass}` : "시험대비 미배정", k:"examClass"});
+  if(showIncompleteOnly) items.push({label:"수업요일 미입력", k:"incomplete"});
+  if(searchTerm) items.push({label:`검색 "${searchTerm}"`, k:"query"});
+
+  document.getElementById("stuCrumbs").innerHTML = items.length===0
+    ? `<span class="crumb-none">조건 없음 — 전체 보기</span>`
+    : items.map(i=>`<span class="crumb">${escapeHtml(i.label)}<button data-k="${i.k}">×</button></span>`).join("");
+  document.querySelectorAll("#stuCrumbs button").forEach(b=> b.addEventListener("click", ()=>{
+    const k = b.dataset.k;
+    if(k==="cho") stuF.cho="";
+    else if(k==="school") stuF.school="";
+    else if(k==="grade") stuF.grade="";
+    else if(k==="incomplete") showIncompleteOnly=false;
+    else if(k==="query") document.getElementById("studentSearch").value="";
+    else stuF[k]=null;
+    renderStudents();
+  }));
+}
+
+function clsTag(v){ return v ? `<span class="tag cls">${escapeHtml(v)}</span>` : `<span class="tag none">미배정</span>`; }
+
 function renderStudents(){
   const tbody = document.getElementById("studentTableBody");
   const emptyBox = document.getElementById("studentEmptyState");
-  const fSchool = document.getElementById("filterSchool").value;
-  const fGrade = document.getElementById("filterGrade").value;
-  const fTeacher = document.getElementById("filterTeacher").value;
-  const searchTerm = document.getElementById("studentSearch").value.trim().toLowerCase();
 
   const incompleteCount = students.filter(s=> !s.classDayGroup).length;
   const badge = document.getElementById("incompleteBadge");
   badge.textContent = `수업요일 미입력 ${incompleteCount}명`;
   badge.classList.toggle("active", showIncompleteOnly);
 
-  let filtered = students.filter(s=>
-    (!fSchool || s.school===fSchool) && (!fGrade || s.grade===fGrade) && (!fTeacher || s.teacher===fTeacher)
-  );
-  if(searchTerm){
-    filtered = filtered.filter(s=>
-      (s.name||"").toLowerCase().includes(searchTerm) || (s.school||"").toLowerCase().includes(searchTerm) || (s.studentNumber||"").toLowerCase().includes(searchTerm)
-    );
-  }
-  if(showIncompleteOnly){
-    filtered = filtered.filter(s=> !s.classDayGroup);
-  }
+  renderChoBar(); renderGradeFilters(); renderIdxPanel(); renderCrumbs();
 
-  document.getElementById("studentCountText").textContent = `표시 ${filtered.length}명 / 전체 ${students.length}명`;
+  const list = filteredStudents();
+  document.getElementById("studentCountText").textContent =
+    `표시 ${list.length}명 / 전체 ${students.length}명` + (selectedStudents.size? ` · 선택 ${selectedStudents.size}명` : "");
 
   if(students.length===0){
     tbody.innerHTML = "";
     emptyBox.innerHTML = `<div class="empty-state">아직 등록된 학생이 없어요. 위에서 첫 학생을 추가해보세요.</div>`;
-    return;
-  }
-  if(filtered.length===0){
+  } else if(list.length===0){
     tbody.innerHTML = "";
     emptyBox.innerHTML = `<div class="empty-state">이 조건에 맞는 학생이 없어요.</div>`;
-    return;
-  }
-  emptyBox.innerHTML = "";
-  tbody.innerHTML = filtered.map(s=>{
-    if(s.id === editingStudentId){
+  } else {
+    emptyBox.innerHTML = "";
+    tbody.innerHTML = list.map((s,i)=>{
+      if(s.id === editingStudentId){
+        return `
+          <tr class="editing">
+            <td class="chk"></td>
+            <td><input type="text" class="edit-field" data-field="studentNumber" value="${escapeHtml(s.studentNumber||"")}" style="width:78px;"></td>
+            <td><input type="text" class="edit-field" data-field="name" value="${escapeHtml(s.name||"")}" style="width:78px;"></td>
+            <td><input type="text" class="edit-field" data-field="school" value="${escapeHtml(s.school||"")}" list="schoolList" style="width:100px;"></td>
+            <td><input type="text" class="edit-field" data-field="grade" value="${escapeHtml(s.grade||"")}" list="gradeList" style="width:56px;"></td>
+            <td><input type="text" class="edit-field" data-field="teacher" value="${escapeHtml(s.teacher||"")}" list="teacherList" style="width:74px;"></td>
+            <td>${dayGroupRowHtml(s.id, s.classDayGroup)}</td>
+            <td><input type="text" class="edit-field" data-field="regularClass" value="${escapeHtml(s.regularClass||"")}" list="regularClassList" style="width:74px;"></td>
+            <td><input type="text" class="edit-field" data-field="examClass" value="${escapeHtml(s.examClass||"")}" list="examClassList" style="width:74px;"></td>
+            <td style="white-space:nowrap;">
+              <button class="icon-btn save-edit" data-id="${s.id}">저장</button>
+              <button class="icon-btn cancel-edit" data-id="${s.id}">취소</button>
+            </td>
+          </tr>`;
+      }
+      const sel = selectedStudents.has(s.id);
       return `
-        <tr class="editing">
-          <td><input type="text" class="edit-field" data-field="studentNumber" value="${escapeHtml(s.studentNumber||"")}" style="width:80px;"></td>
-          <td><input type="text" class="edit-field" data-field="name" value="${escapeHtml(s.name||"")}" style="width:90px;"></td>
-          <td><input type="text" class="edit-field" data-field="school" value="${escapeHtml(s.school||"")}" list="schoolList" style="width:110px;"></td>
-          <td><input type="text" class="edit-field" data-field="grade" value="${escapeHtml(s.grade||"")}" list="gradeList" style="width:60px;"></td>
-          <td><input type="text" class="edit-field" data-field="teacher" value="${escapeHtml(s.teacher||"")}" list="teacherList" style="width:80px;"></td>
-          <td>${dayGroupRowHtml(s.id, s.classDayGroup)}</td>
-          <td style="white-space:nowrap;">
-            <button class="icon-btn save-edit" data-id="${s.id}">저장</button>
-            <button class="icon-btn cancel-edit" data-id="${s.id}">취소</button>
-          </td>
-        </tr>
-      `;
-    }
-    return `
-    <tr class="${s.classDayGroup?"":"incomplete"}">
-      <td>${s.studentNumber? escapeHtml(s.studentNumber) : "—"}</td>
-      <td class="name-cell">${escapeHtml(s.name)}</td>
-      <td>${s.school? `<span class="tag school clickable" data-school="${escapeHtml(s.school)}">${escapeHtml(s.school)}</span>`:"—"}</td>
-      <td>${s.grade? `<span class="tag grade clickable" data-grade="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:"—"}</td>
-      <td>${s.teacher? `<span class="tag teacher clickable" data-teacher="${escapeHtml(s.teacher)}">${escapeHtml(s.teacher)}T</span>`:"—"}</td>
-      <td>${dayGroupRowHtml(s.id, s.classDayGroup)}</td>
-      <td style="white-space:nowrap;">
-        <button class="icon-btn edit-btn" data-id="${s.id}">수정</button>
-        <button class="icon-btn del" data-id="${s.id}">제거</button>
-      </td>
-    </tr>
-  `;
-  }).join("");
+      <tr class="${sel?"sel":(s.classDayGroup?"":"incomplete")}" data-ri="${i}" data-id="${s.id}">
+        <td class="chk"><input type="checkbox" data-id="${s.id}" ${sel?"checked":""}></td>
+        <td>${s.studentNumber? escapeHtml(s.studentNumber) : "—"}</td>
+        <td class="name-cell">${escapeHtml(s.name)}</td>
+        <td>${s.school? `<span class="tag school clickable" data-jump="school" data-v="${escapeHtml(s.school)}">${escapeHtml(shortSchool(s.school))}</span>`:"—"}</td>
+        <td>${s.grade? `<span class="tag grade clickable" data-jump="grade" data-v="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:"—"}</td>
+        <td>${s.teacher
+              ? `<span class="tag teacher clickable" data-jump="teacher" data-v="${escapeHtml(s.teacher)}">${escapeHtml(s.teacher)}T</span>`
+              : `<span class="tag none clickable" data-jump="teacher" data-v="">미지정</span>`}</td>
+        <td>${dayGroupRowHtml(s.id, s.classDayGroup)}</td>
+        <td><span class="clickable" data-jump="regularClass" data-v="${escapeHtml(s.regularClass||"")}">${clsTag(s.regularClass)}</span></td>
+        <td><span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span></td>
+        <td style="white-space:nowrap;">
+          <button class="icon-btn edit-btn" data-id="${s.id}">수정</button>
+          <button class="icon-btn del" data-id="${s.id}">제거</button>
+        </td>
+      </tr>`;
+    }).join("");
+  }
+
+  /* 전체선택 체크박스 상태 */
+  const chkAll = document.getElementById("stuChkAll");
+  const allSel = list.length>0 && list.every(s=> selectedStudents.has(s.id));
+  chkAll.checked = allSel;
+  chkAll.indeterminate = !allSel && list.some(s=> selectedStudents.has(s.id));
+
+  /* 조건 밖까지 전체 선택 안내 */
+  const sa = document.getElementById("stuSelAll");
+  if(allSel && stuHasFilter() && selectedStudents.size < students.length){
+    sa.classList.add("show");
+    sa.innerHTML = `화면에 보이는 <b>${list.length}명</b>을 선택했어요. <button id="stuExpandAll">조건과 상관없이 전체 ${students.length}명 선택</button>`;
+    document.getElementById("stuExpandAll").addEventListener("click", ()=>{
+      students.forEach(s=> selectedStudents.add(s.id)); renderStudents();
+    });
+  } else sa.classList.remove("show");
+
+  /* 체크박스 (Shift + 클릭 = 범위 선택) */
+  tbody.querySelectorAll('td.chk input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener("click", (ev)=>{
+      const ri = Number(cb.closest("tr").dataset.ri);
+      if(ev.shiftKey && lastStuRow!==null){
+        const [a,b] = [Math.min(lastStuRow,ri), Math.max(lastStuRow,ri)];
+        tbody.querySelectorAll("tr[data-ri]").forEach(r=>{
+          const i = Number(r.dataset.ri);
+          if(i>=a && i<=b) selectedStudents.add(r.dataset.id);
+        });
+      } else {
+        const id = cb.dataset.id;
+        selectedStudents.has(id) ? selectedStudents.delete(id) : selectedStudents.add(id);
+      }
+      lastStuRow = ri;
+      renderStudents();
+    });
+  });
 
   tbody.querySelectorAll(".edit-btn").forEach(b=> b.addEventListener("click", ()=>{
-    editingStudentId = b.dataset.id;
-    renderStudents();
+    editingStudentId = b.dataset.id; renderStudents();
   }));
   tbody.querySelectorAll(".cancel-edit").forEach(b=> b.addEventListener("click", ()=>{
-    editingStudentId = null;
-    renderStudents();
+    editingStudentId = null; renderStudents();
   }));
   tbody.querySelectorAll(".save-edit").forEach(b=> b.addEventListener("click", ()=>{
     const row = b.closest("tr");
     const get = f => row.querySelector(`[data-field="${f}"]`).value.trim();
     const payload = {
-      studentNumber: get("studentNumber"),
-      name: get("name"),
-      school: get("school"),
-      grade: get("grade"),
-      teacher: get("teacher"),
+      studentNumber: get("studentNumber"), name: get("name"), school: get("school"),
+      grade: get("grade"), teacher: get("teacher"),
+      regularClass: get("regularClass"), examClass: get("examClass"),
     };
     if(!payload.name){ alert("이름은 비워둘 수 없어요."); return; }
-    updateStudentDoc(b.dataset.id, payload);
-    editingStudentId = null;
+    editingStudentId = null;          // 먼저 편집 모드를 끄고 저장 (즉시 다시 그려도 편집칸이 남지 않도록)
+    updateStudentDoc(b.dataset.id, payload).then(renderStudents);
   }));
-
-  tbody.querySelectorAll(".del").forEach(b=> b.addEventListener("click", ()=>{
+  tbody.querySelectorAll(".icon-btn.del").forEach(b=> b.addEventListener("click", ()=>{
     if(confirm("이 학생을 삭제할까요?")) removeStudent(b.dataset.id);
   }));
-  tbody.querySelectorAll(".tag.school").forEach(t=> t.addEventListener("click", ()=>{ document.getElementById("filterSchool").value=t.dataset.school; renderStudents(); }));
-  tbody.querySelectorAll(".tag.grade").forEach(t=> t.addEventListener("click", ()=>{ document.getElementById("filterGrade").value=t.dataset.grade; renderStudents(); }));
-  tbody.querySelectorAll(".tag.teacher").forEach(t=> t.addEventListener("click", ()=>{ document.getElementById("filterTeacher").value=t.dataset.teacher; renderStudents(); }));
+
+  /* 표 안의 알약을 누르면 그 조건으로 걸림 */
+  tbody.querySelectorAll("[data-jump]").forEach(el=> el.addEventListener("click", ()=>{
+    const k = el.dataset.jump, v = el.dataset.v;
+    if(k==="school"){ stuF.school = v; stuIdxTab = "school"; }
+    else if(k==="grade"){ stuF.grade = v; }
+    else if(k==="teacher"){ stuF.teacher = v; stuIdxTab = "teacher"; }
+    else { stuF[k] = v; stuIdxTab = "class"; stuClassField = k; }
+    renderStudents();
+  }));
+
   tbody.querySelectorAll(".daygroup-picker").forEach(picker=>{
     picker.querySelectorAll("button").forEach(b=>{
       b.addEventListener("click", ()=>{
@@ -862,23 +1149,91 @@ function renderStudents(){
         const s = students.find(st=>st.id===studentId);
         if(!s) return;
         const group = b.dataset.group;
-        const newValue = (s.classDayGroup===group) ? "" : group;
-        updateStudentDoc(studentId, {classDayGroup: newValue});
+        updateStudentDoc(studentId, {classDayGroup: (s.classDayGroup===group) ? "" : group});
       });
     });
   });
+
+  /* 일괄 편집 막대 */
+  document.getElementById("stuBulk").classList.toggle("show", selectedStudents.size>0);
+  document.getElementById("stuBulkCount").textContent = `${selectedStudents.size}명 선택됨`;
+  renderBulkValueInput();
 }
-document.getElementById("filterSchool").addEventListener("change", renderStudents);
-document.getElementById("filterGrade").addEventListener("change", renderStudents);
-document.getElementById("filterTeacher").addEventListener("change", renderStudents);
+
+/* ---------- 일괄 편집 ---------- */
+function renderBulkValueInput(){
+  const field = document.getElementById("stuBulkField").value;
+  const wrap = document.getElementById("stuBulkValueWrap");
+  if(field==="classDayGroup"){
+    if(wrap.querySelector("select")) return;
+    wrap.innerHTML = `<select id="stuBulkValue">
+      <option value="월수금">월수금</option><option value="화목토">화목토</option><option value="">(비우기)</option></select>`;
+    return;
+  }
+  const listId = field==="teacher" ? "teacherList"
+    : field==="school" ? "schoolList"
+    : field==="grade" ? "gradeList"
+    : field==="regularClass" ? "regularClassList" : "examClassList";
+  const ph = field==="teacher" ? "예: 강지성"
+    : field==="school" ? "예: 가락중학교"
+    : field==="grade" ? "예: 중2"
+    : field==="regularClass" ? "학기중 반 이름" : "시험대비 반 이름";
+  const prev = document.getElementById("stuBulkValue");
+  const keep = (prev && prev.tagName==="INPUT" && prev.dataset.list===listId) ? prev.value : "";
+  wrap.innerHTML = `<input type="text" id="stuBulkValue" list="${listId}" data-list="${listId}" placeholder="${ph}" value="${escapeHtml(keep)}">`;
+}
+document.getElementById("stuBulkField").addEventListener("change", ()=>{
+  document.getElementById("stuBulkValueWrap").innerHTML = "";
+  renderBulkValueInput();
+});
+document.getElementById("stuBulkApply").addEventListener("click", async ()=>{
+  const field = document.getElementById("stuBulkField").value;
+  const label = document.getElementById("stuBulkField").selectedOptions[0].textContent;
+  const value = document.getElementById("stuBulkValue").value.trim();
+  const ids = [...selectedStudents];
+  if(ids.length===0) return;
+  if(!confirm(`선택한 ${ids.length}명의 ${label}을(를) "${value || "(비움)"}" (으)로 바꿀까요?`)) return;
+  const log = document.getElementById("stuBulkLog");
+  log.textContent = `${ids.length}명 변경 중...`;
+  await updateStudentsBulk(ids, {[field]: value});
+  log.textContent = `✔ ${ids.length}명의 ${label}을(를) "${value || "(비움)"}" 로 변경했어요.`;
+});
+document.getElementById("stuBulkClear").addEventListener("click", ()=>{
+  selectedStudents.clear(); lastStuRow = null;
+  document.getElementById("stuBulkLog").textContent = "";
+  renderStudents();
+});
+document.getElementById("stuBulkDelete").addEventListener("click", async ()=>{
+  const ids = [...selectedStudents];
+  if(ids.length===0) return;
+  if(!confirm(`선택한 ${ids.length}명을 삭제할까요? 되돌릴 수 없어요.`)) return;
+  const log = document.getElementById("stuBulkLog");
+  log.textContent = `${ids.length}명 삭제 중...`;
+  selectedStudents.clear(); lastStuRow = null;
+  await removeStudentsBulk(ids);
+  log.textContent = `🗑 ${ids.length}명을 삭제했어요.`;
+});
+document.getElementById("stuChkAll").addEventListener("click", ()=>{
+  const list = filteredStudents();
+  const allSel = list.length>0 && list.every(s=> selectedStudents.has(s.id));
+  list.forEach(s=> allSel ? selectedStudents.delete(s.id) : selectedStudents.add(s.id));
+  renderStudents();
+});
+document.querySelectorAll("#stuIdxTabs button").forEach(b=> b.addEventListener("click", ()=>{
+  stuIdxTab = b.dataset.tab; renderStudents();
+}));
+document.querySelectorAll("#stuSubToggle button").forEach(b=> b.addEventListener("click", ()=>{
+  stuClassField = b.dataset.cf; renderStudents();
+}));
 document.getElementById("studentSearch").addEventListener("input", renderStudents);
 document.getElementById("incompleteBadge").addEventListener("click", ()=>{
   showIncompleteOnly = !showIncompleteOnly;
   renderStudents();
 });
 document.getElementById("clearFilterBtn").addEventListener("click", ()=>{
-  document.getElementById("filterSchool").value=""; document.getElementById("filterGrade").value=""; document.getElementById("filterTeacher").value="";
-  document.getElementById("studentSearch").value=""; showIncompleteOnly=false;
+  stuF = {cho:"", school:"", grade:"", teacher:null, regularClass:null, examClass:null};
+  document.getElementById("studentSearch").value = "";
+  showIncompleteOnly = false;
   renderStudents();
 });
 document.getElementById("addStudentBtn").addEventListener("click", async ()=>{
@@ -887,12 +1242,14 @@ document.getElementById("addStudentBtn").addEventListener("click", async ()=>{
   const school = document.getElementById("stuSchool").value.trim();
   const grade = document.getElementById("stuGrade").value.trim();
   const teacher = document.getElementById("stuTeacher").value.trim();
+  const regularClass = document.getElementById("stuRegularClass").value.trim();
+  const examClass = document.getElementById("stuExamClass").value.trim();
   const picker = document.getElementById("addDayGroupPicker");
   const classDayGroup = getPickedDayGroup(picker);
   if(!name){ alert("이름을 입력해주세요."); return; }
-  await addStudent({studentNumber, name, school, grade, teacher, classDayGroup});
-  document.getElementById("stuNumber").value=""; document.getElementById("stuName").value=""; document.getElementById("stuSchool").value="";
-  document.getElementById("stuGrade").value=""; document.getElementById("stuTeacher").value="";
+  await addStudent({studentNumber, name, school, grade, teacher, classDayGroup, regularClass, examClass});
+  ["stuNumber","stuName","stuSchool","stuGrade","stuTeacher","stuRegularClass","stuExamClass"]
+    .forEach(id=> document.getElementById(id).value="");
   resetDayGroupPicker(picker, "");
 });
 
@@ -918,21 +1275,29 @@ document.getElementById("excelFileInput").addEventListener("change", (e)=>{
       const parsed = [];
       let skipped = 0;
 
+      // 제목행 이름이 조금씩 달라도 인식되도록 여러 표기를 허용
+      const pick = (row, keys) => {
+        for(const k of keys){ if(row[k] !== undefined && String(row[k]).trim() !== "") return String(row[k]).trim(); }
+        return "";
+      };
+
       rows.forEach(row=>{
-        const name = String(row["이름"] ?? "").trim();
+        const name = pick(row, ["이름","성명","학생명"]);
         if(!name){ skipped++; return; }
-        const studentNumber = String(row["학번"] ?? "").trim();
-        const school = String(row["학교"] ?? "").trim();
-        const grade = String(row["학년"] ?? "").trim();
-        const teacher = String(row["담당"] ?? "").trim();
-        const rawGroup = String(row["수업요일"] ?? "").trim();
+        const studentNumber = pick(row, ["학번","번호"]);
+        const school = pick(row, ["학교","학교명"]);
+        const grade = pick(row, ["학년"]);
+        const teacher = pick(row, ["담임","담당","담당선생님","담임선생님","담당 선생님","담임 선생님"]);
+        const rawGroup = pick(row, ["수업요일","요일"]);
         const classDayGroup = (rawGroup==="월수금" || rawGroup==="화목토") ? rawGroup : "";
-        parsed.push({studentNumber, name, school, grade, teacher, classDayGroup});
+        const regularClass = pick(row, ["학기중 반","학기중반","반","정규반","학기반"]);
+        const examClass = pick(row, ["시험대비 반","시험대비반","시험반","대비반"]);
+        parsed.push({studentNumber, name, school, grade, teacher, classDayGroup, regularClass, examClass});
       });
 
       if(parsed.length===0){
         statusEl.textContent = "";
-        alert("추가할 학생을 찾지 못했어요. '이름' 열이 채워져 있는지 확인해주세요.\n(1행은 제목행: 학번, 이름, 학교, 학년, 담당, 수업요일)");
+        alert("추가할 학생을 찾지 못했어요. '이름' 열이 채워져 있는지 확인해주세요.\n(제목행 예: 학번, 이름, 학교, 학년, 담임, 수업요일, 학기중 반, 시험대비 반)");
         return;
       }
 
