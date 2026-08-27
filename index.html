@@ -6,6 +6,7 @@
 <title>학원 관리 시스템</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --ink:#20291f; --board:#26362b; --board-dark:#1b271a;
@@ -202,12 +203,13 @@
   .empty-state{ text-align:center; color:#a49c88; padding:30px 10px; font-size:13px; }
 
   /* ---------- 학생 관리 표 ---------- */
-  .weekday-picker{display:flex; gap:4px;}
-  .weekday-picker button{
-    width:26px; height:26px; border-radius:6px; border:1.5px solid #dcd6c6; background:#fff;
-    font-size:11px; font-weight:700; color:#9a9484; cursor:pointer; padding:0;
+  .daygroup-picker{display:flex; gap:6px;}
+  .daygroup-picker button{
+    border:1.5px solid #dcd6c6; background:#fff; padding:7px 14px; border-radius:8px;
+    font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer; color:#6b7368;
   }
-  .weekday-picker button.active{background:var(--board); color:var(--chalk); border-color:var(--board);}
+  .daygroup-picker button.active{background:var(--board); color:var(--chalk); border-color:var(--board);}
+  .daygroup-picker.compact button{padding:5px 10px; font-size:11.5px;}
   .students-toolbar{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
   .students-toolbar .search-box{flex:1; min-width:180px;}
   .count-text{font-size:12px; color:#8a8375; font-weight:600; white-space:nowrap;}
@@ -227,7 +229,7 @@
 
 <header class="app-head">
   <div class="head-inner">
-    <div class="eyebrow">KLADI · ACADEMY DESK</div>
+    <div class="eyebrow">ACADEMY DESK</div>
     <h1 class="title">학원 관리 시스템</h1>
     <p class="subtitle">학교를 고르면 학년별 시험 카드가 자동으로 뜨고, 캘린더·학생 관리와 연동돼요</p>
   </div>
@@ -298,6 +300,10 @@
 
     <div class="form-row">
       <div>
+        <label>학번</label>
+        <input type="text" id="stuNumber" placeholder="예: 20250114">
+      </div>
+      <div>
         <label>이름</label>
         <input type="text" id="stuName" placeholder="예: 김지민">
       </div>
@@ -313,22 +319,13 @@
         <label>담당 선생님</label>
         <input type="text" id="stuTeacher" placeholder="예: 박유경" list="teacherList">
       </div>
-      <div>
-        <label>연락처 (선택)</label>
-        <input type="tel" id="stuPhone" placeholder="010-0000-0000">
-      </div>
     </div>
     <div class="form-row" style="align-items:center;">
       <div style="flex:0 0 auto;">
         <label>수업요일</label>
-        <div class="weekday-picker" id="addWeekdayPicker">
-          <button type="button" data-day="월">월</button>
-          <button type="button" data-day="화">화</button>
-          <button type="button" data-day="수">수</button>
-          <button type="button" data-day="목">목</button>
-          <button type="button" data-day="금">금</button>
-          <button type="button" data-day="토">토</button>
-          <button type="button" data-day="일">일</button>
+        <div class="daygroup-picker" id="addDayGroupPicker">
+          <button type="button" data-group="월수금">월수금</button>
+          <button type="button" data-group="화목토">화목토</button>
         </div>
       </div>
     </div>
@@ -338,8 +335,11 @@
       <option value="중1"><option value="중2"><option value="중3">
       <option value="고1"><option value="고2"><option value="고3">
     </datalist>
-    <div class="btn-row">
+    <div class="btn-row" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
       <button class="btn" id="addStudentBtn">+ 학생 추가</button>
+      <button class="btn secondary" id="excelUploadBtn">📄 엑셀로 일괄 등록</button>
+      <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+      <span id="excelUploadStatus" style="font-size:12px; color:#8a8375;"></span>
     </div>
 
     <div style="height:22px;"></div>
@@ -375,7 +375,7 @@
       <table class="student-table">
         <thead>
           <tr>
-            <th>이름</th><th>학교</th><th>학년</th><th>담당</th><th>수업요일</th><th></th>
+            <th>학번</th><th>이름</th><th>학교</th><th>학년</th><th>담당</th><th>수업요일</th><th></th>
           </tr>
         </thead>
         <tbody id="studentTableBody"></tbody>
@@ -461,6 +461,15 @@ async function addStudent(s){
   if(isConfigured){ await addDoc(collection(db,"students"), s); }
   else{ students.push({id:"s"+Date.now(), ...s}); saveLocal("kladi_students", students); onDataChange(); }
 }
+async function addStudentsBulk(list){
+  if(isConfigured){
+    for(const s of list){ await addDoc(collection(db,"students"), s); }
+  } else {
+    list.forEach(s=> students.push({id:"s"+Date.now()+Math.random().toString(36).slice(2), ...s}));
+    saveLocal("kladi_students", students);
+    onDataChange();
+  }
+}
 async function removeStudent(id){
   if(isConfigured){ await deleteDoc(doc(db,"students",id)); }
   else{ students = students.filter(s=>s.id!==id); saveLocal("kladi_students", students); onDataChange(); }
@@ -543,23 +552,27 @@ function fillSelect(id, values, placeholder){
 const WEEKDAYS = ["월","화","수","목","금","토","일"];
 let showIncompleteOnly = false;
 
-function setupWeekdayPicker(container){
+function setupDayGroupPicker(container){
   container.querySelectorAll("button").forEach(b=>{
-    b.addEventListener("click", ()=> b.classList.toggle("active"));
+    b.addEventListener("click", ()=>{
+      const wasActive = b.classList.contains("active");
+      container.querySelectorAll("button").forEach(x=>x.classList.remove("active"));
+      if(!wasActive) b.classList.add("active");
+    });
   });
 }
-function getPickedDays(container){
-  return Array.from(container.querySelectorAll("button.active")).map(b=>b.dataset.day);
+function getPickedDayGroup(container){
+  const active = container.querySelector("button.active");
+  return active ? active.dataset.group : "";
 }
-function resetWeekdayPicker(container){
-  container.querySelectorAll("button").forEach(b=> b.classList.remove("active"));
+function resetDayGroupPicker(container, value){
+  container.querySelectorAll("button").forEach(b=> b.classList.toggle("active", b.dataset.group===value));
 }
-setupWeekdayPicker(document.getElementById("addWeekdayPicker"));
+setupDayGroupPicker(document.getElementById("addDayGroupPicker"));
 
-function weekdayRowHtml(studentId, classDays){
-  const days = classDays || [];
-  return `<div class="weekday-picker" data-student="${studentId}">` +
-    WEEKDAYS.map(d=>`<button type="button" data-day="${d}" class="${days.includes(d)?"active":""}">${d}</button>`).join("") +
+function dayGroupRowHtml(studentId, classDayGroup){
+  return `<div class="daygroup-picker compact" data-student="${studentId}">` +
+    ["월수금","화목토"].map(g=>`<button type="button" data-group="${g}" class="${classDayGroup===g?"active":""}">${g}</button>`).join("") +
     `</div>`;
 }
 
@@ -571,7 +584,7 @@ function renderStudents(){
   const fTeacher = document.getElementById("filterTeacher").value;
   const searchTerm = document.getElementById("studentSearch").value.trim().toLowerCase();
 
-  const incompleteCount = students.filter(s=> !(s.classDays && s.classDays.length)).length;
+  const incompleteCount = students.filter(s=> !s.classDayGroup).length;
   const badge = document.getElementById("incompleteBadge");
   badge.textContent = `수업요일 미입력 ${incompleteCount}명`;
   badge.classList.toggle("active", showIncompleteOnly);
@@ -581,11 +594,11 @@ function renderStudents(){
   );
   if(searchTerm){
     filtered = filtered.filter(s=>
-      (s.name||"").toLowerCase().includes(searchTerm) || (s.school||"").toLowerCase().includes(searchTerm)
+      (s.name||"").toLowerCase().includes(searchTerm) || (s.school||"").toLowerCase().includes(searchTerm) || (s.studentNumber||"").toLowerCase().includes(searchTerm)
     );
   }
   if(showIncompleteOnly){
-    filtered = filtered.filter(s=> !(s.classDays && s.classDays.length));
+    filtered = filtered.filter(s=> !s.classDayGroup);
   }
 
   document.getElementById("studentCountText").textContent = `표시 ${filtered.length}명 / 전체 ${students.length}명`;
@@ -602,12 +615,13 @@ function renderStudents(){
   }
   emptyBox.innerHTML = "";
   tbody.innerHTML = filtered.map(s=>`
-    <tr class="${(s.classDays&&s.classDays.length)?"":"incomplete"}">
+    <tr class="${s.classDayGroup?"":"incomplete"}">
+      <td>${s.studentNumber? escapeHtml(s.studentNumber) : "—"}</td>
       <td class="name-cell">${escapeHtml(s.name)}</td>
       <td>${s.school? `<span class="tag school clickable" data-school="${escapeHtml(s.school)}">${escapeHtml(s.school)}</span>`:"—"}</td>
       <td>${s.grade? `<span class="tag grade clickable" data-grade="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:"—"}</td>
       <td>${s.teacher? `<span class="tag teacher clickable" data-teacher="${escapeHtml(s.teacher)}">${escapeHtml(s.teacher)}T</span>`:"—"}</td>
-      <td>${weekdayRowHtml(s.id, s.classDays)}</td>
+      <td>${dayGroupRowHtml(s.id, s.classDayGroup)}</td>
       <td><button class="icon-btn del" data-id="${s.id}">제거</button></td>
     </tr>
   `).join("");
@@ -618,16 +632,15 @@ function renderStudents(){
   tbody.querySelectorAll(".tag.school").forEach(t=> t.addEventListener("click", ()=>{ document.getElementById("filterSchool").value=t.dataset.school; renderStudents(); }));
   tbody.querySelectorAll(".tag.grade").forEach(t=> t.addEventListener("click", ()=>{ document.getElementById("filterGrade").value=t.dataset.grade; renderStudents(); }));
   tbody.querySelectorAll(".tag.teacher").forEach(t=> t.addEventListener("click", ()=>{ document.getElementById("filterTeacher").value=t.dataset.teacher; renderStudents(); }));
-  tbody.querySelectorAll(".weekday-picker").forEach(picker=>{
+  tbody.querySelectorAll(".daygroup-picker").forEach(picker=>{
     picker.querySelectorAll("button").forEach(b=>{
       b.addEventListener("click", ()=>{
         const studentId = picker.dataset.student;
         const s = students.find(st=>st.id===studentId);
         if(!s) return;
-        let days = s.classDays || [];
-        const day = b.dataset.day;
-        days = days.includes(day) ? days.filter(d=>d!==day) : [...days, day];
-        updateStudentDoc(studentId, {classDays: days});
+        const group = b.dataset.group;
+        const newValue = (s.classDayGroup===group) ? "" : group;
+        updateStudentDoc(studentId, {classDayGroup: newValue});
       });
     });
   });
@@ -646,18 +659,73 @@ document.getElementById("clearFilterBtn").addEventListener("click", ()=>{
   renderStudents();
 });
 document.getElementById("addStudentBtn").addEventListener("click", async ()=>{
+  const studentNumber = document.getElementById("stuNumber").value.trim();
   const name = document.getElementById("stuName").value.trim();
   const school = document.getElementById("stuSchool").value.trim();
   const grade = document.getElementById("stuGrade").value.trim();
   const teacher = document.getElementById("stuTeacher").value.trim();
-  const phone = document.getElementById("stuPhone").value.trim();
-  const picker = document.getElementById("addWeekdayPicker");
-  const classDays = getPickedDays(picker);
+  const picker = document.getElementById("addDayGroupPicker");
+  const classDayGroup = getPickedDayGroup(picker);
   if(!name){ alert("이름을 입력해주세요."); return; }
-  await addStudent({name, school, grade, teacher, phone, classDays});
-  document.getElementById("stuName").value=""; document.getElementById("stuSchool").value="";
-  document.getElementById("stuGrade").value=""; document.getElementById("stuTeacher").value=""; document.getElementById("stuPhone").value="";
-  resetWeekdayPicker(picker);
+  await addStudent({studentNumber, name, school, grade, teacher, classDayGroup});
+  document.getElementById("stuNumber").value=""; document.getElementById("stuName").value=""; document.getElementById("stuSchool").value="";
+  document.getElementById("stuGrade").value=""; document.getElementById("stuTeacher").value="";
+  resetDayGroupPicker(picker, "");
+});
+
+/* ---------- 엑셀 일괄 업로드 ---------- */
+document.getElementById("excelUploadBtn").addEventListener("click", ()=>{
+  document.getElementById("excelFileInput").click();
+});
+document.getElementById("excelFileInput").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById("excelUploadStatus");
+  statusEl.textContent = "읽는 중...";
+
+  const reader = new FileReader();
+  reader.onload = async (evt)=>{
+    try{
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, {type:"array"});
+      const firstSheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[firstSheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, {defval:""});
+
+      const parsed = [];
+      let skipped = 0;
+
+      rows.forEach(row=>{
+        const name = String(row["이름"] ?? "").trim();
+        if(!name){ skipped++; return; }
+        const studentNumber = String(row["학번"] ?? "").trim();
+        const school = String(row["학교"] ?? "").trim();
+        const grade = String(row["학년"] ?? "").trim();
+        const teacher = String(row["담당"] ?? "").trim();
+        const rawGroup = String(row["수업요일"] ?? "").trim();
+        const classDayGroup = (rawGroup==="월수금" || rawGroup==="화목토") ? rawGroup : "";
+        parsed.push({studentNumber, name, school, grade, teacher, classDayGroup});
+      });
+
+      if(parsed.length===0){
+        statusEl.textContent = "";
+        alert("추가할 학생을 찾지 못했어요. '이름' 열이 채워져 있는지 확인해주세요.\n(1행은 제목행: 학번, 이름, 학교, 학년, 담당, 수업요일)");
+        return;
+      }
+
+      statusEl.textContent = `${parsed.length}명 업로드 중...`;
+      await addStudentsBulk(parsed);
+      statusEl.textContent = "";
+      alert(`${parsed.length}명을 추가했어요.${skipped? ` (이름이 없어서 건너뛴 행 ${skipped}개)`:""}`);
+    } catch(err){
+      console.error(err);
+      statusEl.textContent = "";
+      alert("파일을 읽는 중 문제가 생겼어요. 엑셀 템플릿 형식(학번/이름/학교/학년/담당/수업요일 제목행)과 같은지 확인해주세요.");
+    } finally {
+      e.target.value = "";
+    }
+  };
+  reader.readAsArrayBuffer(file);
 });
 
 /* ---------- 시험정보 입력 탭 ---------- */
