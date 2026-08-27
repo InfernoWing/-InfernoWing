@@ -264,6 +264,10 @@
         <label>선생님별 보기</label>
         <select id="calFilterTeacher"><option value="">전체 선생님</option></select>
       </div>
+      <div class="checkbox-row" style="align-self:center;">
+        <input type="checkbox" id="hideEmptyExams" checked>
+        <label style="margin:0;">학생 없는 시험 숨기기</label>
+      </div>
     </div>
 
     <div class="cal-head">
@@ -959,6 +963,7 @@ function renderCalendar(){
   document.getElementById("monthLabel").textContent = `${viewYear}년 ${viewMonth+1}월`;
   const grid = document.getElementById("calGrid");
   const teacherFilter = document.getElementById("calFilterTeacher").value;
+  const hideEmpty = document.getElementById("hideEmptyExams").checked;
 
   let firstDow = new Date(viewYear, viewMonth, 1).getDay();
   firstDow = (firstDow===0) ? 6 : firstDow-1;
@@ -969,6 +974,9 @@ function renderCalendar(){
   for(let d=1; d<=daysInMonth; d++){
     const key = dateKey(viewYear, viewMonth, d);
     let dayExams = examsForDate(key);
+    if(hideEmpty){
+      dayExams = dayExams.filter(e => studentsForExam(e).length > 0);
+    }
     if(teacherFilter){
       dayExams = dayExams.filter(e => studentsForExam(e).some(s=>s.teacher===teacherFilter));
     }
@@ -991,6 +999,7 @@ function renderCalendar(){
 document.getElementById("prevMonth").addEventListener("click", ()=>{ viewMonth--; if(viewMonth<0){viewMonth=11; viewYear--;} renderCalendar(); });
 document.getElementById("nextMonth").addEventListener("click", ()=>{ viewMonth++; if(viewMonth>11){viewMonth=0; viewYear++;} renderCalendar(); });
 document.getElementById("calFilterTeacher").addEventListener("change", renderCalendar);
+document.getElementById("hideEmptyExams").addEventListener("change", renderCalendar);
 
 /* ---------- 시험 상세 모달 ---------- */
 async function toggleAssignmentStatus(examId, studentId){
