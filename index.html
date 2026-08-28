@@ -507,6 +507,74 @@
   .copy-actions{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:11px;}
   .copy-actions .hint{font-size:11.5px; color:#a49c88;}
 
+  /* 재원 상태 */
+  .tag.st-재원{background:#dcefe3; color:var(--green);}
+  .tag.st-휴원{background:#fdf3df; color:#8a5a13;}
+  .tag.st-퇴원{background:#eee9dc; color:#8a8375;}
+  .student-table tr.left td{opacity:.55;}
+  .student-table tr.left:hover td{opacity:.8;}
+  .promote-row{display:flex; justify-content:space-between; align-items:center; gap:10px;
+    border:1.5px solid #ece7d8; border-radius:10px; padding:9px 13px; margin-bottom:7px; background:#fffdf8;}
+  .promote-row .from{font-weight:800; font-size:13.5px;}
+  .promote-row .arrow{color:#a49c88; font-weight:800;}
+  .promote-row .to{font-weight:800; font-size:13.5px; color:var(--green);}
+  .promote-row.grad .to{color:var(--rust);}
+  .promote-row .n{font-size:11.5px; color:#8a8375; font-weight:700;}
+
+  /* 입력완료 진행률 */
+  .prog-wrap{display:flex; align-items:center; gap:10px; margin:2px 0 12px;}
+  .prog-bar{flex:1; height:9px; background:#ece7d8; border-radius:999px; overflow:hidden;}
+  .prog-bar span{display:block; height:100%; background:var(--green); border-radius:999px; transition:width .25s;}
+  .prog-text{font-size:12px; font-weight:800; color:#6b7368; white-space:nowrap;}
+  .prog-text.done{color:var(--green);}
+  .teacher-group .tname{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .tname .allbtn{border:1.5px solid #ddd6c2; background:#fff; color:#6b7368; font-family:inherit;
+    font-weight:700; font-size:10.5px; padding:3px 9px; border-radius:20px; cursor:pointer; margin-left:auto;}
+  .tname .allbtn:hover{background:#f2eee2; border-color:var(--green); color:var(--green);}
+
+  /* 상세 창에서 범위 바로 입력 */
+  .scope-edit{border:1.5px solid #ece7d8; border-left:4px solid var(--mustard); border-radius:9px;
+    padding:11px 13px; background:#fffdf8; margin-bottom:9px;}
+  .scope-edit.empty{border-left-color:var(--rust); background:#fdf1ee;}
+  .scope-edit .st{font-size:10.5px; font-weight:800; color:#a08a4d; letter-spacing:.04em; margin-bottom:6px; display:block;}
+  .scope-edit.empty .st{color:var(--rust);}
+  .scope-edit textarea{width:100%; min-height:52px; font-family:inherit; font-size:13px; line-height:1.7;
+    padding:8px 10px; border:1.5px solid #dcd6c6; border-radius:8px; background:#fff; resize:vertical;}
+  .scope-edit .row{display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap;}
+  .scope-edit .hint{font-size:11px; color:#a49c88;}
+
+  /* 학생 카드 목록 (좁은 화면) */
+  .stu-cards{display:flex; flex-direction:column; gap:8px;}
+  .stu-card{border:1.5px solid #ece7d8; border-radius:12px; background:#fffdf8; padding:11px 13px;}
+  .stu-card.sel{background:#fff5e2; border-color:var(--mustard);}
+  .stu-card.left{opacity:.6;}
+  .sc-top{display:flex; align-items:center; gap:9px;}
+  .sc-top input[type=checkbox]{width:16px; height:16px; flex-shrink:0;}
+  .sc-name{font-weight:800; font-size:14.5px; cursor:pointer; border-bottom:1.5px dotted #c9c2ac;}
+  .sc-name:hover{color:var(--rust); border-bottom-color:var(--rust);}
+  .sc-num{font-size:11px; color:#a49c88; margin-left:auto;}
+  .sc-tags{display:flex; gap:5px; flex-wrap:wrap; margin-top:8px;}
+  .sc-actions{display:flex; gap:6px; margin-top:9px;}
+  .sc-actions .icon-btn{font-size:11.5px; padding:5px 10px;}
+
+  /* 보기 모드 / 수정 모드 */
+  body.view-mode .edit-only{display:none !important;}
+  .mode-btn{
+    position:absolute; top:0; right:0; display:inline-flex; align-items:center; gap:7px;
+    border:1.5px solid #ffffff33; background:#ffffff14; color:var(--chalk);
+    font-family:inherit; font-weight:700; font-size:12.5px; padding:8px 14px; border-radius:20px; cursor:pointer;
+  }
+  .mode-btn:hover{background:#ffffff26;}
+  .mode-btn.editing{background:var(--mustard); color:#3b2a08; border-color:var(--mustard);}
+  .mode-btn .dot{width:7px; height:7px; border-radius:50%; background:var(--chalk-dim);}
+  .mode-btn.editing .dot{background:#3b2a08;}
+  @media (max-width:560px){
+    .mode-btn{position:static; margin-top:12px;}
+  }
+  .pw-row{display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; margin-top:12px;}
+  .pw-row > div{flex:1; min-width:150px;}
+  .pw-note{font-size:11.5px; color:#8a8375; line-height:1.65; margin-top:10px;}
+
   /* ---------- 토스트 알림 ---------- */
   .toast-wrap{position:fixed; left:50%; transform:translateX(-50%); bottom:22px; z-index:100;
     display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none; width:min(560px,calc(100% - 32px));}
@@ -673,12 +741,13 @@
     <div class="eyebrow">ACADEMY DESK</div>
     <h1 class="title">학원 관리 시스템</h1>
     <p class="subtitle">학교를 고르면 학년별 시험 카드가 자동으로 뜨고, 캘린더·학생 관리와 연동돼요</p>
+    <button class="mode-btn" id="modeBtn"><span class="dot"></span><span id="modeLabel">보기 모드</span></button>
   </div>
 </header>
 
 <nav class="tabs">
   <button class="tab-btn active" data-tab="calendar">캘린더</button>
-  <button class="tab-btn" data-tab="examinput">시험정보 입력</button>
+  <button class="tab-btn edit-only" data-tab="examinput">시험정보 입력</button>
   <button class="tab-btn" data-tab="schedule">학교별 일정</button>
   <button class="tab-btn" data-tab="scope">시험 범위</button>
   <button class="tab-btn" data-tab="students">학생 관리</button>
@@ -699,7 +768,7 @@
         <h2 class="panel-title">캘린더</h2>
         <p class="panel-desc">시험 기간 동안 매일 알약이 표시돼요. 알약을 누르면 상세 정보가 열립니다.</p>
       </div>
-      <button class="btn" id="goToExamTab">+ 시험정보 입력으로 이동</button>
+      <button class="btn edit-only" id="goToExamTab">+ 시험정보 입력으로 이동</button>
     </div>
 
     <div class="summary-row" id="summaryRow"></div>
@@ -828,7 +897,7 @@
     <h2 class="panel-title">학생 관리</h2>
     <p class="panel-desc">학교·학년·담임 선생님·반을 등록해두면, 시험정보 입력과 캘린더에 자동으로 연동돼요. 여러 명을 체크해서 한 번에 바꿀 수 있습니다.</p>
 
-    <div class="form-row">
+    <div class="form-row edit-only">
       <div>
         <label>학번</label>
         <input type="text" id="stuNumber" placeholder="예: 20250114">
@@ -850,7 +919,7 @@
         <input type="text" id="stuTeacher" placeholder="예: 김도윤" list="teacherList">
       </div>
     </div>
-    <div class="form-row">
+    <div class="form-row edit-only">
       <div>
         <label>학기중 반</label>
         <input type="text" id="stuRegularClass" placeholder="예: 월수금 A반" list="regularClassList">
@@ -869,8 +938,8 @@
       <option value="고1"><option value="고2"><option value="고3">
     </datalist>
     <div class="btn-row" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-      <button class="btn" id="addStudentBtn">+ 학생 추가</button>
-      <button class="btn secondary" id="excelUploadBtn">📄 엑셀로 일괄 등록</button>
+      <button class="btn edit-only" id="addStudentBtn">+ 학생 추가</button>
+      <button class="btn secondary edit-only" id="excelUploadBtn">📄 엑셀로 일괄 등록</button>
       <button class="btn secondary" id="excelDownloadBtn" title="지금 화면에 보이는 학생만 내보냅니다">⤓ 엑셀로 내보내기</button>
       <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
       <span id="excelUploadStatus" style="font-size:12px; color:#8a8375;"></span>
@@ -881,14 +950,19 @@
     <div class="students-toolbar">
       <div class="search-box">
         <label>검색</label>
-        <input type="text" id="studentSearch" placeholder="이름 · 학교 · 담임">
+        <input type="text" id="studentSearch" placeholder="이름 · 학교 · 담임 (초성도 됩니다 — 예: ㄱㅈㅁ)">
       </div>
       <div class="count-text" id="studentCountText"></div>
+      <div class="view-toggle" id="stuViewToggle">
+        <button data-view="table">표</button>
+        <button data-view="card">카드</button>
+      </div>
       <button class="btn secondary small" id="clearFilterBtn">조건 모두 해제</button>
       <button class="badge-warn" id="incompleteBadge">학기중 반 미배정 0명</button>
       <button class="badge-info" id="sameNameBadge" style="display:none;">동명이인 0명</button>
     </div>
 
+    <div class="filter-line" id="stuStatusFilters"></div>
     <div class="filter-line" id="stuGradeFilters"></div>
     <div class="cho-bar" id="stuChoBar"></div>
     <div class="crumbs" id="stuCrumbs"></div>
@@ -909,13 +983,14 @@
       </div>
 
       <div class="table-wrap">
-        <div class="table-scroll">
+        <div class="stu-cards" id="studentCards" style="display:none;"></div>
+        <div class="table-scroll" id="studentTableWrap">
           <table class="student-table">
             <thead>
               <tr>
-                <th class="chk"><input type="checkbox" id="stuChkAll"></th>
+                <th class="chk edit-only"><input type="checkbox" id="stuChkAll"></th>
                 <th>학번</th><th>이름</th><th>학교</th><th>학년</th><th>담임</th>
-                <th>학기중 반</th><th>시험대비 반</th><th class="act"></th>
+                <th>학기중 반</th><th>시험대비 반</th><th>상태</th><th class="act"></th>
               </tr>
             </thead>
             <tbody id="studentTableBody"></tbody>
@@ -925,7 +1000,7 @@
       </div>
     </div>
 
-    <div class="bulkbar" id="stuBulk">
+    <div class="bulkbar edit-only" id="stuBulk">
       <span class="cnt" id="stuBulkCount">0명 선택됨</span>
       <select id="stuBulkField">
         <option value="teacher">담임 선생님</option>
@@ -933,6 +1008,7 @@
         <option value="school">학교</option>
         <option value="regularClass">학기중 반</option>
         <option value="examClass">시험대비 반</option>
+        <option value="status">재원 상태</option>
       </select>
       <span id="stuBulkValueWrap"></span>
       <button class="bb" id="stuBulkApply">적용</button>
@@ -944,10 +1020,12 @@
 
     <div class="data-tools">
       <span class="dt-label">데이터 관리</span>
-      <button class="btn secondary small" id="cleanupBtn">🧹 데이터 정리</button>
+      <button class="btn secondary small edit-only" id="promoteBtn">🎓 학년 올리기</button>
+      <button class="btn secondary small edit-only" id="cleanupBtn">🧹 데이터 정리</button>
       <button class="btn secondary small" id="backupBtn">💾 전체 백업</button>
-      <button class="btn secondary small" id="restoreBtn">↩ 백업 복원</button>
+      <button class="btn secondary small edit-only" id="restoreBtn">↩ 백업 복원</button>
       <input type="file" id="restoreFileInput" accept=".json" style="display:none;">
+      <button class="btn secondary small edit-only" id="pwChangeBtn">🔑 비밀번호 바꾸기</button>
       <span id="backupStatus" style="font-size:11.5px; color:#8a8375;"></span>
     </div>
   </section>
@@ -964,6 +1042,53 @@
     <div class="copy-actions">
       <button class="btn" id="copyDoBtn">📋 복사하기</button>
       <span class="hint">내용을 직접 고쳐서 복사해도 됩니다.</span>
+    </div>
+  </div>
+</div>
+
+<!-- 수정 모드 비밀번호 모달 -->
+<div class="overlay" id="pwModal">
+  <div class="modal" style="max-width:420px;">
+    <button class="close-x" id="closePwModal">&times;</button>
+    <h3>수정 모드로 바꾸기</h3>
+    <p class="modal-meta">비밀번호를 입력하면 내용을 고칠 수 있어요. 브라우저를 닫으면 다시 보기 모드가 됩니다.</p>
+    <div class="pw-row">
+      <div><label>비밀번호</label><input type="password" id="pwInput" placeholder="비밀번호" autocomplete="current-password"></div>
+      <button class="btn" id="pwSubmit">확인</button>
+    </div>
+    <div class="pw-note" id="pwNote"></div>
+  </div>
+</div>
+
+<!-- 비밀번호 변경 모달 -->
+<div class="overlay" id="pwChangeModal">
+  <div class="modal" style="max-width:440px;">
+    <button class="close-x" id="closePwChangeModal">&times;</button>
+    <h3>비밀번호 바꾸기</h3>
+    <p class="modal-meta">바꾼 비밀번호는 모든 기기에 함께 적용됩니다.</p>
+    <div class="pw-row">
+      <div><label>새 비밀번호</label><input type="password" id="pwNew1" placeholder="4자 이상"></div>
+      <div><label>한 번 더</label><input type="password" id="pwNew2" placeholder="다시 입력"></div>
+      <button class="btn" id="pwChangeSubmit">바꾸기</button>
+    </div>
+    <div class="pw-note">비밀번호를 잊으면 되돌릴 수 없으니 꼭 기억해두세요.</div>
+  </div>
+</div>
+
+<!-- 학년 올리기 모달 -->
+<div class="overlay" id="promoteModal">
+  <div class="modal">
+    <button class="close-x" id="closePromoteModal">&times;</button>
+    <h3>학년 올리기</h3>
+    <p class="modal-meta">새 학년이 되면 학년을 한 칸씩 올립니다. 퇴원 처리된 학생은 제외돼요.</p>
+    <div id="promoteBody"></div>
+    <label class="not-held-row" style="margin-top:12px;">
+      <input type="checkbox" id="promoteGraduate" checked>
+      마지막 학년(고3)은 <b>퇴원</b>으로 바꾸기
+    </label>
+    <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
+      <button class="btn" id="promoteRun">학년 올리기 실행</button>
+      <button class="btn secondary" id="promoteCancel">취소</button>
     </div>
   </div>
 </div>
@@ -986,18 +1111,19 @@
     <p class="modal-meta" id="stuMeta"></p>
     <div class="stu-tags" id="stuTags"></div>
 
-    <div class="stu-quick" id="stuQuick">
+    <div class="stu-quick edit-only" id="stuQuick">
       <div class="sq-row">
         <div><label class="small">담임</label><input type="text" id="sqTeacher" list="teacherList" placeholder="예: 강지성"></div>
         <div><label class="small">학기중 반</label><input type="text" id="sqRegular" list="regularClassList" placeholder="예: 월수금 A반"></div>
         <div><label class="small">시험대비 반</label><input type="text" id="sqExam" list="examClassList" placeholder="예: 내신A"></div>
+        <div style="flex:0 0 90px;"><label class="small">재원 상태</label><select id="sqStatus"></select></div>
         <button class="btn small" id="sqSave">저장</button>
       </div>
     </div>
 
     <div id="stuExamList"></div>
     <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
-      <button class="btn secondary small" id="stuModalEdit">전체 정보 수정</button>
+      <button class="btn secondary small edit-only" id="stuModalEdit">전체 정보 수정</button>
     </div>
   </div>
 </div>
@@ -1046,6 +1172,8 @@ let students = [];
 let exams = []; // {id, school, grade, examName, notConducted, notConductedReason, startDate, endDate, printStatus, inputTeacher, examScope, schoolNotice, makeupDate, statusMap, savedAt}
 
 const GRADE_ORDER = ["초4","초5","초6","중1","중2","중3","고1","고2","고3"];
+const STATUS_LIST = ["재원","휴원","퇴원"];
+function statusOf(s){ return STATUS_LIST.includes(s?.status) ? s.status : "재원"; }
 const EXAM_TYPES = ["중간고사","기말고사"];
 let currentExamSchool = "";
 let currentDetailExamId = null;
@@ -1058,6 +1186,10 @@ async function initFirebase(){
     document.getElementById("setupBanner").style.display = "block";
     students = loadLocal("kladi_students");
     exams = loadLocal("kladi_exams");
+    try{
+      const st = JSON.parse(localStorage.getItem("kladi_settings") || "{}");
+      if(st.editPasswordHash) editPwHash = st.editPasswordHash;
+    }catch(e){}
     onDataChange();
     return;
   }
@@ -1076,6 +1208,10 @@ async function initFirebase(){
   onSnapshot(collection(db,"exams"), snap=>{
     exams = snap.docs.map(d=>({id:d.id, ...d.data()}));
     onDataChange();
+  });
+  onSnapshot(doc(db,"settings","app"), snap=>{
+    const d = snap.data();
+    if(d && d.editPasswordHash) editPwHash = d.editPasswordHash;
   });
 }
 
@@ -1121,6 +1257,17 @@ async function removeStudent(id){
   if(isConfigured){ await deleteDoc(doc(db,"students",id)); }
   else{ students = students.filter(s=>s.id!==id); saveLocal("kladi_students", students); onDataChange(); }
 }
+/* 앱 설정(비밀번호 해시 등) — 없으면 기본값 사용 */
+async function saveSetting(key, value){
+  if(isConfigured){
+    await setDoc(doc(db,"settings","app"), {[key]: value}, {merge:true});
+  } else {
+    const cur = JSON.parse(localStorage.getItem("kladi_settings") || "{}");
+    cur[key] = value;
+    localStorage.setItem("kladi_settings", JSON.stringify(cur));
+  }
+}
+
 async function updateStudentsBulk(ids, payload){
   if(isConfigured){
     for(const id of ids){ await updateDoc(doc(db,"students",id), payload); }
@@ -1209,6 +1356,97 @@ async function restoreStudentFields(snapshot){
   }
 }
 
+/* ---------- 보기 모드 / 수정 모드 ----------
+   기본 비밀번호: hakwon2026 (앱 안에서 바꿀 수 있어요)
+   화면에서 수정 기능을 감추는 "실수 방지" 잠금입니다.
+   ------------------------------------------------- */
+const DEFAULT_PW_HASH = "dec9da81cce0339c2b06ffba4a11ceee400f4a1d6964fcb25f145089cc8a2f3b";
+let editPwHash = DEFAULT_PW_HASH;   // Firestore 에 저장된 값이 있으면 그걸로 덮어씀
+let editMode = sessionStorage.getItem("kladi_edit") === "1";
+
+async function sha256Hex(text){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b=> b.toString(16).padStart(2,"0")).join("");
+}
+
+function applyMode(){
+  document.body.classList.toggle("view-mode", !editMode);
+  const btn = document.getElementById("modeBtn");
+  btn.classList.toggle("editing", editMode);
+  document.getElementById("modeLabel").textContent = editMode ? "수정 모드" : "보기 모드";
+  btn.title = editMode ? "누르면 보기 모드로 잠급니다" : "누르면 비밀번호를 넣고 수정할 수 있어요";
+  /* 보기 모드인데 수정 전용 탭에 있으면 캘린더로 */
+  if(!editMode && document.querySelector(".tab-btn.active")?.dataset.tab === "examinput") switchTab("calendar");
+}
+
+function guardEdit(){
+  if(editMode) return true;
+  showToast("보기 모드예요. 오른쪽 위 “보기 모드”를 눌러 수정 모드로 바꿔주세요.", {type:"warn"});
+  return false;
+}
+
+document.getElementById("modeBtn").addEventListener("click", ()=>{
+  if(editMode){
+    editMode = false;
+    sessionStorage.removeItem("kladi_edit");
+    applyMode();
+    if(typeof renderStudents === "function") renderStudents();
+    showToast("보기 모드로 잠갔어요.", {type:"ok"});
+    return;
+  }
+  document.getElementById("pwInput").value = "";
+  document.getElementById("pwNote").textContent = "";
+  document.getElementById("pwModal").classList.add("active");
+  setTimeout(()=> document.getElementById("pwInput").focus(), 60);
+});
+
+const closePw = ()=> document.getElementById("pwModal").classList.remove("active");
+document.getElementById("closePwModal").addEventListener("click", closePw);
+document.getElementById("pwModal").addEventListener("click", (e)=>{ if(e.target.id==="pwModal") closePw(); });
+
+async function trySubmitPw(){
+  const note = document.getElementById("pwNote");
+  const val = document.getElementById("pwInput").value;
+  if(!val){ note.textContent = "비밀번호를 입력해주세요."; return; }
+  const h = await sha256Hex(val);
+  if(h !== editPwHash){
+    note.textContent = "비밀번호가 맞지 않아요.";
+    document.getElementById("pwInput").select();
+    return;
+  }
+  editMode = true;
+  sessionStorage.setItem("kladi_edit", "1");
+  closePw();
+  applyMode();
+  renderStudents();
+  showToast("수정 모드로 바꿨어요. 브라우저를 닫으면 다시 잠깁니다.", {type:"ok"});
+}
+document.getElementById("pwSubmit").addEventListener("click", trySubmitPw);
+document.getElementById("pwInput").addEventListener("keydown", (e)=>{ if(e.key==="Enter") trySubmitPw(); });
+
+/* 비밀번호 바꾸기 */
+const closePwChange = ()=> document.getElementById("pwChangeModal").classList.remove("active");
+document.getElementById("pwChangeBtn").addEventListener("click", ()=>{
+  document.getElementById("pwNew1").value = "";
+  document.getElementById("pwNew2").value = "";
+  document.getElementById("pwChangeModal").classList.add("active");
+});
+document.getElementById("closePwChangeModal").addEventListener("click", closePwChange);
+document.getElementById("pwChangeModal").addEventListener("click", (e)=>{ if(e.target.id==="pwChangeModal") closePwChange(); });
+document.getElementById("pwChangeSubmit").addEventListener("click", async ()=>{
+  const a = document.getElementById("pwNew1").value;
+  const b2 = document.getElementById("pwNew2").value;
+  if(a.length < 4){ showToast("4자 이상으로 정해주세요.", {type:"warn"}); return; }
+  if(a !== b2){ showToast("두 번 입력한 값이 달라요.", {type:"warn"}); return; }
+  const h = await sha256Hex(a);
+  await saveSetting("editPasswordHash", h);
+  editPwHash = h;
+  closePwChange();
+  showToast("비밀번호를 바꿨어요.", {type:"ok"});
+});
+
+applyMode();
+
 /* ---------- 탭 전환 ---------- */
 function switchTab(tabName){
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active", b.dataset.tab===tabName));
@@ -1261,11 +1499,23 @@ function fillSelect(id, values, placeholder){
 /* ---------- 학생 관리 ---------- */
 let showIncompleteOnly = false;   // 학기중 반 미배정만 보기
 let showSameNameOnly = false;    // 이름이 겹치는 학생만 보기
+let stuStatusOn = new Set(["재원","휴원"]);   // 기본은 퇴원생 숨김
+let stuView = (window.innerWidth <= 820) ? "card" : "table";   // 좁은 화면은 카드로 시작
+document.querySelectorAll("#stuViewToggle button").forEach(b=> b.addEventListener("click", ()=>{
+  stuView = b.dataset.view; renderStudents();
+}));
 let editingStudentId = null;
 
 /* ---------- 색인 (초성 / 학교 · 담임 · 반) ---------- */
 const CHO_ALL = ["ㄱ","ㄴ","ㄷ","ㄹ","ㅁ","ㅂ","ㅅ","ㅇ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
 const CHO_TBL = ["ㄱ","ㄱ","ㄴ","ㄷ","ㄷ","ㄹ","ㅁ","ㅂ","ㅂ","ㅅ","ㅅ","ㅇ","ㅈ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+/* 이름 전체를 초성 문자열로 (김지민 → ㄱㅈㅁ) */
+function nameChosung(name){
+  return (name||"").split("").map(ch=>{
+    const c = ch.charCodeAt(0) - 0xAC00;
+    return (c>=0 && c<=11171) ? CHO_TBL[Math.floor(c/588)] : ch;
+  }).join("");
+}
 function chosungOf(name){
   const c = (name||"").charCodeAt(0) - 0xAC00;
   if(isNaN(c) || c < 0 || c > 11171) return "";
@@ -1282,6 +1532,7 @@ let lastStuRow = null;
 function filteredStudents(){
   const searchTerm = document.getElementById("studentSearch").value.trim().toLowerCase();
   return students.filter(s=>{
+    if(!stuStatusOn.has(statusOf(s))) return false;
     if(stuF.cho && chosungOf(s.name)!==stuF.cho) return false;
     if(stuF.school && s.school!==stuF.school) return false;
     if(stuF.grade && s.grade!==stuF.grade) return false;
@@ -1292,13 +1543,20 @@ function filteredStudents(){
     if(showSameNameOnly && (sameNameCounts()[(s.name||"").trim()]||0) < 2) return false;
     if(searchTerm){
       const hay = `${s.name||""} ${s.school||""} ${s.teacher||""} ${s.studentNumber||""}`.toLowerCase();
-      if(!hay.includes(searchTerm)) return false;
+      /* ㄱㅈㅁ 처럼 초성만 쳐도 이름이 찾아지도록 */
+      const isChosungQuery = /^[ㄱ-ㅎ]+$/.test(searchTerm);
+      const hit = isChosungQuery
+        ? (nameChosung(s.name).startsWith(searchTerm) ||
+           (searchTerm.length >= 2 && nameChosung(s.teacher).startsWith(searchTerm)))
+        : hay.includes(searchTerm);
+      if(!hit) return false;
     }
     return true;
   });
 }
 function stuHasFilter(){
-  return !!(stuF.cho || stuF.school || stuF.grade || stuF.teacher!==null ||
+  const statusChanged = !(stuStatusOn.size===2 && stuStatusOn.has("재원") && stuStatusOn.has("휴원"));
+  return !!(statusChanged || stuF.cho || stuF.school || stuF.grade || stuF.teacher!==null ||
     stuF.regularClass!==null || stuF.examClass!==null || showIncompleteOnly || showSameNameOnly ||
     document.getElementById("studentSearch").value.trim());
 }
@@ -1312,6 +1570,24 @@ function renderChoBar(){
   document.querySelectorAll("#stuChoBar .cho").forEach(b=> b.addEventListener("click", ()=>{
     if(b.disabled) return;
     stuF.cho = b.dataset.c; renderStudents();
+  }));
+}
+
+function renderStatusFilters(){
+  const counts = {};
+  STATUS_LIST.forEach(st=> counts[st]=0);
+  students.forEach(s=> counts[statusOf(s)]++);
+  document.getElementById("stuStatusFilters").innerHTML =
+    `<span class="fl">재원 상태</span>` +
+    STATUS_LIST.map(st=>`<button class="fbtn ${stuStatusOn.has(st)?"active":""}" data-st="${st}">${st} ${counts[st]}</button>`).join("") +
+    `<span style="font-size:11px; color:#c9c2ac; margin-left:4px;">눌러서 켜고 끄기</span>`;
+  document.querySelectorAll("#stuStatusFilters .fbtn").forEach(b=> b.addEventListener("click", ()=>{
+    const st = b.dataset.st;
+    if(stuStatusOn.has(st)){
+      if(stuStatusOn.size===1){ showToast("최소 하나는 켜져 있어야 해요.", {type:"warn"}); return; }
+      stuStatusOn.delete(st);
+    } else stuStatusOn.add(st);
+    renderStudents();
   }));
 }
 
@@ -1373,6 +1649,8 @@ function renderCrumbs(){
   if(stuF.examClass!==null) items.push({label: stuF.examClass? `시험대비 ${stuF.examClass}` : "시험대비 미배정", k:"examClass"});
   if(showIncompleteOnly) items.push({label:"학기중 반 미배정", k:"incomplete"});
   if(showSameNameOnly) items.push({label:"동명이인만", k:"samename"});
+  const stDefault = stuStatusOn.size===2 && stuStatusOn.has("재원") && stuStatusOn.has("휴원");
+  if(!stDefault) items.push({label:`상태 ${[...stuStatusOn].join("·")}`, k:"status"});
   if(searchTerm) items.push({label:`검색 "${searchTerm}"`, k:"query"});
 
   document.getElementById("stuCrumbs").innerHTML = items.length===0
@@ -1385,6 +1663,7 @@ function renderCrumbs(){
     else if(k==="grade") stuF.grade="";
     else if(k==="incomplete") showIncompleteOnly=false;
     else if(k==="samename") showSameNameOnly=false;
+    else if(k==="status") stuStatusOn = new Set(["재원","휴원"]);
     else if(k==="query") document.getElementById("studentSearch").value="";
     else stuF[k]=null;
     renderStudents();
@@ -1411,7 +1690,7 @@ function renderStudents(){
   dupBadge.textContent = `동명이인 ${dupPeople}명`;
   dupBadge.classList.toggle("active", showSameNameOnly);
 
-  renderChoBar(); renderGradeFilters(); renderIdxPanel(); renderCrumbs();
+  renderChoBar(); renderStatusFilters(); renderGradeFilters(); renderIdxPanel(); renderCrumbs();
 
   const list = filteredStudents();
   document.getElementById("studentCountText").textContent =
@@ -1429,7 +1708,7 @@ function renderStudents(){
       if(s.id === editingStudentId){
         return `
           <tr class="editing">
-            <td class="chk"></td>
+            <td class="chk edit-only"></td>
             <td><input type="text" class="edit-field" data-field="studentNumber" value="${escapeHtml(s.studentNumber||"")}" style="width:78px;"></td>
             <td><input type="text" class="edit-field" data-field="name" value="${escapeHtml(s.name||"")}" style="width:78px;"></td>
             <td><input type="text" class="edit-field" data-field="school" value="${escapeHtml(s.school||"")}" list="schoolList" style="width:100px;"></td>
@@ -1437,6 +1716,9 @@ function renderStudents(){
             <td><input type="text" class="edit-field" data-field="teacher" value="${escapeHtml(s.teacher||"")}" list="teacherList" style="width:74px;"></td>
             <td><input type="text" class="edit-field" data-field="regularClass" value="${escapeHtml(s.regularClass||"")}" list="regularClassList" style="width:88px;"></td>
             <td><input type="text" class="edit-field" data-field="examClass" value="${escapeHtml(s.examClass||"")}" list="examClassList" style="width:88px;"></td>
+            <td><select class="edit-field" data-field="status" style="width:74px;">${
+              STATUS_LIST.map(st=>`<option value="${st}" ${statusOf(s)===st?"selected":""}>${st}</option>`).join("")
+            }</select></td>
             <td class="act">
               <button class="icon-btn save-edit" data-id="${s.id}">저장</button>
               <button class="icon-btn cancel-edit" data-id="${s.id}">취소</button>
@@ -1445,8 +1727,8 @@ function renderStudents(){
       }
       const sel = selectedStudents.has(s.id);
       return `
-      <tr class="${sel?"sel":""}" data-ri="${i}" data-id="${s.id}">
-        <td class="chk"><input type="checkbox" data-id="${s.id}" ${sel?"checked":""}></td>
+      <tr class="${sel?"sel":""} ${statusOf(s)==="퇴원"?"left":""}" data-ri="${i}" data-id="${s.id}">
+        <td class="chk edit-only"><input type="checkbox" data-id="${s.id}" ${sel?"checked":""}></td>
         <td>${s.studentNumber? escapeHtml(s.studentNumber) : "—"}</td>
         <td class="name-cell"><span class="stu-link" data-student="${s.id}">${escapeHtml(s.name)}</span>${
           (nameCounts[(s.name||"").trim()]||0) > 1
@@ -1459,13 +1741,54 @@ function renderStudents(){
               : `<span class="tag none clickable" data-jump="teacher" data-v="">미지정</span>`}</td>
         <td><span class="clickable" data-jump="regularClass" data-v="${escapeHtml(s.regularClass||"")}">${clsTag(s.regularClass)}</span></td>
         <td><span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span></td>
-        <td class="act">
+        <td><span class="tag st-${statusOf(s)}">${statusOf(s)}</span></td>
+        <td class="act edit-only">
           <button class="icon-btn edit-btn" data-id="${s.id}">수정</button>
           <button class="icon-btn del" data-id="${s.id}">제거</button>
         </td>
       </tr>`;
     }).join("");
   }
+
+  /* 카드 목록 (좁은 화면용) */
+  const cardBox = document.getElementById("studentCards");
+  document.querySelectorAll("#stuViewToggle button").forEach(b=> b.classList.toggle("active", b.dataset.view===stuView));
+  document.getElementById("studentTableWrap").style.display = stuView==="table" ? "" : "none";
+  cardBox.style.display = stuView==="card" ? "flex" : "none";
+
+  if(stuView==="card"){
+    cardBox.innerHTML = list.length===0 ? "" : list.map((s,i)=>{
+      const sel = selectedStudents.has(s.id);
+      const st = statusOf(s);
+      return `<div class="stu-card ${sel?"sel":""} ${st==="퇴원"?"left":""}" data-ri="${i}" data-id="${s.id}">
+        <div class="sc-top">
+          <input type="checkbox" class="edit-only" data-id="${s.id}" ${sel?"checked":""}>
+          <span class="sc-name" data-student="${s.id}">${escapeHtml(s.name)}</span>
+          ${(nameCounts[(s.name||"").trim()]||0) > 1 ? `<span class="tag dup">동명 ${nameCounts[(s.name||"").trim()]}</span>` : ""}
+          <span class="tag st-${st}">${st}</span>
+          ${s.studentNumber ? `<span class="sc-num">${escapeHtml(s.studentNumber)}</span>` : ""}
+        </div>
+        <div class="sc-tags">
+          ${s.school? `<span class="tag school clickable" data-jump="school" data-v="${escapeHtml(s.school)}">${escapeHtml(shortSchool(s.school))}</span>`:""}
+          ${s.grade? `<span class="tag grade clickable" data-jump="grade" data-v="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:""}
+          ${s.teacher
+            ? `<span class="tag teacher clickable" data-jump="teacher" data-v="${escapeHtml(s.teacher)}">${escapeHtml(s.teacher)}T</span>`
+            : `<span class="tag none clickable" data-jump="teacher" data-v="">담임 미지정</span>`}
+          <span class="clickable" data-jump="regularClass" data-v="${escapeHtml(s.regularClass||"")}">${clsTag(s.regularClass)}</span>
+          <span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span>
+        </div>
+        <div class="sc-actions edit-only">
+          <button class="icon-btn edit-btn" data-id="${s.id}">수정</button>
+          <button class="icon-btn del" data-id="${s.id}">제거</button>
+        </div>
+      </div>`;
+    }).join("");
+  } else {
+    cardBox.innerHTML = "";
+  }
+
+  /* 표·카드 공통 이벤트 대상 */
+  const scope = stuView==="card" ? cardBox : tbody;
 
   /* 전체선택 체크박스 상태 */
   const chkAll = document.getElementById("stuChkAll");
@@ -1484,12 +1807,12 @@ function renderStudents(){
   } else sa.classList.remove("show");
 
   /* 체크박스 (Shift + 클릭 = 범위 선택) */
-  tbody.querySelectorAll('td.chk input[type=checkbox]').forEach(cb=>{
+  scope.querySelectorAll('input[type=checkbox]').forEach(cb=>{
     cb.addEventListener("click", (ev)=>{
-      const ri = Number(cb.closest("tr").dataset.ri);
+      const ri = Number(cb.closest("[data-ri]").dataset.ri);
       if(ev.shiftKey && lastStuRow!==null){
         const [a,b] = [Math.min(lastStuRow,ri), Math.max(lastStuRow,ri)];
-        tbody.querySelectorAll("tr[data-ri]").forEach(r=>{
+        scope.querySelectorAll("[data-ri]").forEach(r=>{
           const i = Number(r.dataset.ri);
           if(i>=a && i<=b) selectedStudents.add(r.dataset.id);
         });
@@ -1502,8 +1825,11 @@ function renderStudents(){
     });
   });
 
-  tbody.querySelectorAll(".edit-btn").forEach(b=> b.addEventListener("click", ()=>{
-    editingStudentId = b.dataset.id; renderStudents();
+  scope.querySelectorAll(".edit-btn").forEach(b=> b.addEventListener("click", ()=>{
+    if(!guardEdit()) return;
+    editingStudentId = b.dataset.id;
+    if(stuView==="card") stuView = "table";   // 편집은 표에서
+    renderStudents();
   }));
   tbody.querySelectorAll(".cancel-edit").forEach(b=> b.addEventListener("click", ()=>{
     editingStudentId = null; renderStudents();
@@ -1515,12 +1841,14 @@ function renderStudents(){
       studentNumber: get("studentNumber"), name: get("name"), school: get("school"),
       grade: get("grade"), teacher: get("teacher"),
       regularClass: get("regularClass"), examClass: get("examClass"),
+      status: get("status"),
     };
     if(!payload.name){ alert("이름은 비워둘 수 없어요."); return; }
     editingStudentId = null;          // 먼저 편집 모드를 끄고 저장 (즉시 다시 그려도 편집칸이 남지 않도록)
     updateStudentDoc(b.dataset.id, payload).then(renderStudents);
   }));
-  tbody.querySelectorAll(".icon-btn.del").forEach(b=> b.addEventListener("click", async ()=>{
+  scope.querySelectorAll(".icon-btn.del").forEach(b=> b.addEventListener("click", async ()=>{
+    if(!guardEdit()) return;
     const target = students.find(x=>x.id===b.dataset.id);
     if(!target || !confirm(`${target.name} 학생을 삭제할까요?`)) return;
     const backup = {...target};
@@ -1535,13 +1863,13 @@ function renderStudents(){
   }));
 
   /* 이름을 누르면 학생 상세 창 */
-  tbody.querySelectorAll(".stu-link").forEach(el=> el.addEventListener("click", (ev)=>{
+  scope.querySelectorAll(".stu-link, .sc-name").forEach(el=> el.addEventListener("click", (ev)=>{
     ev.stopPropagation();
     openStudentModal(el.dataset.student);
   }));
 
   /* 표 안의 알약을 누르면 그 조건으로 걸림 */
-  tbody.querySelectorAll("[data-jump]").forEach(el=> el.addEventListener("click", ()=>{
+  scope.querySelectorAll("[data-jump]").forEach(el=> el.addEventListener("click", ()=>{
     const k = el.dataset.jump, v = el.dataset.v;
     if(k==="school"){ stuF.school = v; stuIdxTab = "school"; }
     else if(k==="grade"){ stuF.grade = v; }
@@ -1560,6 +1888,11 @@ function renderStudents(){
 function renderBulkValueInput(){
   const field = document.getElementById("stuBulkField").value;
   const wrap = document.getElementById("stuBulkValueWrap");
+  if(field==="status"){
+    if(wrap.querySelector("select")) return;
+    wrap.innerHTML = `<select id="stuBulkValue">${STATUS_LIST.map(st=>`<option value="${st}">${st}</option>`).join("")}</select>`;
+    return;
+  }
   const listId = field==="teacher" ? "teacherList"
     : field==="school" ? "schoolList"
     : field==="grade" ? "gradeList"
@@ -1577,6 +1910,7 @@ document.getElementById("stuBulkField").addEventListener("change", ()=>{
   renderBulkValueInput();
 });
 document.getElementById("stuBulkApply").addEventListener("click", async ()=>{
+  if(!guardEdit()) return;
   const field = document.getElementById("stuBulkField").value;
   const label = document.getElementById("stuBulkField").selectedOptions[0].textContent;
   const value = document.getElementById("stuBulkValue").value.trim();
@@ -1608,6 +1942,7 @@ document.getElementById("stuBulkClear").addEventListener("click", ()=>{
   renderStudents();
 });
 document.getElementById("stuBulkDelete").addEventListener("click", async ()=>{
+  if(!guardEdit()) return;
   const ids = [...selectedStudents];
   if(ids.length===0) return;
   if(!confirm(`선택한 ${ids.length}명을 삭제할까요?\n삭제 후 잠시 동안 "되돌리기"로 복구할 수 있어요.`)) return;
@@ -1652,9 +1987,11 @@ document.getElementById("clearFilterBtn").addEventListener("click", ()=>{
   document.getElementById("studentSearch").value = "";
   showIncompleteOnly = false;
   showSameNameOnly = false;
+  stuStatusOn = new Set(["재원","휴원"]);
   renderStudents();
 });
 document.getElementById("addStudentBtn").addEventListener("click", async ()=>{
+  if(!guardEdit()) return;
   const studentNumber = document.getElementById("stuNumber").value.trim();
   const name = document.getElementById("stuName").value.trim();
   const school = document.getElementById("stuSchool").value.trim();
@@ -1663,7 +2000,7 @@ document.getElementById("addStudentBtn").addEventListener("click", async ()=>{
   const regularClass = document.getElementById("stuRegularClass").value.trim();
   const examClass = document.getElementById("stuExamClass").value.trim();
   if(!name){ alert("이름을 입력해주세요."); return; }
-  await addStudent({studentNumber, name, school, grade, teacher, regularClass, examClass});
+  await addStudent({studentNumber, name, school, grade, teacher, regularClass, examClass, status:"재원"});
   ["stuNumber","stuName","stuSchool","stuGrade","stuTeacher","stuRegularClass","stuExamClass"]
     .forEach(id=> document.getElementById(id).value="");
 });
@@ -1676,10 +2013,12 @@ document.getElementById("excelDownloadBtn").addEventListener("click", ()=>{
   const rows = filteredStudents().map(s=>({
     "학번": s.studentNumber||"", "이름": s.name||"", "학교": s.school||"", "학년": s.grade||"",
     "담임": s.teacher||"", "학기중 반": s.regularClass||"", "시험대비 반": s.examClass||"",
+    "상태": statusOf(s),
   }));
   exportRows(rows, "학생명단", "학생명단");
 });
 document.getElementById("excelFileInput").addEventListener("change", (e)=>{
+  if(!guardEdit()){ e.target.value=""; return; }
   const file = e.target.files[0];
   if(!file) return;
   const statusEl = document.getElementById("excelUploadStatus");
@@ -1714,7 +2053,9 @@ document.getElementById("excelFileInput").addEventListener("change", (e)=>{
         const classDayGroup = (rawGroup==="월수금" || rawGroup==="화목토") ? rawGroup : "";
         const regularClass = pick(row, ["학기중 반","학기중반","반","정규반","학기반"]);
         const examClass = pick(row, ["시험대비 반","시험대비반","시험반","대비반"]);
-        parsed.push({studentNumber, name, school, grade, teacher, classDayGroup, regularClass, examClass});
+        const rawStatus = pick(row, ["상태","재원상태","재원 상태"]);
+        const status = STATUS_LIST.includes(rawStatus) ? rawStatus : "재원";
+        parsed.push({studentNumber, name, school, grade, teacher, classDayGroup, regularClass, examClass, status});
       });
 
       if(parsed.length===0){
@@ -1787,6 +2128,7 @@ function examCardHtml(school, grade, examName){
         <div><label class="small">시험 시작</label><input type="date" data-field="startDate" value="${existing?.startDate||""}"></div>
         <div><label class="small">시험 종료</label><input type="date" data-field="endDate" value="${existing?.endDate||""}"></div>
       </div>
+      <button type="button" class="copy-prev-btn spread-date-btn">이 날짜를 다른 학년에도</button>
 
       <div class="mini-row">
         <div>
@@ -1893,6 +2235,7 @@ async function saveExamCard(cardEl, extra={}){
 document.getElementById("examCardsGrid").addEventListener("click", (e)=>{
   const card = e.target.closest(".exam-card");
   if(!card) return;
+  if(!editMode) return;
   if(e.target.classList.contains("save-exam-btn")){
     const title = `${card.dataset.school} ${card.dataset.grade} ${card.dataset.examName}`;
     saveExamCard(card).then(()=>{
@@ -1944,6 +2287,7 @@ function updateDirtyCount(){
 
 /* 이 학교 전체 저장 — 저장 안 된 카드만 (없으면 전체) */
 document.getElementById("saveAllExamBtn").addEventListener("click", async (ev)=>{
+  if(!guardEdit()) return;
   const btn = ev.currentTarget;
   const grid = document.getElementById("examCardsGrid");
   let cards = [...grid.querySelectorAll(".exam-card.dirty")];
@@ -1963,8 +2307,34 @@ document.getElementById("saveAllExamBtn").addEventListener("click", async (ev)=>
 });
 
 /* 같은 학교·학년의 지난 시험에서 범위·안내를 가져오기 */
+/* 이 카드의 시험 날짜를 같은 학교의 다른 학년 카드에도 채워넣기 */
+document.getElementById("examCardsGrid").addEventListener("click", (e)=>{
+  if(!e.target.classList.contains("spread-date-btn")) return;
+  const card = e.target.closest(".exam-card");
+  const sd = card.querySelector('[data-field="startDate"]').value;
+  const ed = card.querySelector('[data-field="endDate"]').value;
+  if(!sd || !ed){ showToast("시험 시작·종료 날짜를 먼저 입력해주세요.", {type:"warn"}); return; }
+
+  const {grade, examName} = card.dataset;
+  const targets = [...document.querySelectorAll("#examCardsGrid .exam-card")]
+    .filter(c=> c!==card && c.dataset.examName===examName);
+  if(targets.length===0){ showToast("적용할 다른 학년 카드가 없어요.", {type:"warn"}); return; }
+
+  const names = targets.map(c=> c.dataset.grade).join(", ");
+  if(!confirm(`${sd} ~ ${ed} 를 ${examName} 의 다른 학년(${names})에도 넣을까요?\n넣기만 하고 저장은 따로 눌러야 합니다.`)) return;
+
+  targets.forEach(c=>{
+    c.querySelector('[data-field="startDate"]').value = sd;
+    c.querySelector('[data-field="endDate"]').value = ed;
+    c.classList.add("dirty");
+  });
+  updateDirtyCount();
+  showToast(`${targets.length}개 학년에 날짜를 넣었어요. 확인 후 "이 학교 전체 저장"을 눌러주세요.`, {type:"warn", duration:7000});
+});
+
 document.getElementById("examCardsGrid").addEventListener("click", (e)=>{
   if(!e.target.classList.contains("copy-prev-btn")) return;
+  if(e.target.classList.contains("spread-date-btn")) return;
   const card = e.target.closest(".exam-card");
   const {school, grade, examName} = card.dataset;
   const prev = exams
@@ -1998,7 +2368,8 @@ function weekdayShort(dateObj){ return ["일","월","화","수","목","금","토
 function fmtWithDow(key){ const d = toDate(key); return `${d.getMonth()+1}/${d.getDate()}(${weekdayShort(d)})`; }
 
 function studentsForExam(exam){
-  return students.filter(s=>s.school===exam.school && s.grade===exam.grade);
+  /* 퇴원한 학생은 시험 대상에서 빼요 */
+  return students.filter(s=> s.school===exam.school && s.grade===exam.grade && statusOf(s)!=="퇴원");
 }
 /* 화면 필터(학생 없는 시험 숨기기 / 선생님별 보기)를 적용한 전체 시험 목록 */
 function visibleExams(){
@@ -2787,6 +3158,100 @@ function jumpToExamInput(exam){
   }
 }
 
+/* ---------- 학년 올리기 ---------- */
+function nextGradeOf(g){
+  const i = GRADE_ORDER.indexOf(g);
+  if(i === -1) return null;
+  if(i === GRADE_ORDER.length - 1) return "졸업";
+  return GRADE_ORDER[i+1];
+}
+
+function renderPromote(){
+  const target = students.filter(s=> statusOf(s) !== "퇴원");
+  const byGrade = {};
+  target.forEach(s=>{ const g = s.grade || ""; byGrade[g] = (byGrade[g]||0) + 1; });
+
+  const rows = sortGrades(Object.keys(byGrade).filter(Boolean)).map(g=>{
+    const to = nextGradeOf(g);
+    return {from:g, to, n:byGrade[g]};
+  });
+  const unknown = Object.keys(byGrade).filter(g=> !g || GRADE_ORDER.indexOf(g)===-1);
+  const unknownN = unknown.reduce((a,g)=> a + byGrade[g], 0);
+
+  const body = document.getElementById("promoteBody");
+  body.innerHTML =
+    (rows.length===0 ? `<div class="empty-state">올릴 학생이 없어요.</div>` :
+      rows.map(r=> `<div class="promote-row ${r.to==="졸업"?"grad":""}">
+        <span><span class="from">${escapeHtml(r.from)}</span> <span class="arrow">→</span>
+          <span class="to">${r.to==="졸업" ? "졸업 (퇴원 처리)" : escapeHtml(r.to)}</span></span>
+        <span class="n">${r.n}명</span>
+      </div>`).join("")) +
+    (unknownN ? `<div class="clean-note" style="margin-top:8px;">학년이 비었거나 목록에 없는 학생 ${unknownN}명은 그대로 둡니다.</div>` : "");
+}
+
+document.getElementById("promoteBtn").addEventListener("click", ()=>{
+  renderPromote();
+  document.getElementById("promoteModal").classList.add("active");
+});
+const closePromote = ()=> document.getElementById("promoteModal").classList.remove("active");
+document.getElementById("closePromoteModal").addEventListener("click", closePromote);
+document.getElementById("promoteCancel").addEventListener("click", closePromote);
+document.getElementById("promoteModal").addEventListener("click", (e)=>{
+  if(e.target.id==="promoteModal") closePromote();
+});
+
+document.getElementById("promoteRun").addEventListener("click", async (ev)=>{
+  if(!guardEdit()) return;
+  const graduateToLeft = document.getElementById("promoteGraduate").checked;
+  const target = students.filter(s=> statusOf(s)!=="퇴원" && GRADE_ORDER.indexOf(s.grade) !== -1);
+  if(target.length===0){ showToast("올릴 학생이 없어요.", {type:"warn"}); return; }
+
+  const plan = [];       // {id, payload}
+  const before = [];     // 되돌리기용
+  let gradCount = 0;
+  target.forEach(s=>{
+    const to = nextGradeOf(s.grade);
+    if(to === "졸업"){
+      if(!graduateToLeft) return;
+      gradCount++;
+      plan.push({id:s.id, payload:{status:"퇴원"}});
+      before.push({id:s.id, payload:{status: statusOf(s)}});
+    } else {
+      plan.push({id:s.id, payload:{grade: to}});
+      before.push({id:s.id, payload:{grade: s.grade}});
+    }
+  });
+  if(plan.length===0){ showToast("바뀔 학생이 없어요.", {type:"warn"}); return; }
+
+  if(!confirm(`학생 ${plan.length}명의 학년을 한 칸씩 올립니다.` +
+    (gradCount ? `\n(마지막 학년 ${gradCount}명은 퇴원 처리)` : "") +
+    `\n\n되돌리기가 가능하지만, 실행 전 "전체 백업"을 한 번 받아두시길 권합니다. 계속할까요?`)) return;
+
+  const btn = ev.currentTarget;
+  btn.disabled = true; btn.textContent = "적용 중...";
+  try{
+    /* 같은 값끼리 묶어서 처리 (문서 하나씩 쓰는 것보다 코드가 단순해요) */
+    const groups = {};
+    plan.forEach(it=>{
+      const k = JSON.stringify(it.payload);
+      (groups[k] = groups[k] || []).push(it.id);
+    });
+    for(const k of Object.keys(groups)){
+      await updateStudentsBulk(groups[k], JSON.parse(k));
+    }
+    closePromote();
+    showToast(`학년을 올렸어요. (${plan.length}명${gradCount ? `, 퇴원 ${gradCount}명` : ""})`, {
+      type:"ok", actionLabel:"되돌리기", duration:12000,
+      onAction: async ()=>{
+        await restoreStudentFields(before);
+        showToast("학년 올리기를 되돌렸어요.", {type:"warn"});
+      }
+    });
+  } finally {
+    btn.disabled = false; btn.textContent = "학년 올리기 실행";
+  }
+});
+
 /* ---------- 시험 요약 복사 ---------- */
 let copySourceExams = [];
 let copyOpts = { scope:true, notice:true, makeup:true, count:false };
@@ -2958,6 +3423,7 @@ function renderCleanup(){
   }));
 
   body.querySelectorAll(".apply-school").forEach(b=> b.addEventListener("click", async ()=>{
+    if(!guardEdit()) return;
     const g = findSchoolVariants().find(x=> x.key===b.dataset.key);
     if(!g) return;
     const target = cleanupPick[g.key] || g.names[0];
@@ -3018,6 +3484,7 @@ document.getElementById("restoreBtn").addEventListener("click", ()=>
   document.getElementById("restoreFileInput").click());
 
 document.getElementById("restoreFileInput").addEventListener("change", (ev)=>{
+  if(!guardEdit()){ ev.target.value=""; return; }
   const file = ev.target.files[0];
   if(!file) return;
   const statusEl = document.getElementById("backupStatus");
@@ -3074,6 +3541,7 @@ function openStudentModal(studentId){
     `${s.school || "학교 미입력"} · ${s.grade || "학년 미입력"}` + (s.studentNumber ? ` · 학번 ${s.studentNumber}` : "");
 
   document.getElementById("stuTags").innerHTML =
+    `<span class="tag st-${statusOf(s)}">${statusOf(s)}</span>` +
     (s.teacher ? `<span class="tag teacher">${escapeHtml(s.teacher)}T</span>` : `<span class="tag none">담임 미지정</span>`) +
     (s.regularClass ? `<span class="tag cls">학기중 ${escapeHtml(s.regularClass)}</span>` : `<span class="tag none">학기중 반 미배정</span>`) +
     (s.examClass ? `<span class="tag cls">시험대비 ${escapeHtml(s.examClass)}</span>` : `<span class="tag none">시험대비 반 미배정</span>`);
@@ -3117,13 +3585,17 @@ function openStudentModal(studentId){
   document.getElementById("sqTeacher").value = s.teacher || "";
   document.getElementById("sqRegular").value = s.regularClass || "";
   document.getElementById("sqExam").value = s.examClass || "";
+  document.getElementById("sqStatus").innerHTML =
+    STATUS_LIST.map(st=>`<option value="${st}" ${statusOf(s)===st?"selected":""}>${st}</option>`).join("");
   document.getElementById("sqSave").onclick = async ()=>{
+    if(!guardEdit()) return;
     const payload = {
       teacher: document.getElementById("sqTeacher").value.trim(),
       regularClass: document.getElementById("sqRegular").value.trim(),
       examClass: document.getElementById("sqExam").value.trim(),
+      status: document.getElementById("sqStatus").value,
     };
-    const before = {teacher: s.teacher||"", regularClass: s.regularClass||"", examClass: s.examClass||""};
+    const before = {teacher: s.teacher||"", regularClass: s.regularClass||"", examClass: s.examClass||"", status: statusOf(s)};
     const changed = Object.keys(payload).some(k=> payload[k] !== before[k]);
     if(!changed){ showToast("바뀐 내용이 없어요.", {type:"warn"}); return; }
     await updateStudentDoc(studentId, payload);
@@ -3202,19 +3674,50 @@ function openDetailModal(examId, returnTo){
   document.getElementById("detailMeta").innerHTML =
     `시험기간 ${period}<span class="dot">·</span>${makeupHtml}<span class="dot">·</span>${printHtml}`;
 
-  /* 시험 범위 · 학교 안내 (없으면 경고 + 입력 화면 바로가기) */
+  /* 시험 범위 · 안내 — 창 안에서 바로 쓰고 저장 */
   const scopeBox = document.getElementById("detailScope");
-  scopeBox.innerHTML = `<div class="section-label">시험 범위 · 안내</div>` +
-    (exam.examScope
-      ? `<div class="scope-box"><div class="st">시험 범위</div><div class="sv">${escapeHtml(exam.examScope)}</div></div>`
-      : `<div class="scope-box missing"><div class="st">시험 범위</div>
-           <div class="sv">아직 입력되지 않았어요</div>
-           <button class="mini-btn" id="goFillScope">시험정보 입력에서 채우기 →</button></div>`) +
-    (exam.schoolNotice
-      ? `<div class="scope-box notice"><div class="st">학교 안내 사항</div><div class="sv">${escapeHtml(exam.schoolNotice)}</div></div>`
-      : "");
-  const fillBtn = document.getElementById("goFillScope");
-  if(fillBtn) fillBtn.addEventListener("click", ()=> jumpToExamInput(exam));
+  if(!editMode){
+    scopeBox.innerHTML = `<div class="section-label">시험 범위 · 안내</div>` +
+      (exam.examScope
+        ? `<div class="scope-box"><div class="st">시험 범위</div><div class="sv">${escapeHtml(exam.examScope)}</div></div>`
+        : `<div class="scope-box missing"><div class="st">시험 범위</div><div class="sv">아직 입력되지 않았어요</div></div>`) +
+      (exam.schoolNotice
+        ? `<div class="scope-box notice"><div class="st">학교 안내 사항</div><div class="sv">${escapeHtml(exam.schoolNotice)}</div></div>`
+        : "");
+  } else {
+  scopeBox.innerHTML = `<div class="section-label">시험 범위 · 안내</div>
+    <div class="scope-edit ${exam.examScope?"":"empty"}">
+      <span class="st">시험 범위${exam.examScope?"":" — 아직 입력되지 않았어요"}</span>
+      <textarea id="detailScopeInput" placeholder="예: 수학(상) 2단원 전체 ~ 3-1, 교과서 유인물 포함">${escapeHtml(exam.examScope||"")}</textarea>
+      <span class="st" style="margin-top:9px;">학교 안내 사항</span>
+      <textarea id="detailNoticeInput" placeholder="예: 서술형 30%, 프린트 3종 배부">${escapeHtml(exam.schoolNotice||"")}</textarea>
+      <div class="row">
+        <button class="btn small" id="detailScopeSave">저장</button>
+        <button class="mini-btn" id="goFillScope" style="margin-top:0;">시험정보 입력에서 열기 →</button>
+        <span class="hint">여기서 고친 내용은 바로 저장됩니다.</span>
+      </div>
+    </div>`;
+
+  document.getElementById("goFillScope").addEventListener("click", ()=> jumpToExamInput(exam));
+  document.getElementById("detailScopeSave").addEventListener("click", async (ev)=>{
+    const scope = document.getElementById("detailScopeInput").value.trim();
+    const notice = document.getElementById("detailNoticeInput").value.trim();
+    if(scope===(exam.examScope||"") && notice===(exam.schoolNotice||"")){
+      showToast("바뀐 내용이 없어요.", {type:"warn"}); return;
+    }
+    const before = {examScope: exam.examScope||"", schoolNotice: exam.schoolNotice||""};
+    const btn = ev.currentTarget;
+    btn.disabled = true; btn.textContent = "저장 중...";
+    await updateExamDoc(examId, {examScope: scope, schoolNotice: notice});
+    showToast("시험 범위를 저장했어요.", {
+      type:"ok", actionLabel:"되돌리기",
+      onAction: async ()=>{
+        await updateExamDoc(examId, before);
+        showToast("되돌렸어요.", {type:"warn"});
+      }
+    });
+  });
+  }
 
   document.getElementById("detailCopyBtn").onclick = ()=>
     openCopyModal([exam], `${exam.school||""} ${exam.grade||""}`.trim());
@@ -3229,7 +3732,15 @@ function openDetailModal(examId, returnTo){
   const teacherNames = Object.keys(byTeacher).sort();
   const statusMap = exam.statusMap || {};
 
+  const doneCount = relevant.filter(s=> statusMap[s.id]==="done").length;
+  const pct = relevant.length ? Math.round(doneCount/relevant.length*100) : 0;
   let bodyHtml = `<div class="section-label">담당 선생님별 학생 ${relevant.length}명</div>`;
+  if(relevant.length){
+    bodyHtml += `<div class="prog-wrap">
+      <div class="prog-bar"><span style="width:${pct}%;"></span></div>
+      <span class="prog-text ${doneCount===relevant.length?"done":""}">${doneCount} / ${relevant.length}명 입력완료</span>
+    </div>`;
+  }
   if(teacherNames.length===0){
     bodyHtml += `<div class="empty-state">이 학교·학년에 해당하는 학생이 없어요.</div>`;
   } else {
@@ -3237,7 +3748,11 @@ function openDetailModal(examId, returnTo){
       const list = byTeacher[t];
       return `
         <div class="teacher-group">
-          <div class="tname">${escapeHtml(t)}T <span class="cnt">${list.length}명</span></div>
+          <div class="tname">${escapeHtml(t)}T <span class="cnt">${list.length}명</span>
+            <button class="allbtn" data-teacher="${escapeHtml(t)}">${
+              list.every(x=> statusMap[x.id]==="done") ? "전원 해제" : "전원 완료"
+            }</button>
+          </div>
           <div class="assign-row">
             ${list.map(s=>{
               const st = statusMap[s.id]==="done" ? "done":"pending";
@@ -3258,6 +3773,18 @@ function openDetailModal(examId, returnTo){
   box.querySelectorAll(".status-tag").forEach(btn=>{
     btn.addEventListener("click", ()=> toggleAssignmentStatus(examId, btn.dataset.student));
   });
+  box.querySelectorAll(".allbtn").forEach(btn=> btn.addEventListener("click", async ()=>{
+    const list = byTeacher[btn.dataset.teacher] || [];
+    const allDone = list.every(x=> statusMap[x.id]==="done");
+    const next = {...statusMap};
+    list.forEach(x=> next[x.id] = allDone ? "pending" : "done");
+    await updateExamDoc(examId, {statusMap: next});
+    showToast(`${btn.dataset.teacher}T 학생 ${list.length}명을 ${allDone?"미입력으로 되돌렸어요":"입력완료로 바꿨어요"}.`, {
+      type: allDone ? "warn" : "ok",
+      actionLabel:"되돌리기",
+      onAction: async ()=>{ await updateExamDoc(examId, {statusMap}); }
+    });
+  }));
 
 }
 document.getElementById("closeDetailModal").addEventListener("click", ()=>{
