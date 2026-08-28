@@ -424,18 +424,27 @@
     background:#fffdf8; position:sticky; left:0; z-index:3; border-right:1.5px solid #ece7d8;
     display:flex; align-items:center; justify-content:space-between; gap:6px;}
   .tl-name .cnt{font-size:10.5px; font-weight:700; color:#a49c88;}
+  .tl-name{font-size:13px;}
   .tl-track{position:relative;}
   .tl-head .tl-name{background:#f6f3e9;}
   .tl-head .tl-track{background:#f6f3e9;}
   .tl-daycell{position:absolute; top:0; bottom:0; border-left:1px solid #f4f1e6;}
-  .tl-daycell.wk{background:#faf7ee;}
-  .tl-daycell.mstart{border-left:1.5px solid #ddd6c2;}
-  .tl-daylabel{position:absolute; top:0; font-size:9.5px; color:#a49c88; font-weight:700;
-    padding:5px 0 0 3px; white-space:nowrap;}
-  .tl-monthlabel{position:absolute; top:0; font-size:11.5px; color:#6b7368; font-weight:800; padding:3px 0 0 5px;}
+  .tl-daycell.wk{background:#f7f4ea;}
+  .tl-daycell.sun{background:#fbf1ee;}
+  .tl-daycell.wstart{border-left:1.5px solid #e2dbc7;}
+  .tl-daycell.mstart{border-left:2px solid #c9c2ac;}
+  /* 날짜 눈금 (헤더 2단: 월 / 일·요일) */
+  .tl-monthlabel{position:absolute; top:2px; font-size:12px; color:var(--ink); font-weight:800;
+    padding-left:5px; white-space:nowrap;}
+  .tl-dnum{position:absolute; top:20px; font-size:10.5px; color:#6b7368; font-weight:700;
+    text-align:center; line-height:1.15;}
+  .tl-dnum .dw{display:block; font-size:8.5px; color:#a49c88; font-weight:600;}
+  .tl-dnum.sat{color:var(--blue);} .tl-dnum.sat .dw{color:var(--blue); opacity:.75;}
+  .tl-dnum.sun{color:var(--rust);} .tl-dnum.sun .dw{color:var(--rust); opacity:.75;}
+  .tl-dnum.tday{color:#fff; background:var(--rust); border-radius:6px; font-weight:800;}
+  .tl-dnum.tday .dw{color:#fff; opacity:.85;}
   .tl-today{position:absolute; top:0; bottom:0; width:2px; background:var(--rust); z-index:4; opacity:.75;}
-  .tl-today.lbl::after{content:"오늘"; position:absolute; top:4px; left:4px; font-size:9.5px;
-    font-weight:800; color:var(--rust); white-space:nowrap;}
+  .tl-today.lbl{z-index:2; opacity:.35;}
   .bar{position:absolute; height:22px; border-radius:6px; display:flex; align-items:center;
     padding:0 7px; font-size:10.5px; font-weight:800; white-space:nowrap; overflow:hidden;
     border:1px solid var(--pd); background:var(--pb); color:var(--pt); cursor:pointer;
@@ -450,6 +459,13 @@
   .bar.c7{--pb:#e9e6dc; --pd:#d7d2c3; --pt:#5c5a4f;}
   .bar.past{opacity:.45;}
   .bar.noscope{border-style:dashed; border-width:1.5px; border-color:var(--rust);}
+
+  /* 상세 창 뒤로가기 */
+  .back-btn{display:none; border:1.5px solid #ddd6c2; background:#fff; color:#6b7368;
+    font-family:inherit; font-weight:700; font-size:12px; padding:5px 12px; border-radius:20px;
+    cursor:pointer; margin-bottom:10px;}
+  .back-btn:hover{background:#f2eee2; border-color:var(--mustard); color:#8a5a13;}
+  .back-btn.show{display:inline-block;}
 
   /* ---------- 토스트 알림 ---------- */
   .toast-wrap{position:fixed; left:50%; transform:translateX(-50%); bottom:22px; z-index:100;
@@ -916,6 +932,7 @@
   <div class="modal">
     <button class="close-x" id="closeDetailModal">×</button>
     <button class="icon-btn del" id="deleteExamBtn" style="float:right; margin-right:34px;">삭제</button>
+    <button class="back-btn" id="detailBackBtn">← 목록으로</button>
     <h3 id="detailTitle">시험 상세</h3>
     <p class="modal-meta" id="detailMeta"></p>
     <div id="detailScope"></div>
@@ -2038,7 +2055,7 @@ function renderCalListView(){
     </div>`;
   }
   box.innerHTML = html || `<div class="cl-empty">${viewYear}년 ${viewMonth+1}월에는 표시할 시험이 없어요.</div>`;
-  box.querySelectorAll(".cl-item").forEach(b=> b.addEventListener("click", ()=> openDetailModal(b.dataset.exam)));
+  box.querySelectorAll(".cl-item").forEach(b=> b.addEventListener("click", ()=> openDetailModal(b.dataset.exam, null)));
 }
 
 function renderCalendar(){
@@ -2089,7 +2106,7 @@ function renderCalendar(){
   }
   grid.innerHTML = html;
   grid.querySelectorAll(".exam-pill").forEach(p=>{
-    p.addEventListener("click", (ev)=>{ ev.stopPropagation(); openDetailModal(p.dataset.exam); });
+    p.addEventListener("click", (ev)=>{ ev.stopPropagation(); openDetailModal(p.dataset.exam, null); });
   });
   grid.querySelectorAll(".more-pill").forEach(b=>{
     b.addEventListener("click", (ev)=>{ ev.stopPropagation(); openDayModal(b.dataset.more); });
@@ -2177,8 +2194,9 @@ function openDayModal(key, keepFilters){
 
   box.querySelectorAll(".cmp-row").forEach(row=>{
     row.addEventListener("click", ()=>{
+      const backKey = currentDayKey;
       closeDayModal();
-      openDetailModal(row.dataset.exam);
+      openDetailModal(row.dataset.exam, {type:"day", key: backKey});
     });
   });
   document.getElementById("dayModal").classList.add("active");
@@ -2328,7 +2346,7 @@ function renderSummary(){
 /* ---------- 학교별 일정 타임라인 ---------- */
 let schedSeason = "";
 let schedGrade = "";
-const TL_NAME_W = 118, TL_DAY_W = 26;
+const TL_NAME_W = 124, TL_DAY_W = 30;
 
 function shiftKey(key, days){
   const d = toDate(key);
@@ -2407,16 +2425,22 @@ function renderScheduleTab(){
   const trackW = days * TL_DAY_W;
   const tk = todayKey();
 
-  /* 날짜 눈금 */
+  /* 날짜 눈금 — 모든 날짜에 일자와 요일을 표시 */
+  const DOW_KO = ["일","월","화","수","목","금","토"];
   let cells = "", labels = "";
   for(let i=0;i<days;i++){
     const k = shiftKey(from, i);
     const d = toDate(k);
     const dow = d.getDay();
     const isMstart = d.getDate()===1;
-    cells += `<div class="tl-daycell ${(dow===0||dow===6)?"wk":""} ${isMstart?"mstart":""}" style="left:${i*TL_DAY_W}px; width:${TL_DAY_W}px;"></div>`;
-    if(isMstart || i===0) labels += `<div class="tl-monthlabel" style="left:${i*TL_DAY_W}px;">${d.getMonth()+1}월</div>`;
-    else if(d.getDate()%5===0) labels += `<div class="tl-daylabel" style="left:${i*TL_DAY_W}px;">${d.getDate()}</div>`;
+    const isWstart = dow===1;                       // 월요일마다 주 구분선
+    const cls = dow===0 ? "sun" : dow===6 ? "wk" : "";
+    cells += `<div class="tl-daycell ${cls} ${isWstart?"wstart":""} ${isMstart?"mstart":""}"
+      style="left:${i*TL_DAY_W}px; width:${TL_DAY_W}px;"></div>`;
+    if(isMstart || i===0)
+      labels += `<div class="tl-monthlabel" style="left:${i*TL_DAY_W}px;">${d.getMonth()+1}월</div>`;
+    const dcls = (k===tk) ? "tday" : dow===6 ? "sat" : dow===0 ? "sun" : "";
+    labels += `<div class="tl-dnum ${dcls}" style="left:${i*TL_DAY_W}px; width:${TL_DAY_W}px;">${d.getDate()}<span class="dw">${DOW_KO[dow]}</span></div>`;
   }
   const todayLeft = dayIndex(from, tk) * TL_DAY_W;
   const inRange = todayLeft >= 0 && todayLeft <= trackW;
@@ -2425,7 +2449,7 @@ function renderScheduleTab(){
 
   let html = `<div class="tl-row tl-head" style="grid-template-columns:${TL_NAME_W}px ${trackW}px;">
       <div class="tl-name">학교 <span class="cnt">${schools.length}곳</span></div>
-      <div class="tl-track" style="height:26px;">${cells}${todayMarkLbl}${labels}</div>
+      <div class="tl-track" style="height:42px;">${cells}${todayMarkLbl}${labels}</div>
     </div>`;
 
   schools.forEach(sc=>{
@@ -2450,13 +2474,13 @@ function renderScheduleTab(){
     }).join("")).join("");
 
     html += `<div class="tl-row" style="grid-template-columns:${TL_NAME_W}px ${trackW}px;">
-      <div class="tl-name">${escapeHtml(shortSchool(sc))} <span class="cnt">${rows.length}건</span></div>
+      <div class="tl-name">${escapeHtml(shortSchool(sc))}${rows.length>1 ? ` <span class="cnt">${rows.length}건</span>` : ""}</div>
       <div class="tl-track" style="height:${h}px;">${cells}${todayMark}${bars}</div>
     </div>`;
   });
 
   tl.innerHTML = html;
-  tl.querySelectorAll(".bar").forEach(b=> b.addEventListener("click", ()=> openDetailModal(b.dataset.exam)));
+  tl.querySelectorAll(".bar").forEach(b=> b.addEventListener("click", ()=> openDetailModal(b.dataset.exam, null)));
 
   legend.innerHTML = `<span>학년 색상</span>` + grades.map(g=>{
     const c = gradeColor(g);
@@ -2693,8 +2717,9 @@ function openStudentModal(studentId){
         }).join("")
   );
   box.querySelectorAll(".stu-exam-row").forEach(r=> r.addEventListener("click", ()=>{
+    const backId = currentStudentId;
     closeStudentModal();
-    openDetailModal(r.dataset.exam);
+    openDetailModal(r.dataset.exam, {type:"student", id: backId});
   }));
 
   document.getElementById("stuModalEdit").onclick = ()=>{
@@ -2726,10 +2751,32 @@ async function toggleAssignmentStatus(examId, studentId){
   await updateExamDoc(examId, {statusMap});
 }
 
-function openDetailModal(examId){
+let detailReturnTo = null;   // {type:"day", key} | {type:"student", id} | null
+
+function openDetailModal(examId, returnTo){
   const exam = exams.find(e=>e.id===examId);
   if(!exam) return;
   currentDetailExamId = examId;
+  if(returnTo !== undefined) detailReturnTo = returnTo;
+
+  /* 목록에서 들어온 경우 뒤로가기 버튼 */
+  const backBtn = document.getElementById("detailBackBtn");
+  if(detailReturnTo){
+    backBtn.classList.add("show");
+    backBtn.textContent = detailReturnTo.type==="student" ? "← 학생 정보로" : "← 목록으로";
+    backBtn.onclick = ()=>{
+      const ret = detailReturnTo;
+      document.getElementById("detailModal").classList.remove("active");
+      currentDetailExamId = null;
+      detailReturnTo = null;
+      backBtn.classList.remove("show");
+      if(ret.type==="day") openDayModal(ret.key, true);
+      else if(ret.type==="student") openStudentModal(ret.id);
+    };
+  } else {
+    backBtn.classList.remove("show");
+    backBtn.onclick = null;
+  }
 
   document.getElementById("detailModal").classList.add("active");
   document.getElementById("detailTitle").textContent = `${exam.school||""} ${exam.grade||""} ${exam.examName||""}`.trim();
@@ -2815,10 +2862,15 @@ function openDetailModal(examId){
 }
 document.getElementById("closeDetailModal").addEventListener("click", ()=>{
   document.getElementById("detailModal").classList.remove("active");
-  currentDetailExamId = null;
+  currentDetailExamId = null; detailReturnTo = null;
+  document.getElementById("detailBackBtn").classList.remove("show");
 });
 document.getElementById("detailModal").addEventListener("click", (e)=>{
-  if(e.target.id==="detailModal"){ e.currentTarget.classList.remove("active"); currentDetailExamId = null; }
+  if(e.target.id==="detailModal"){
+    e.currentTarget.classList.remove("active");
+    currentDetailExamId = null; detailReturnTo = null;
+    document.getElementById("detailBackBtn").classList.remove("show");
+  }
 });
 
 initFirebase();
