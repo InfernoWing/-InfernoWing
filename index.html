@@ -768,7 +768,6 @@
         <h2 class="panel-title">캘린더</h2>
         <p class="panel-desc">시험 기간 동안 매일 알약이 표시돼요. 알약을 누르면 상세 정보가 열립니다.</p>
       </div>
-      <button class="btn edit-only" id="goToExamTab">+ 시험정보 입력으로 이동</button>
     </div>
 
     <div class="summary-row" id="summaryRow"></div>
@@ -1455,7 +1454,6 @@ function switchTab(tabName){
 document.querySelectorAll(".tab-btn").forEach(btn=>{
   btn.addEventListener("click", ()=> switchTab(btn.dataset.tab));
 });
-document.getElementById("goToExamTab").addEventListener("click", ()=> switchTab("examinput"));
 
 function escapeHtml(str){
   const div = document.createElement("div");
