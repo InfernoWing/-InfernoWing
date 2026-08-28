@@ -145,7 +145,7 @@
   /* ---------- Calendar ---------- */
   .cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:10px;}
   .cal-head .month-label{font-family:'Gowun Batang',serif; font-size:19px; min-width:112px; text-align:center; white-space:nowrap;}
-  .cal-nav{display:flex; gap:6px; align-items:center; flex:0 0 auto; position:relative;}
+  .cal-nav{display:flex; gap:6px; align-items:center; flex:0 1 auto; position:relative; flex-wrap:wrap; justify-content:flex-end; max-width:100%;}
   .cal-nav button.arrow{ background:#f2eee2; border:none; width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:15px; font-weight:700; }
   .cal-nav button.arrow:hover{background:#e5dfcd;}
   .cal-nav button.today-btn{
@@ -199,6 +199,13 @@
   .seg .seg-btn .n{background:var(--pill-count); color:#fff; border-radius:999px; font-size:9.5px; padding:1px 5px; margin-left:4px;}
   .seg .seg-btn.active .n{background:var(--mustard); color:#3b2a08;}
   .hint-line{font-size:12px; color:#a49c88; margin:0 0 14px;}
+  @media (max-width:520px){
+    .cal-head{flex-direction:column; align-items:stretch;}
+    .cal-nav{justify-content:space-between;}
+    .cal-head .month-label{min-width:0; flex:1 1 auto;}
+    .month-picker{left:0; right:auto;}
+    .summary-row{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+  }
 
   /* 좁은 화면에서 셀이 찌그러지지 않도록 가로 스크롤 */
   .cal-scroll{ overflow-x:auto; padding-bottom:6px; }
@@ -218,18 +225,38 @@
   .cal-cell.sun .num{color:var(--rust);}
   .cal-cell .pills{display:flex; flex-direction:column; gap:3px; margin-top:3px;}
 
+  /* 학년별 알약 색상 */
   .exam-pill{
+    --pb:#f7e6b8; --pd:#eed69a; --pt:#7a5518; --pc:#e2871f;
     display:flex; align-items:center; justify-content:space-between; gap:5px;
-    background:var(--pill-bg); border:1px solid var(--pill-border); color:var(--pill-text);
+    background:var(--pb); border:1px solid var(--pd); color:var(--pt);
     border-radius:7px; padding:3px 7px; font-size:11px; font-weight:700;
     cursor:pointer; overflow:hidden;
   }
-  .exam-pill:hover{filter:brightness(0.97); border-color:var(--mustard);}
+  .exam-pill.c1{--pb:#f7e6b8; --pd:#eed69a; --pt:#7a5518; --pc:#e2871f;}
+  .exam-pill.c2{--pb:#dbe7f1; --pd:#c3d6e6; --pt:#2f5674; --pc:#3f6b8f;}
+  .exam-pill.c3{--pb:#e7dff3; --pd:#d3c7e8; --pt:#54397d; --pc:#7a5ca8;}
+  .exam-pill.c4{--pb:#dcefe3; --pd:#c2e0d0; --pt:#26614a; --pc:#3d8361;}
+  .exam-pill.c5{--pb:#f8dfd7; --pd:#eec8bc; --pt:#8a3f27; --pc:#c96a4e;}
+  .exam-pill.c6{--pb:#d6ebeb; --pd:#bcdcdc; --pt:#205e5e; --pc:#2e8080;}
+  .exam-pill.c7{--pb:#e9e6dc; --pd:#d7d2c3; --pt:#5c5a4f; --pc:#8a8375;}
+  .exam-pill:hover{filter:brightness(0.97); border-color:var(--pc);}
   .exam-pill .label{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .exam-pill .count{
-    background:var(--pill-count); color:#fff; border-radius:999px; min-width:16px; height:16px;
+    background:var(--pc); color:#fff; border-radius:999px; min-width:16px; height:16px;
     font-size:10px; display:flex; align-items:center; justify-content:center; padding:0 4px; flex-shrink:0;
   }
+  /* 이미 끝난 시험은 흐리게, 진행 중인 시험은 강조 */
+  .exam-pill.past{opacity:.45; filter:saturate(.5);}
+  .exam-pill.past:hover{opacity:.8;}
+  .exam-pill.ongoing{box-shadow:0 0 0 1.5px var(--pc); font-weight:800;}
+  .cal-cell.past{background:#f8f6f0;}
+  .cal-cell.past .num{color:#c9c2ac;}
+
+  /* 학년 색상 범례 */
+  .cal-legend{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:0 0 10px; font-size:11px; color:#a49c88;}
+  .cal-legend .lg{display:inline-flex; align-items:center; gap:5px; font-weight:700; color:#6b7368;}
+  .cal-legend .sw{width:11px; height:11px; border-radius:3px; display:inline-block; border:1px solid #00000014;}
   .more-pill{
     border:1px dashed #ddd6c2; background:#fff; color:#8a8375; border-radius:7px;
     padding:3px 7px; font-size:10.5px; font-weight:700; cursor:pointer;
@@ -285,6 +312,124 @@
   .scope-table tr.missing{background:#fdf1ee;}
   .scope-table .none{color:var(--rust); font-weight:700;}
   .scope-table .muted{color:#a49c88;}
+
+  /* 저장 안 된 시험 카드 표시 */
+  .exam-card.dirty{border-color:var(--mustard); box-shadow:0 0 0 3px var(--mustard-dim);}
+  .exam-card .dirty-flag{display:none; font-size:10.5px; font-weight:800; color:#8a5a13;}
+  .exam-card.dirty .dirty-flag{display:inline;}
+  .exam-actions{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-left:auto;}
+  .exam-actions .dirty-count{font-size:12px; font-weight:700; color:var(--rust);}
+  .copy-prev-btn{border:none; background:#eee9dc; border-radius:7px; padding:3px 8px;
+    font-family:inherit; font-size:10px; font-weight:700; cursor:pointer; color:#5c6459;}
+  .copy-prev-btn:hover{background:#e0d9c6;}
+
+  /* ---------- 상단 요약(할 일) 카드 ---------- */
+  .summary-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin-bottom:18px;}
+  .stat-card{
+    border:1.5px solid #ece7d8; border-radius:12px; padding:12px 14px; background:#fffdf8;
+    text-align:left; font-family:inherit; cursor:pointer; transition:.14s; display:block; width:100%;
+  }
+  .stat-card:hover{border-color:var(--mustard); background:#fff8ea; transform:translateY(-1px);}
+  .stat-card .sl{font-size:10.5px; font-weight:800; color:#a49c88; letter-spacing:.04em; display:block; margin-bottom:6px;}
+  .stat-card .sv{font-size:19px; font-weight:800; color:var(--ink); line-height:1.2;}
+  .stat-card .su{font-size:12px; font-weight:700; color:#8a8375; margin-left:3px;}
+  .stat-card .sd{font-size:11.5px; color:#8a8375; margin-top:5px; line-height:1.5;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .stat-card.alert{border-color:#f0cfc4; background:#fdf1ee;}
+  .stat-card.alert .sv{color:var(--rust);}
+  .stat-card.alert:hover{background:#fbe9e2; border-color:var(--rust);}
+  .stat-card.done{border-color:#cfe4d8; background:#f2f9f5;}
+  .stat-card.done .sv{color:var(--green);}
+  .stat-card.soon{border-color:var(--mustard); background:#fff6e6;}
+  .stat-card.soon .sv{color:#b0742a;}
+  .dday{display:inline-block; background:var(--rust); color:#fff; font-size:11px; font-weight:800;
+    padding:2px 8px; border-radius:20px; margin-left:6px; vertical-align:2px;}
+  .dday.wide{background:var(--board);}
+  .dday.now{background:var(--green);}
+
+  /* 데이터 불러오는 중 표시 */
+  #loadingBar{
+    display:flex; align-items:center; gap:10px; background:#fff; border:2px solid #ece7d8;
+    border-radius:12px; padding:14px 18px; margin:0 0 18px; font-size:13px; color:#6b7368; font-weight:600;
+  }
+  #loadingBar .spin{
+    width:16px; height:16px; border:2.5px solid #ece7d8; border-top-color:var(--mustard);
+    border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .skeleton{background:linear-gradient(90deg,#f2eee2 25%,#faf7ef 37%,#f2eee2 63%);
+    background-size:400% 100%; animation:sk 1.2s ease infinite; border-radius:9px;}
+  @keyframes sk{0%{background-position:100% 50%;}100%{background-position:0 50%;}}
+  .sk-row{height:44px; margin-bottom:8px;}
+
+  /* 학생 상세 창 */
+  .stu-head{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:4px;}
+  .stu-tags{display:flex; gap:5px; flex-wrap:wrap; margin:10px 0 4px;}
+  .stu-exam-row{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+    border:1.5px solid #ece7d8; border-radius:10px; padding:10px 12px; margin-bottom:8px;
+    background:#fffdf8; cursor:pointer; width:100%; text-align:left; font-family:inherit;}
+  .stu-exam-row:hover{border-color:var(--mustard); background:#fff8ea;}
+  .stu-exam-row.past{opacity:.55;}
+  .stu-exam-row .en{font-weight:700; font-size:13.5px; color:var(--ink);}
+  .stu-exam-row .ed{font-size:11.5px; color:#8a8375; margin-top:4px; line-height:1.6;}
+  .stu-exam-row .ed .noscope{color:var(--rust); font-weight:700;}
+  .dday-sm{display:inline-block; background:var(--board); color:var(--chalk); font-size:10.5px;
+    font-weight:800; padding:2px 8px; border-radius:20px; white-space:nowrap;}
+  .dday-sm.soon{background:var(--rust);}
+  .dday-sm.now{background:var(--green);}
+  .dday-sm.done{background:#e0dbcd; color:#8a8375;}
+  .name-cell .stu-link{cursor:pointer; border-bottom:1.5px dotted #c9c2ac;}
+  .name-cell .stu-link:hover{color:var(--rust); border-bottom-color:var(--rust);}
+
+  /* 캘린더 목록 보기 (모바일 친화) */
+  .view-toggle{display:inline-flex; background:#f2eee2; border-radius:9px; padding:3px; gap:3px;}
+  .view-toggle button{border:none; background:transparent; font-family:inherit; font-weight:800;
+    font-size:11.5px; color:#6b7368; padding:6px 12px; border-radius:7px; cursor:pointer; white-space:nowrap;}
+  .view-toggle button.active{background:var(--board); color:var(--chalk);}
+  .cal-list{display:flex; flex-direction:column; gap:14px;}
+  .cl-day{border:1.5px solid #ece7d8; border-radius:12px; background:#fffdf8; overflow:hidden;}
+  .cl-day.today{border-color:var(--mustard); box-shadow:0 0 0 3px var(--mustard-dim);}
+  .cl-day.past{opacity:.62;}
+  .cl-head{display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:9px 13px; background:#f6f3e9; border-bottom:1.5px solid #ece7d8;}
+  .cl-head .d{font-family:'Gowun Batang',serif; font-size:15px; font-weight:700;}
+  .cl-head .d .dow{font-size:12px; color:#8a8375; margin-left:5px;}
+  .cl-head .d .sat{color:var(--blue);} .cl-head .d .sun{color:var(--rust);}
+  .cl-head .n{font-size:11px; font-weight:700; color:#8a8375;}
+  .cl-body{padding:9px 11px; display:flex; flex-direction:column; gap:6px;}
+  .cl-item{display:flex; align-items:center; justify-content:space-between; gap:8px;
+    border:1px solid var(--pd); background:var(--pb); color:var(--pt);
+    border-radius:9px; padding:8px 11px; font-size:12.5px; font-weight:700;
+    cursor:pointer; width:100%; text-align:left; font-family:inherit;
+    --pb:#f7e6b8; --pd:#eed69a; --pt:#7a5518; --pc:#e2871f;}
+  .cl-item.c1{--pb:#f7e6b8; --pd:#eed69a; --pt:#7a5518; --pc:#e2871f;}
+  .cl-item.c2{--pb:#dbe7f1; --pd:#c3d6e6; --pt:#2f5674; --pc:#3f6b8f;}
+  .cl-item.c3{--pb:#e7dff3; --pd:#d3c7e8; --pt:#54397d; --pc:#7a5ca8;}
+  .cl-item.c4{--pb:#dcefe3; --pd:#c2e0d0; --pt:#26614a; --pc:#3d8361;}
+  .cl-item.c5{--pb:#f8dfd7; --pd:#eec8bc; --pt:#8a3f27; --pc:#c96a4e;}
+  .cl-item.c6{--pb:#d6ebeb; --pd:#bcdcdc; --pt:#205e5e; --pc:#2e8080;}
+  .cl-item.c7{--pb:#e9e6dc; --pd:#d7d2c3; --pt:#5c5a4f; --pc:#8a8375;}
+  .cl-item:hover{filter:brightness(.97);}
+  .cl-item .sub{display:block; font-size:11px; font-weight:600; opacity:.85; margin-top:3px;}
+  .cl-item .cnt{background:var(--pc); color:#fff; border-radius:999px; font-size:10.5px;
+    padding:2px 8px; flex-shrink:0;}
+  .cl-empty{text-align:center; color:#a49c88; padding:34px 10px; font-size:13px;}
+
+  /* ---------- 토스트 알림 ---------- */
+  .toast-wrap{position:fixed; left:50%; transform:translateX(-50%); bottom:22px; z-index:100;
+    display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none; width:min(560px,calc(100% - 32px));}
+  .toast{pointer-events:auto; background:var(--board-dark); color:var(--chalk); border-radius:12px;
+    padding:12px 16px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:12px;
+    box-shadow:0 8px 24px #1b271a55; width:100%; animation:toastIn .18s ease-out;}
+  .toast.ok{border-left:4px solid var(--green);}
+  .toast.warn{border-left:4px solid var(--mustard);}
+  .toast.bad{border-left:4px solid var(--rust);}
+  .toast .tmsg{flex:1; line-height:1.5;}
+  .toast .tact{border:1.5px solid #ffffff55; background:#ffffff1a; color:var(--chalk); font-family:inherit;
+    font-weight:800; font-size:12px; padding:6px 12px; border-radius:8px; cursor:pointer; white-space:nowrap;}
+  .toast .tact:hover{background:#ffffff2e;}
+  .toast .tclose{border:none; background:transparent; color:#ffffff88; font-size:16px; cursor:pointer; line-height:1; padding:0 2px;}
+  @keyframes toastIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
 
   @media print{
     header.app-head, nav.tabs, #setupBanner, .filter-line, .print-hide{display:none !important;}
@@ -447,6 +592,8 @@
 </nav>
 
 <main>
+  <div id="loadingBar"><span class="spin"></span>데이터를 불러오는 중이에요...</div>
+
   <div id="setupBanner">
     <b>⚠ Firebase 설정이 필요해요.</b> 지금은 임시 저장(브라우저에만 저장)으로 동작 중이에요.
     코드 상단의 <code>firebaseConfig</code> 부분을 본인 Firebase 프로젝트 값으로 바꾸면 여러 기기에서 실시간으로 동기화됩니다.
@@ -462,6 +609,8 @@
       <button class="btn" id="goToExamTab">+ 시험정보 입력으로 이동</button>
     </div>
 
+    <div class="summary-row" id="summaryRow"></div>
+
     <div class="filter-bar">
       <div>
         <label>선생님별 보기</label>
@@ -476,6 +625,10 @@
     <div class="cal-head">
       <div class="season-row" id="seasonRow"></div>
       <div class="cal-nav">
+        <div class="view-toggle" id="calViewToggle">
+          <button data-view="grid">달력</button>
+          <button data-view="list">목록</button>
+        </div>
         <button class="today-btn" id="todayBtn">오늘</button>
         <button class="arrow" id="prevMonth">‹</button>
         <div class="month-label tappable" id="monthLabel"></div>
@@ -491,12 +644,14 @@
       </div>
     </div>
     <p class="hint-line">알약을 클릭하면 상세 정보와 학생 명단이 열립니다. 시험이 많은 날은 “+N개 더”를 누르면 전체 목록이 열려요.</p>
-    <div class="cal-scroll">
+    <div class="cal-legend" id="calLegend"></div>
+    <div class="cal-scroll" id="calGridWrap">
       <div class="cal-inner">
         <div class="cal-grid" id="calDow"></div>
         <div class="cal-grid" id="calGrid" style="margin-top:6px;"></div>
       </div>
     </div>
+    <div class="cal-list" id="calList" style="display:none;"></div>
   </section>
 
   <!-- 시험정보 입력 -->
@@ -510,6 +665,10 @@
         <select id="examSchoolSelect"></select>
       </div>
       <div class="exam-summary" id="examSummary"></div>
+      <div class="exam-actions">
+        <span class="dirty-count" id="examDirtyCount"></span>
+        <button class="btn" id="saveAllExamBtn">이 학교 전체 저장</button>
+      </div>
     </div>
 
     <div class="exam-grid" id="examCardsGrid"></div>
@@ -522,7 +681,10 @@
         <h2 class="panel-title">시험 범위</h2>
         <p class="panel-desc">학교별 시험 범위를 한 장에 모아서 봅니다. 범위가 비어 있는 줄은 빨갛게 표시돼요.</p>
       </div>
-      <button class="btn secondary print-hide" id="scopePrintBtn">🖨 인쇄 / PDF 저장</button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn secondary print-hide" id="scopeExportBtn">⤓ 엑셀로 내보내기</button>
+        <button class="btn secondary print-hide" id="scopePrintBtn">🖨 인쇄 / PDF 저장</button>
+      </div>
     </div>
 
     <div class="filter-bar print-hide">
@@ -591,6 +753,7 @@
     <div class="btn-row" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
       <button class="btn" id="addStudentBtn">+ 학생 추가</button>
       <button class="btn secondary" id="excelUploadBtn">📄 엑셀로 일괄 등록</button>
+      <button class="btn secondary" id="excelDownloadBtn" title="지금 화면에 보이는 학생만 내보냅니다">⤓ 엑셀로 내보내기</button>
       <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
       <span id="excelUploadStatus" style="font-size:12px; color:#8a8375;"></span>
     </div>
@@ -662,6 +825,20 @@
   </section>
 </main>
 
+<!-- 학생 상세 모달 -->
+<div class="overlay" id="studentModal">
+  <div class="modal">
+    <button class="close-x" id="closeStudentModal">&times;</button>
+    <h3 id="stuTitle">학생</h3>
+    <p class="modal-meta" id="stuMeta"></p>
+    <div class="stu-tags" id="stuTags"></div>
+    <div id="stuExamList"></div>
+    <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
+      <button class="btn secondary small" id="stuModalEdit">이 학생 정보 수정</button>
+    </div>
+  </div>
+</div>
+
 <!-- 날짜별 시험 목록 모달 -->
 <div class="overlay" id="dayModal">
   <div class="modal">
@@ -700,7 +877,7 @@ const firebaseConfig = {
 };
 const isConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
 
-let db, collection, onSnapshot, addDoc, deleteDoc, updateDoc, doc, query, orderBy;
+let db, collection, onSnapshot, addDoc, deleteDoc, updateDoc, setDoc, doc, query, orderBy;
 let students = [];
 let exams = []; // {id, school, grade, examName, notConducted, notConductedReason, startDate, endDate, printStatus, inputTeacher, examScope, schoolNotice, makeupDate, statusMap, savedAt}
 
@@ -725,7 +902,7 @@ async function initFirebase(){
   const app = appMod.initializeApp(firebaseConfig);
   db = fsMod.getFirestore(app);
   collection = fsMod.collection; onSnapshot = fsMod.onSnapshot;
-  addDoc = fsMod.addDoc; deleteDoc = fsMod.deleteDoc; updateDoc = fsMod.updateDoc;
+  addDoc = fsMod.addDoc; deleteDoc = fsMod.deleteDoc; updateDoc = fsMod.updateDoc; setDoc = fsMod.setDoc;
   doc = fsMod.doc; query = fsMod.query; orderBy = fsMod.orderBy;
 
   onSnapshot(query(collection(db,"students"), orderBy("name")), snap=>{
@@ -738,13 +915,21 @@ async function initFirebase(){
   });
 }
 
+let firstLoadDone = false;
 function onDataChange(){
+  if(!firstLoadDone){
+    firstLoadDone = true;
+    const lb = document.getElementById("loadingBar");
+    if(lb) lb.style.display = "none";
+  }
   renderStudents();
   populateDropdowns();
   renderCalendar();
   renderExamTab();
   renderScopeTab();
+  renderSummary();
   if(currentDayKey && document.getElementById("dayModal").classList.contains("active")) openDayModal(currentDayKey, true);
+  if(currentStudentId && document.getElementById("studentModal").classList.contains("active")) openStudentModal(currentStudentId);
   if(currentDetailExamId) openDetailModal(currentDetailExamId);
 }
 
@@ -753,13 +938,19 @@ async function addStudent(s){
   else{ students.push({id:"s"+Date.now(), ...s}); saveLocal("kladi_students", students); onDataChange(); }
 }
 async function addStudentsBulk(list){
+  const newIds = [];
   if(isConfigured){
-    for(const s of list){ await addDoc(collection(db,"students"), s); }
+    for(const s of list){ const ref = await addDoc(collection(db,"students"), s); newIds.push(ref.id); }
   } else {
-    list.forEach(s=> students.push({id:"s"+Date.now()+Math.random().toString(36).slice(2), ...s}));
+    list.forEach(s=>{
+      const id = "s"+Date.now()+Math.random().toString(36).slice(2);
+      newIds.push(id);
+      students.push({id, ...s});
+    });
     saveLocal("kladi_students", students);
     onDataChange();
   }
+  return newIds;
 }
 async function removeStudent(id){
   if(isConfigured){ await deleteDoc(doc(db,"students",id)); }
@@ -806,6 +997,51 @@ async function updateExamDoc(id, payload){
 async function removeExam(id){
   if(isConfigured){ await deleteDoc(doc(db,"exams",id)); }
   else{ exams = exams.filter(e=>e.id!==id); saveLocal("kladi_exams", exams); onDataChange(); }
+}
+
+/* ---------- 토스트 알림 · 되돌리기 ---------- */
+function showToast(message, opts={}){
+  const wrap = document.getElementById("toastWrap");
+  const el = document.createElement("div");
+  el.className = `toast ${opts.type||"ok"}`;
+  el.innerHTML = `<span class="tmsg">${escapeHtml(message)}</span>` +
+    (opts.actionLabel ? `<button class="tact">${escapeHtml(opts.actionLabel)}</button>` : "") +
+    `<button class="tclose" title="닫기">&times;</button>`;
+  wrap.appendChild(el);
+
+  let timer = null;
+  const close = ()=>{ clearTimeout(timer); el.remove(); };
+  el.querySelector(".tclose").addEventListener("click", close);
+  const act = el.querySelector(".tact");
+  if(act) act.addEventListener("click", async ()=>{
+    act.disabled = true; act.textContent = "되돌리는 중...";
+    try{ await opts.onAction(); } finally { close(); }
+  });
+  timer = setTimeout(close, opts.duration || (opts.actionLabel ? 9000 : 3200));
+  return close;
+}
+
+/* 삭제/일괄변경을 되돌리기 위한 복원 함수 */
+async function restoreStudentDocs(list){
+  if(isConfigured){
+    for(const s of list){ const {id, ...rest} = s; await setDoc(doc(db,"students",id), rest); }
+  } else {
+    list.forEach(s=> students.push({...s}));
+    saveLocal("kladi_students", students); onDataChange();
+  }
+}
+async function restoreExamDoc(exam){
+  if(isConfigured){ const {id, ...rest} = exam; await setDoc(doc(db,"exams",id), rest); }
+  else { exams.push({...exam}); saveLocal("kladi_exams", exams); onDataChange(); }
+}
+async function restoreStudentFields(snapshot){
+  // snapshot: [{id, payload}]
+  if(isConfigured){
+    for(const it of snapshot){ await updateDoc(doc(db,"students",it.id), it.payload); }
+  } else {
+    snapshot.forEach(it=>{ const s = students.find(x=>x.id===it.id); if(s) Object.assign(s, it.payload); });
+    saveLocal("kladi_students", students); onDataChange();
+  }
 }
 
 /* ---------- 탭 전환 ---------- */
@@ -1034,7 +1270,7 @@ function renderStudents(){
       <tr class="${sel?"sel":""}" data-ri="${i}" data-id="${s.id}">
         <td class="chk"><input type="checkbox" data-id="${s.id}" ${sel?"checked":""}></td>
         <td>${s.studentNumber? escapeHtml(s.studentNumber) : "—"}</td>
-        <td class="name-cell">${escapeHtml(s.name)}</td>
+        <td class="name-cell"><span class="stu-link" data-student="${s.id}">${escapeHtml(s.name)}</span></td>
         <td>${s.school? `<span class="tag school clickable" data-jump="school" data-v="${escapeHtml(s.school)}">${escapeHtml(shortSchool(s.school))}</span>`:"—"}</td>
         <td>${s.grade? `<span class="tag grade clickable" data-jump="grade" data-v="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:"—"}</td>
         <td>${s.teacher
@@ -1103,8 +1339,24 @@ function renderStudents(){
     editingStudentId = null;          // 먼저 편집 모드를 끄고 저장 (즉시 다시 그려도 편집칸이 남지 않도록)
     updateStudentDoc(b.dataset.id, payload).then(renderStudents);
   }));
-  tbody.querySelectorAll(".icon-btn.del").forEach(b=> b.addEventListener("click", ()=>{
-    if(confirm("이 학생을 삭제할까요?")) removeStudent(b.dataset.id);
+  tbody.querySelectorAll(".icon-btn.del").forEach(b=> b.addEventListener("click", async ()=>{
+    const target = students.find(x=>x.id===b.dataset.id);
+    if(!target || !confirm(`${target.name} 학생을 삭제할까요?`)) return;
+    const backup = {...target};
+    await removeStudent(backup.id);
+    showToast(`${backup.name} 학생을 삭제했어요.`, {
+      type:"bad", actionLabel:"되돌리기",
+      onAction: async ()=>{
+        await restoreStudentDocs([backup]);
+        showToast(`${backup.name} 학생을 복구했어요.`, {type:"ok"});
+      }
+    });
+  }));
+
+  /* 이름을 누르면 학생 상세 창 */
+  tbody.querySelectorAll(".stu-link").forEach(el=> el.addEventListener("click", (ev)=>{
+    ev.stopPropagation();
+    openStudentModal(el.dataset.student);
   }));
 
   /* 표 안의 알약을 누르면 그 조건으로 걸림 */
@@ -1150,10 +1402,24 @@ document.getElementById("stuBulkApply").addEventListener("click", async ()=>{
   const ids = [...selectedStudents];
   if(ids.length===0) return;
   if(!confirm(`선택한 ${ids.length}명의 ${label}을(를) "${value || "(비움)"}" (으)로 바꿀까요?`)) return;
+
+  // 되돌리기용으로 바꾸기 전 값을 저장
+  const before = ids.map(id=>{
+    const s = students.find(x=>x.id===id);
+    return {id, payload:{[field]: (s? (s[field]||"") : "")}};
+  });
+
   const log = document.getElementById("stuBulkLog");
   log.textContent = `${ids.length}명 변경 중...`;
   await updateStudentsBulk(ids, {[field]: value});
-  log.textContent = `✔ ${ids.length}명의 ${label}을(를) "${value || "(비움)"}" 로 변경했어요.`;
+  log.textContent = "";
+  showToast(`${ids.length}명의 ${label}을(를) "${value || "(비움)"}" 로 바꿨어요.`, {
+    type:"ok", actionLabel:"되돌리기",
+    onAction: async ()=>{
+      await restoreStudentFields(before);
+      showToast(`${before.length}명의 ${label}을(를) 되돌렸어요.`, {type:"warn"});
+    }
+  });
 });
 document.getElementById("stuBulkClear").addEventListener("click", ()=>{
   selectedStudents.clear(); lastStuRow = null;
@@ -1163,12 +1429,21 @@ document.getElementById("stuBulkClear").addEventListener("click", ()=>{
 document.getElementById("stuBulkDelete").addEventListener("click", async ()=>{
   const ids = [...selectedStudents];
   if(ids.length===0) return;
-  if(!confirm(`선택한 ${ids.length}명을 삭제할까요? 되돌릴 수 없어요.`)) return;
+  if(!confirm(`선택한 ${ids.length}명을 삭제할까요?\n삭제 후 잠시 동안 "되돌리기"로 복구할 수 있어요.`)) return;
+
+  const backup = ids.map(id=> students.find(x=>x.id===id)).filter(Boolean).map(s=>({...s}));
   const log = document.getElementById("stuBulkLog");
   log.textContent = `${ids.length}명 삭제 중...`;
   selectedStudents.clear(); lastStuRow = null;
   await removeStudentsBulk(ids);
-  log.textContent = `🗑 ${ids.length}명을 삭제했어요.`;
+  log.textContent = "";
+  showToast(`${backup.length}명을 삭제했어요.`, {
+    type:"bad", actionLabel:"되돌리기",
+    onAction: async ()=>{
+      await restoreStudentDocs(backup);
+      showToast(`${backup.length}명을 복구했어요.`, {type:"ok"});
+    }
+  });
 });
 document.getElementById("stuChkAll").addEventListener("click", ()=>{
   const list = filteredStudents();
@@ -1210,6 +1485,13 @@ document.getElementById("addStudentBtn").addEventListener("click", async ()=>{
 /* ---------- 엑셀 일괄 업로드 ---------- */
 document.getElementById("excelUploadBtn").addEventListener("click", ()=>{
   document.getElementById("excelFileInput").click();
+});
+document.getElementById("excelDownloadBtn").addEventListener("click", ()=>{
+  const rows = filteredStudents().map(s=>({
+    "학번": s.studentNumber||"", "이름": s.name||"", "학교": s.school||"", "학년": s.grade||"",
+    "담임": s.teacher||"", "학기중 반": s.regularClass||"", "시험대비 반": s.examClass||"",
+  }));
+  exportRows(rows, "학생명단", "학생명단");
 });
 document.getElementById("excelFileInput").addEventListener("change", (e)=>{
   const file = e.target.files[0];
@@ -1256,9 +1538,16 @@ document.getElementById("excelFileInput").addEventListener("change", (e)=>{
       }
 
       statusEl.textContent = `${parsed.length}명 업로드 중...`;
-      await addStudentsBulk(parsed);
+      const addedIds = await addStudentsBulk(parsed);
       statusEl.textContent = "";
-      alert(`${parsed.length}명을 추가했어요.${skipped? ` (이름이 없어서 건너뛴 행 ${skipped}개)`:""}`);
+      showToast(`${parsed.length}명을 추가했어요.${skipped? ` (이름이 없어 건너뛴 행 ${skipped}개)`:""}`, {
+        type:"ok",
+        actionLabel: addedIds.length ? "방금 추가한 학생 취소" : null,
+        onAction: async ()=>{
+          await removeStudentsBulk(addedIds);
+          showToast(`방금 추가한 ${addedIds.length}명을 취소했어요.`, {type:"warn"});
+        }
+      });
     } catch(err){
       console.error(err);
       statusEl.textContent = "";
@@ -1272,8 +1561,16 @@ document.getElementById("excelFileInput").addEventListener("change", (e)=>{
 
 /* ---------- 시험정보 입력 탭 ---------- */
 document.getElementById("examSchoolSelect").addEventListener("change", (e)=>{
+  const dirty = document.querySelectorAll("#examCardsGrid .exam-card.dirty").length;
+  if(dirty && !confirm(`저장하지 않은 카드가 ${dirty}개 있어요. 학교를 바꾸면 사라집니다. 계속할까요?`)){
+    e.target.value = currentExamSchool;
+    return;
+  }
+  document.querySelectorAll("#examCardsGrid .exam-card.dirty").forEach(c=> c.classList.remove("dirty"));
   currentExamSchool = e.target.value;
+  document.getElementById("examCardsGrid").dataset.school = "";
   renderExamTab();
+  updateDirtyCount();
 });
 
 function findExam(school, grade, examName){
@@ -1320,7 +1617,10 @@ function examCardHtml(school, grade, examName){
       </div>
 
       <div>
-        <label class="small">시험 범위</label>
+        <label class="small" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+          <span>시험 범위</span>
+          <button type="button" class="copy-prev-btn">지난 시험에서 가져오기</button>
+        </label>
         <textarea data-field="examScope" placeholder="예: 수학(상) 2단원 전체 ~ 3-1, 교과서 유인물 포함">${escapeHtml(existing?.examScope||"")}</textarea>
       </div>
       <div>
@@ -1330,6 +1630,7 @@ function examCardHtml(school, grade, examName){
 
       <div class="save-row">
         <button class="btn small save-exam-btn">입력 저장</button>
+        <span class="dirty-flag">● 저장 안 됨</span>
         <span class="makeup-info">직전보강 ${existing?.makeupDate? escapeHtml(existing.makeupDate) : "--"}</span>
       </div>
       <div class="mini-row makeup-row">
@@ -1345,6 +1646,13 @@ function examCardHtml(school, grade, examName){
 function renderExamTab(){
   const summaryEl = document.getElementById("examSummary");
   const gridEl = document.getElementById("examCardsGrid");
+
+  // 입력 중(저장 안 된) 카드가 있으면 다시 그리지 않아요 — 타이핑하던 내용이 사라지지 않도록
+  if(gridEl.querySelector(".exam-card.dirty") && gridEl.dataset.school === currentExamSchool){
+    updateDirtyCount();
+    return;
+  }
+  gridEl.dataset.school = currentExamSchool;
 
   if(!currentExamSchool){
     summaryEl.textContent = "";
@@ -1399,17 +1707,75 @@ document.getElementById("examCardsGrid").addEventListener("click", (e)=>{
   const card = e.target.closest(".exam-card");
   if(!card) return;
   if(e.target.classList.contains("save-exam-btn")){
-    saveExamCard(card);
+    const title = `${card.dataset.school} ${card.dataset.grade} ${card.dataset.examName}`;
+    saveExamCard(card).then(()=>{
+      card.classList.remove("dirty"); updateDirtyCount();
+      showToast(`${title} 정보를 저장했어요.`, {type:"ok"});
+    });
   } else if(e.target.classList.contains("apply-makeup-btn")){
     const val = card.querySelector('[data-field="makeupDateInput"]').value;
-    if(!val){ alert("적용할 보강 날짜를 먼저 선택해주세요."); return; }
-    saveExamCard(card, {makeupDate: val});
+    if(!val){ showToast("적용할 보강 날짜를 먼저 선택해주세요.", {type:"warn"}); return; }
+    saveExamCard(card, {makeupDate: val}).then(()=> showToast(`직전보강일을 ${val} 로 저장했어요.`, {type:"ok"}));
   }
 });
 document.getElementById("examCardsGrid").addEventListener("change", (e)=>{
   if(e.target.matches('[data-field="notConducted"]')){
     e.target.closest(".exam-card").querySelector(".reason-box").classList.toggle("show", e.target.checked);
   }
+  markDirty(e.target);
+});
+document.getElementById("examCardsGrid").addEventListener("input", (e)=> markDirty(e.target));
+
+function markDirty(el){
+  const card = el && el.closest ? el.closest(".exam-card") : null;
+  if(!card) return;
+  if(el.dataset && el.dataset.field === "makeupDateInput") return;
+  card.classList.add("dirty");
+  updateDirtyCount();
+}
+function updateDirtyCount(){
+  const n = document.querySelectorAll("#examCardsGrid .exam-card.dirty").length;
+  const el = document.getElementById("examDirtyCount");
+  if(el) el.textContent = n ? `저장 안 된 카드 ${n}개` : "";
+}
+
+/* 이 학교 전체 저장 — 저장 안 된 카드만 (없으면 전체) */
+document.getElementById("saveAllExamBtn").addEventListener("click", async (ev)=>{
+  const btn = ev.currentTarget;
+  const grid = document.getElementById("examCardsGrid");
+  let cards = [...grid.querySelectorAll(".exam-card.dirty")];
+  const onlyDirty = cards.length > 0;
+  if(!onlyDirty) cards = [...grid.querySelectorAll(".exam-card")];
+  if(cards.length===0){ showToast("저장할 카드가 없어요.", {type:"warn"}); return; }
+  if(!confirm(`${cards.length}개 카드를 저장할까요?${onlyDirty ? "" : "\n(변경된 카드가 없어 전체를 저장합니다)"}`)) return;
+
+  btn.disabled = true; btn.textContent = "저장 중...";
+  try{
+    for(const c of cards){ await saveExamCard(c); c.classList.remove("dirty"); }
+    updateDirtyCount();
+    showToast(`${cards.length}개 카드를 저장했어요.`, {type:"ok"});
+  } finally {
+    btn.disabled = false; btn.textContent = "이 학교 전체 저장";
+  }
+});
+
+/* 같은 학교·학년의 지난 시험에서 범위·안내를 가져오기 */
+document.getElementById("examCardsGrid").addEventListener("click", (e)=>{
+  if(!e.target.classList.contains("copy-prev-btn")) return;
+  const card = e.target.closest(".exam-card");
+  const {school, grade, examName} = card.dataset;
+  const prev = exams
+    .filter(x=> x.school===school && x.grade===grade && !(x.examName===examName) )
+    .concat(exams.filter(x=> x.school===school && x.grade===grade && x.examName===examName && x.startDate))
+    .filter(x=> x.examScope || x.schoolNotice)
+    .sort((a,b)=> (b.startDate||"").localeCompare(a.startDate||""))[0];
+  if(!prev){ showToast("가져올 지난 시험 정보가 없어요.", {type:"warn"}); return; }
+  const scopeEl = card.querySelector('[data-field="examScope"]');
+  const noticeEl = card.querySelector('[data-field="schoolNotice"]');
+  if(scopeEl && prev.examScope) scopeEl.value = prev.examScope;
+  if(noticeEl && prev.schoolNotice) noticeEl.value = prev.schoolNotice;
+  card.classList.add("dirty"); updateDirtyCount();
+  showToast(`${prev.examName}${prev.startDate? " ("+prev.startDate+")" : ""} 내용을 불러왔어요. 확인 후 저장해주세요.`, {type:"warn"});
 });
 
 /* ---------- 캘린더 ---------- */
@@ -1554,6 +1920,12 @@ function renderSeasonChips(){
     b.addEventListener("click", ()=> goToMonth(Number(b.dataset.y), Number(b.dataset.m)));
   });
 }
+/* 학년별 알약 색상 (c1~c7) */
+const GRADE_COLOR = {"중1":"c1","중2":"c2","중3":"c3","고1":"c4","고2":"c5","고3":"c6","초4":"c7","초5":"c7","초6":"c7"};
+const COLOR_HEX = {c1:"#f7e6b8", c2:"#dbe7f1", c3:"#e7dff3", c4:"#dcefe3", c5:"#f8dfd7", c6:"#d6ebeb", c7:"#e9e6dc"};
+const COLOR_BORDER = {c1:"#eed69a", c2:"#c3d6e6", c3:"#d3c7e8", c4:"#c2e0d0", c5:"#eec8bc", c6:"#bcdcdc", c7:"#d7d2c3"};
+function gradeColor(grade){ return GRADE_COLOR[grade] || "c7"; }
+
 /* 알약 안에서는 학교명을 줄여서 표시 (가락중학교 → 가락중) */
 function shortSchool(name){
   return (name||"").replace(/초등학교$/,"초").replace(/중학교$/,"중").replace(/고등학교$/,"고");
@@ -1564,10 +1936,60 @@ function shortExamName(name){
 
 const MAX_PILLS = 3; // 한 칸에 최대 3개까지만 보여주고 나머지는 "+N개 더"
 
+/* 달력 / 목록 보기 — 좁은 화면에서는 처음에 목록으로 시작 */
+let calView = (window.innerWidth <= 700) ? "list" : "grid";
+document.querySelectorAll("#calViewToggle button").forEach(b=> b.addEventListener("click", ()=>{
+  calView = b.dataset.view; renderCalendar();
+}));
+
+/* 이 달의 시험을 날짜별로 묶어서 목록으로 */
+function renderCalListView(){
+  const box = document.getElementById("calList");
+  const tk = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+
+  let html = "";
+  for(let d=1; d<=daysInMonth; d++){
+    const key = dateKey(viewYear, viewMonth, d);
+    const list = visibleExamsForDate(key);
+    if(list.length===0) continue;
+    const dt = toDate(key);
+    const dow = weekdayShort(dt);
+    const dowCls = dow==="토" ? "sat" : dow==="일" ? "sun" : "";
+    const isToday = key===tk, isPast = key < tk;
+    html += `<div class="cl-day ${isToday?"today":""} ${isPast?"past":""}">
+      <div class="cl-head">
+        <span class="d">${viewMonth+1}월 ${d}일<span class="dow ${dowCls}">(${dow})</span>${isToday?' <span class="dday-sm now">오늘</span>':''}</span>
+        <span class="n">${list.length}건</span>
+      </div>
+      <div class="cl-body">
+        ${list.map(e=>{
+          const count = studentsForExam(e).length;
+          const scope = e.examScope ? escapeHtml(e.examScope.split("\n")[0]).slice(0,34) : "시험 범위 미입력";
+          return `<button class="cl-item ${gradeColor(e.grade)}" data-exam="${e.id}">
+            <span>${escapeHtml(shortSchool(e.school))} ${escapeHtml(e.grade||"")} ${escapeHtml(shortExamName(e.examName))}
+              <span class="sub">${scope}</span></span>
+            <span class="cnt">${count}명</span>
+          </button>`;
+        }).join("")}
+      </div>
+    </div>`;
+  }
+  box.innerHTML = html || `<div class="cl-empty">${viewYear}년 ${viewMonth+1}월에는 표시할 시험이 없어요.</div>`;
+  box.querySelectorAll(".cl-item").forEach(b=> b.addEventListener("click", ()=> openDetailModal(b.dataset.exam)));
+}
+
 function renderCalendar(){
   renderSeasonChips();
   document.getElementById("monthLabel").innerHTML = `${viewYear}년 ${viewMonth+1}월 <span class="caret">▾</span>`;
   if(monthPicker.classList.contains("open")) renderMonthPicker();
+
+  document.querySelectorAll("#calViewToggle button").forEach(b=> b.classList.toggle("active", b.dataset.view===calView));
+  document.getElementById("calGridWrap").style.display = calView==="grid" ? "" : "none";
+  document.getElementById("calList").style.display = calView==="list" ? "flex" : "none";
+  document.getElementById("calLegend").style.display = calView==="grid" ? "flex" : "none";
+  if(calView==="list"){ renderCalListView(); return; }
+
   const grid = document.getElementById("calGrid");
 
   let firstDow = new Date(viewYear, viewMonth, 1).getDay();
@@ -1585,17 +2007,20 @@ function renderCalendar(){
 
     const shown = dayExams.slice(0, MAX_PILLS);
     const restCount = dayExams.length - shown.length;
+    const tKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
     const pillsHtml = shown.map(e=>{
       const count = studentsForExam(e).length;
       const label = `${shortSchool(e.school)} ${e.grade||""} ${shortExamName(e.examName)}`.trim();
       const full = `${e.school||""} ${e.grade||""} ${e.examName||""}`.trim();
-      return `<div class="exam-pill" data-exam="${e.id}" title="${escapeHtml(full)} · ${count}명"><span class="label">${escapeHtml(label)}</span><span class="count">${count}</span></div>`;
+      const state = e.endDate < tKey ? "past" : (e.startDate <= tKey ? "ongoing" : "");
+      return `<div class="exam-pill ${gradeColor(e.grade)} ${state}" data-exam="${e.id}" title="${escapeHtml(full)} · ${count}명"><span class="label">${escapeHtml(label)}</span><span class="count">${count}</span></div>`;
     }).join("");
     const moreHtml = restCount>0
       ? `<button class="more-pill" data-more="${key}">+${restCount}개 더</button>`
       : "";
 
-    html += `<div class="cal-cell ${isToday?"today":""} ${dowClass}" data-date="${key}">
+    const isPast = key < dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+    html += `<div class="cal-cell ${isToday?"today":""} ${isPast?"past":""} ${dowClass}" data-date="${key}">
       <div class="num">${d}</div>
       <div class="pills">${pillsHtml}${moreHtml}</div>
     </div>`;
@@ -1607,6 +2032,24 @@ function renderCalendar(){
   grid.querySelectorAll(".more-pill").forEach(b=>{
     b.addEventListener("click", (ev)=>{ ev.stopPropagation(); openDayModal(b.dataset.more); });
   });
+  renderCalLegend();
+}
+
+/* 이 달에 나온 학년만 색상 범례로 표시 */
+function renderCalLegend(){
+  const box = document.getElementById("calLegend");
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  const seen = [];
+  for(let d=1; d<=daysInMonth; d++){
+    visibleExamsForDate(dateKey(viewYear, viewMonth, d)).forEach(e=>{
+      if(e.grade && !seen.includes(e.grade)) seen.push(e.grade);
+    });
+  }
+  if(seen.length===0){ box.innerHTML = ""; return; }
+  box.innerHTML = `<span>학년 색상</span>` + sortGrades(seen).map(g=>{
+    const c = gradeColor(g);
+    return `<span class="lg"><span class="sw" style="background:${COLOR_HEX[c]}; border-color:${COLOR_BORDER[c]};"></span>${escapeHtml(g)}</span>`;
+  }).join("") + `<span style="margin-left:4px;">· 흐린 알약은 이미 끝난 시험</span>`;
 }
 function goToMonth(y,m){ viewYear=y; viewMonth=m; renderCalendar(); }
 document.getElementById("prevMonth").addEventListener("click", ()=>{ viewMonth--; if(viewMonth<0){viewMonth=11; viewYear--;} renderCalendar(); });
@@ -1658,7 +2101,7 @@ function openDayModal(key, keepFilters){
           <span class="cmp-school">
             <span class="sname">${escapeHtml(shortSchool(e.school))}</span>
             <span class="smeta">
-              <span class="tag grade">${escapeHtml(e.grade||"")}</span>
+              <span class="tag grade" style="background:${COLOR_HEX[gradeColor(e.grade)]}; color:${COLOR_BORDER[gradeColor(e.grade)]}; filter:brightness(.62);">${escapeHtml(e.grade||"")}</span>
               <span class="count-badge">${count}명</span>
             </span>
           </span>
@@ -1687,15 +2130,143 @@ document.getElementById("dayModal").addEventListener("click", (e)=>{ if(e.target
 document.addEventListener("keydown", (e)=>{
   if(e.key==="Escape"){
     closeMonthPicker();
+    closeStudentModal();
     closeDayModal();
     document.getElementById("detailModal").classList.remove("active");
     currentDetailExamId = null;
   }
 });
 
+/* ---------- 엑셀 내보내기 ---------- */
+function exportRows(rows, sheetName, filePrefix){
+  if(!rows.length){ showToast("내보낼 내용이 없어요.", {type:"warn"}); return; }
+  const stamp = new Date().toISOString().slice(0,10);
+  try{
+    if(typeof XLSX !== "undefined"){
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      XLSX.writeFile(wb, `${filePrefix}_${stamp}.xlsx`);
+      showToast(`${rows.length}줄을 엑셀 파일로 내려받았어요.`, {type:"ok"});
+      return;
+    }
+    downloadCsv(rows, `${filePrefix}_${stamp}.csv`);
+    showToast(`${rows.length}줄을 CSV 파일로 내려받았어요.`, {type:"ok"});
+  }catch(err){
+    console.error(err);
+    try{
+      downloadCsv(rows, `${filePrefix}_${stamp}.csv`);
+      showToast(`엑셀 대신 CSV 파일로 내려받았어요. (${rows.length}줄)`, {type:"warn"});
+    }catch(e2){
+      showToast("파일을 만들지 못했어요.", {type:"bad"});
+    }
+  }
+}
+/* 엑셀 라이브러리를 못 불러왔을 때를 위한 CSV 대체 (엑셀에서 바로 열립니다) */
+function downloadCsv(rows, filename){
+  const cols = Object.keys(rows[0]);
+  const esc = v => `"${String(v ?? "").replace(/"/g,'""')}"`;
+  const csv = [cols.map(esc).join(","), ...rows.map(r=> cols.map(c=> esc(r[c])).join(","))].join("\r\n");
+  const blob = new Blob(["\uFEFF" + csv], {type:"text/csv;charset=utf-8;"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 1500);
+}
+
+/* ---------- 상단 요약(할 일) 카드 ---------- */
+function todayKey(){ return dateKey(today.getFullYear(), today.getMonth(), today.getDate()); }
+function daysBetween(aKey, bKey){
+  return Math.round((toDate(bKey) - toDate(aKey)) / 86400000);
+}
+/* 오늘 이후(진행 중 포함)의 시험만 */
+function upcomingExams(){
+  const tk = todayKey();
+  return exams.filter(e=> e.startDate && e.endDate && !e.notConducted && e.endDate >= tk)
+              .sort((a,b)=> a.startDate.localeCompare(b.startDate));
+}
+
+function renderSummary(){
+  const box = document.getElementById("summaryRow");
+  const tk = todayKey();
+  const up = upcomingExams();
+
+  /* 1) 다가오는 시험 */
+  let card1;
+  if(up.length===0){
+    card1 = `<button class="stat-card done" data-go="none">
+      <span class="sl">다가오는 시험</span>
+      <span class="sv">없음</span>
+      <span class="sd">예정된 시험이 없어요</span></button>`;
+  } else {
+    const first = up[0];
+    const sameDay = up.filter(e=> e.startDate===first.startDate);
+    const schools = uniq(sameDay.map(e=>e.school)).length;
+    const d = daysBetween(tk, first.startDate);
+    const badge = d <= 0 ? `<span class="dday now">진행 중</span>`
+      : `<span class="dday ${d>14?"wide":""}">D-${d}</span>`;
+    card1 = `<button class="stat-card ${d<=7?"soon":""}" data-go="upcoming" data-date="${first.startDate}">
+      <span class="sl">다가오는 시험</span>
+      <span class="sv">${escapeHtml(first.examName||"시험")}${badge}</span>
+      <span class="sd">${escapeHtml(fmtWithDow(first.startDate))} 시작 · ${schools}개교 ${sameDay.length}건</span></button>`;
+  }
+
+  /* 2) 시험 범위 미입력 */
+  const noScope = up.filter(e=> !e.examScope);
+  const card2 = `<button class="stat-card ${noScope.length?"alert":"done"}" data-go="scope-missing">
+    <span class="sl">시험 범위 미입력</span>
+    <span class="sv">${noScope.length}<span class="su">건</span></span>
+    <span class="sd">${noScope.length ? escapeHtml(uniq(noScope.map(e=>shortSchool(e.school))).slice(0,3).join(", ")) + (uniq(noScope.map(e=>e.school)).length>3?" 외":"") : "모두 입력됨"}</span></button>`;
+
+  /* 4) 담임 미지정 */
+  const noTeacher = students.filter(s=> !s.teacher);
+  const card4 = `<button class="stat-card ${noTeacher.length?"alert":"done"}" data-go="teacher-missing">
+    <span class="sl">담임 미지정</span>
+    <span class="sv">${noTeacher.length}<span class="su">명</span></span>
+    <span class="sd">${noTeacher.length ? "학생 관리에서 채우기" : "모두 지정됨"}</span></button>`;
+
+  /* 5) 학기중 반 미배정 */
+  const noClass = students.filter(s=> !s.regularClass);
+  const card5 = `<button class="stat-card ${noClass.length?"alert":"done"}" data-go="class-missing">
+    <span class="sl">학기중 반 미배정</span>
+    <span class="sv">${noClass.length}<span class="su">명</span></span>
+    <span class="sd">전체 ${students.length}명 중</span></button>`;
+
+  box.innerHTML = card1 + card2 + card4 + card5;
+
+  box.querySelectorAll(".stat-card").forEach(b=> b.addEventListener("click", ()=>{
+    const go = b.dataset.go;
+    if(go==="upcoming"){
+      const d = toDate(b.dataset.date);
+      goToMonth(d.getFullYear(), d.getMonth());
+      document.getElementById("calGrid").scrollIntoView({behavior:"smooth", block:"center"});
+    } else if(go==="scope-missing"){
+      const list = upcomingExams().filter(e=>!e.examScope);
+      if(list.length===0){ showToast("시험 범위가 모두 입력되어 있어요.", {type:"ok"}); return; }
+      scopeSeason = seasonKeyOf(list[0]);
+      scopeGrade = "";
+      scopeOnlyMissing = true;
+      switchTab("scope");
+      renderScopeTab();
+    } else if(go==="teacher-missing"){
+      if(students.filter(s=>!s.teacher).length===0){ showToast("담임이 모두 지정되어 있어요.", {type:"ok"}); return; }
+      stuF = {cho:"", school:"", grade:"", teacher:"", regularClass:null, examClass:null};
+      stuIdxTab = "teacher"; showIncompleteOnly = false;
+      switchTab("students"); renderStudents();
+    } else if(go==="class-missing"){
+      if(students.filter(s=>!s.regularClass).length===0){ showToast("모든 학생이 반에 배정되어 있어요.", {type:"ok"}); return; }
+      stuF = {cho:"", school:"", grade:"", teacher:null, regularClass:"", examClass:null};
+      stuIdxTab = "class"; stuClassField = "regularClass"; showIncompleteOnly = false;
+      switchTab("students"); renderStudents();
+    }
+  }));
+}
+
 /* ---------- 시험 범위 탭 (학교별 비교표) ---------- */
 let scopeSeason = "";
 let scopeGrade = "";
+let scopeOnlyMissing = false;   // 시험 범위 미입력만 보기
 
 function seasonKeyOf(e){
   if(!e.startDate) return "nodate";
@@ -1759,12 +2330,15 @@ function renderScopeTab(){
     `<span class="fl">학년</span>` +
     `<button class="fbtn ${scopeGrade===""?"active":""}" data-g="">전체</button>` +
     grades.map(g=>`<button class="fbtn ${scopeGrade===g?"active":""}" data-g="${escapeHtml(g)}">${escapeHtml(g)}</button>`).join("") +
-    (missingCount ? `<span class="warn-btn" style="cursor:default;">범위 미입력 ${missingCount}건</span>` : "");
+    (missingCount ? `<button class="warn-btn ${scopeOnlyMissing?"active":""}" id="scopeMissingToggle">범위 미입력 ${missingCount}건</button>` : "");
   document.querySelectorAll("#scopeGradeFilters .fbtn").forEach(b=>
     b.addEventListener("click", ()=>{ scopeGrade = b.dataset.g; renderScopeTab(); }));
+  const mt = document.getElementById("scopeMissingToggle");
+  if(mt) mt.addEventListener("click", ()=>{ scopeOnlyMissing = !scopeOnlyMissing; renderScopeTab(); });
 
   if(schoolSel.value) rows = rows.filter(e=> e.school===schoolSel.value);
   if(scopeGrade) rows = rows.filter(e=> e.grade===scopeGrade);
+  if(scopeOnlyMissing) rows = rows.filter(e=> !e.examScope && !e.notConducted);
   rows.sort((a,b)=> (a.school||"").localeCompare(b.school||"") || gradeSortIndex(a.grade)-gradeSortIndex(b.grade));
 
   const emptyBox = document.getElementById("scopeEmptyState");
@@ -1801,10 +2375,24 @@ function renderScopeTab(){
     }).join("")}</tbody>`;
 }
 document.getElementById("scopeSeasonSelect").addEventListener("change", (e)=>{
-  scopeSeason = e.target.value; scopeGrade = ""; renderScopeTab();
+  scopeSeason = e.target.value; scopeGrade = "";
+  scopeOnlyMissing = false;
+  renderScopeTab();
 });
 document.getElementById("scopeSchoolFilter").addEventListener("change", renderScopeTab);
 document.getElementById("scopePrintBtn").addEventListener("click", ()=> window.print());
+document.getElementById("scopeExportBtn").addEventListener("click", ()=>{
+  const rows = [...document.querySelectorAll("#scopeTable tbody tr")].map(tr=>{
+    const c = tr.cells;
+    return {
+      "학교": c[0].textContent.trim(), "학년": c[1].textContent.trim(), "인원": c[2].textContent.trim(),
+      "시험 기간": c[3].textContent.trim(), "시험 범위": c[4].innerText.trim(),
+      "학교 안내": c[5].textContent.trim(), "프린트": c[6].textContent.trim(),
+    };
+  });
+  const label = seasonLabelOf(scopeSeason).replace(/\s+/g,"_");
+  exportRows(rows, "시험범위", `시험범위_${label}`);
+});
 
 /* 상세 창에서 '시험정보 입력' 탭의 해당 카드로 이동 */
 function jumpToExamInput(exam){
@@ -1827,6 +2415,85 @@ function jumpToExamInput(exam){
     if(ta) ta.focus();
   }
 }
+
+/* ---------- 학생 상세 모달 ---------- */
+let currentStudentId = null;
+
+function ddayBadge(exam){
+  const tk = todayKey();
+  if(exam.endDate < tk) return `<span class="dday-sm done">종료</span>`;
+  if(exam.startDate <= tk) return `<span class="dday-sm now">진행 중</span>`;
+  const d = daysBetween(tk, exam.startDate);
+  return `<span class="dday-sm ${d<=7?"soon":""}">D-${d}</span>`;
+}
+
+function openStudentModal(studentId){
+  const s = students.find(x=>x.id===studentId);
+  if(!s) return;
+  currentStudentId = studentId;
+
+  document.getElementById("stuTitle").textContent = s.name || "학생";
+  document.getElementById("stuMeta").textContent =
+    `${s.school || "학교 미입력"} · ${s.grade || "학년 미입력"}` + (s.studentNumber ? ` · 학번 ${s.studentNumber}` : "");
+
+  document.getElementById("stuTags").innerHTML =
+    (s.teacher ? `<span class="tag teacher">${escapeHtml(s.teacher)}T</span>` : `<span class="tag none">담임 미지정</span>`) +
+    (s.regularClass ? `<span class="tag cls">학기중 ${escapeHtml(s.regularClass)}</span>` : `<span class="tag none">학기중 반 미배정</span>`) +
+    (s.examClass ? `<span class="tag cls">시험대비 ${escapeHtml(s.examClass)}</span>` : `<span class="tag none">시험대비 반 미배정</span>`);
+
+  /* 이 학생이 치르는 시험 (학교+학년 일치) */
+  const tk = todayKey();
+  const mine = exams
+    .filter(e=> e.school===s.school && e.grade===s.grade && e.startDate && e.endDate && !e.notConducted)
+    .sort((a,b)=>{
+      const aDone = a.endDate < tk, bDone = b.endDate < tk;
+      if(aDone !== bDone) return aDone ? 1 : -1;          // 예정/진행 먼저
+      return aDone ? b.startDate.localeCompare(a.startDate) : a.startDate.localeCompare(b.startDate);
+    });
+
+  const box = document.getElementById("stuExamList");
+  box.innerHTML = `<div class="section-label">이 학생의 시험 ${mine.length}건</div>` + (
+    mine.length===0
+      ? `<div class="empty-state">등록된 시험이 없어요. 학교·학년이 맞게 입력됐는지 확인해주세요.</div>`
+      : mine.map(e=>{
+          const period = e.startDate===e.endDate ? fmtWithDow(e.startDate) : `${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)}`;
+          const done = (e.statusMap||{})[s.id]==="done";
+          const scope = e.examScope
+            ? escapeHtml(e.examScope.split("\n")[0]).slice(0,40) + (e.examScope.length>40?"…":"")
+            : `<span class="noscope">시험 범위 미입력</span>`;
+          return `<button class="stu-exam-row ${e.endDate<tk?"past":""}" data-exam="${e.id}">
+            <span>
+              <span class="en">${escapeHtml(e.examName||"")} <span style="font-weight:600; color:#8a8375; font-size:12px;">${escapeHtml(period)}</span></span>
+              <span class="ed">${scope}<br>${done ? '<span style="color:var(--green); font-weight:700;">입력완료</span>' : '<span style="color:var(--rust); font-weight:700;">미입력</span>'} · 직전보강 ${e.makeupDate ? escapeHtml(e.makeupDate) : "--"}</span>
+            </span>
+            ${ddayBadge(e)}
+          </button>`;
+        }).join("")
+  );
+  box.querySelectorAll(".stu-exam-row").forEach(r=> r.addEventListener("click", ()=>{
+    closeStudentModal();
+    openDetailModal(r.dataset.exam);
+  }));
+
+  document.getElementById("stuModalEdit").onclick = ()=>{
+    closeStudentModal();
+    switchTab("students");
+    editingStudentId = studentId;
+    renderStudents();
+    const row = document.querySelector(`#studentTableBody tr.editing`);
+    if(row) row.scrollIntoView({behavior:"smooth", block:"center"});
+  };
+
+  document.getElementById("studentModal").classList.add("active");
+}
+function closeStudentModal(){
+  document.getElementById("studentModal").classList.remove("active");
+  currentStudentId = null;
+}
+document.getElementById("closeStudentModal").addEventListener("click", closeStudentModal);
+document.getElementById("studentModal").addEventListener("click", (e)=>{
+  if(e.target.id==="studentModal") closeStudentModal();
+});
 
 /* ---------- 시험 상세 모달 ---------- */
 async function toggleAssignmentStatus(examId, studentId){
@@ -1907,11 +2574,21 @@ function openDetailModal(examId){
   });
 
   document.getElementById("deleteExamBtn").onclick = async ()=>{
-    if(confirm("이 시험 정보를 삭제할까요?")){
-      await removeExam(examId);
-      document.getElementById("detailModal").classList.remove("active");
-      currentDetailExamId = null;
-    }
+    const target = exams.find(x=>x.id===examId);
+    if(!target) return;
+    if(!confirm("이 시험 정보를 삭제할까요?\n삭제 후 잠시 동안 \"되돌리기\"로 복구할 수 있어요.")) return;
+    const backup = {...target};
+    await removeExam(examId);
+    document.getElementById("detailModal").classList.remove("active");
+    currentDetailExamId = null;
+    const label = `${backup.school||""} ${backup.grade||""} ${backup.examName||""}`.trim();
+    showToast(`${label} 시험 정보를 삭제했어요.`, {
+      type:"bad", actionLabel:"되돌리기",
+      onAction: async ()=>{
+        await restoreExamDoc(backup);
+        showToast(`${label} 시험 정보를 복구했어요.`, {type:"ok"});
+      }
+    });
   };
 }
 document.getElementById("closeDetailModal").addEventListener("click", ()=>{
@@ -1924,5 +2601,7 @@ document.getElementById("detailModal").addEventListener("click", (e)=>{
 
 initFirebase();
 </script>
+<div class="toast-wrap" id="toastWrap"></div>
+
 </body>
 </html>
