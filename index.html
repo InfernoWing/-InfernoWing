@@ -1356,10 +1356,12 @@ async function restoreStudentFields(snapshot){
 }
 
 /* ---------- 보기 모드 / 수정 모드 ----------
-   기본 비밀번호: hakwon2026 (앱 안에서 바꿀 수 있어요)
-   화면에서 수정 기능을 감추는 "실수 방지" 잠금입니다.
+   비밀번호: npr2026
+   - 앱 안에서 바꾸면 Firestore(settings/app)에 저장되고 모든 기기에 적용됩니다.
+   - settings/app 문서를 지우면 아래 기본값(npr2026)으로 돌아갑니다.
+   - 화면에서 수정 기능을 감추는 "실수 방지" 잠금입니다.
    ------------------------------------------------- */
-const DEFAULT_PW_HASH = "dec9da81cce0339c2b06ffba4a11ceee400f4a1d6964fcb25f145089cc8a2f3b";
+const DEFAULT_PW_HASH = "26cc0973e28dbcb0d62313891e463fe85c162e33b2961fee638bf8a42e9966bb";
 let editPwHash = DEFAULT_PW_HASH;   // Firestore 에 저장된 값이 있으면 그걸로 덮어씀
 let editMode = sessionStorage.getItem("kladi_edit") === "1";
 
