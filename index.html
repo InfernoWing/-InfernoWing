@@ -415,6 +415,42 @@
     padding:2px 8px; flex-shrink:0;}
   .cl-empty{text-align:center; color:#a49c88; padding:34px 10px; font-size:13px;}
 
+  /* ---------- 학교별 일정 타임라인 ---------- */
+  .tl-scroll{overflow-x:auto; background:#fff; border:1.5px solid #e7e1cf; border-radius:11px;}
+  .tl{position:relative;}
+  .tl-row{display:grid; align-items:stretch; border-bottom:1px solid #f1ede0;}
+  .tl-row:last-child{border-bottom:none;}
+  .tl-name{padding:9px 12px; font-size:12.5px; font-weight:800; color:var(--ink);
+    background:#fffdf8; position:sticky; left:0; z-index:3; border-right:1.5px solid #ece7d8;
+    display:flex; align-items:center; justify-content:space-between; gap:6px;}
+  .tl-name .cnt{font-size:10.5px; font-weight:700; color:#a49c88;}
+  .tl-track{position:relative;}
+  .tl-head .tl-name{background:#f6f3e9;}
+  .tl-head .tl-track{background:#f6f3e9;}
+  .tl-daycell{position:absolute; top:0; bottom:0; border-left:1px solid #f4f1e6;}
+  .tl-daycell.wk{background:#faf7ee;}
+  .tl-daycell.mstart{border-left:1.5px solid #ddd6c2;}
+  .tl-daylabel{position:absolute; top:0; font-size:9.5px; color:#a49c88; font-weight:700;
+    padding:5px 0 0 3px; white-space:nowrap;}
+  .tl-monthlabel{position:absolute; top:0; font-size:11.5px; color:#6b7368; font-weight:800; padding:3px 0 0 5px;}
+  .tl-today{position:absolute; top:0; bottom:0; width:2px; background:var(--rust); z-index:4; opacity:.75;}
+  .tl-today.lbl::after{content:"오늘"; position:absolute; top:4px; left:4px; font-size:9.5px;
+    font-weight:800; color:var(--rust); white-space:nowrap;}
+  .bar{position:absolute; height:22px; border-radius:6px; display:flex; align-items:center;
+    padding:0 7px; font-size:10.5px; font-weight:800; white-space:nowrap; overflow:hidden;
+    border:1px solid var(--pd); background:var(--pb); color:var(--pt); cursor:pointer;
+    --pb:#f7e6b8; --pd:#eed69a; --pt:#7a5518;}
+  .bar:hover{filter:brightness(.96); box-shadow:0 2px 6px #1b271a26;}
+  .bar.c1{--pb:#f7e6b8; --pd:#eed69a; --pt:#7a5518;}
+  .bar.c2{--pb:#dbe7f1; --pd:#c3d6e6; --pt:#2f5674;}
+  .bar.c3{--pb:#e7dff3; --pd:#d3c7e8; --pt:#54397d;}
+  .bar.c4{--pb:#dcefe3; --pd:#c2e0d0; --pt:#26614a;}
+  .bar.c5{--pb:#f8dfd7; --pd:#eec8bc; --pt:#8a3f27;}
+  .bar.c6{--pb:#d6ebeb; --pd:#bcdcdc; --pt:#205e5e;}
+  .bar.c7{--pb:#e9e6dc; --pd:#d7d2c3; --pt:#5c5a4f;}
+  .bar.past{opacity:.45;}
+  .bar.noscope{border-style:dashed; border-width:1.5px; border-color:var(--rust);}
+
   /* ---------- 토스트 알림 ---------- */
   .toast-wrap{position:fixed; left:50%; transform:translateX(-50%); bottom:22px; z-index:100;
     display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none; width:min(560px,calc(100% - 32px));}
@@ -587,6 +623,7 @@
 <nav class="tabs">
   <button class="tab-btn active" data-tab="calendar">캘린더</button>
   <button class="tab-btn" data-tab="examinput">시험정보 입력</button>
+  <button class="tab-btn" data-tab="schedule">학교별 일정</button>
   <button class="tab-btn" data-tab="scope">시험 범위</button>
   <button class="tab-btn" data-tab="students">학생 관리</button>
 </nav>
@@ -672,6 +709,30 @@
     </div>
 
     <div class="exam-grid" id="examCardsGrid"></div>
+  </section>
+
+  <!-- 학교별 일정 (타임라인) -->
+  <section class="panel" id="panel-schedule">
+    <div class="panel-head-row">
+      <div>
+        <h2 class="panel-title">학교별 일정</h2>
+        <p class="panel-desc">가로가 날짜, 세로가 학교입니다. 어느 학교가 언제 시험인지, 어느 주에 몰려 있는지 한눈에 보여요.</p>
+      </div>
+      <button class="btn secondary" id="schedTodayBtn">오늘로 이동</button>
+    </div>
+
+    <div class="filter-bar">
+      <div>
+        <label>시험 선택</label>
+        <select id="schedSeasonSelect"></select>
+      </div>
+      <div class="exam-summary" id="schedSummary" style="align-self:flex-end; padding-bottom:9px;"></div>
+    </div>
+
+    <div class="filter-line" id="schedGradeFilters"></div>
+    <div class="tl-scroll" id="schedScroll"><div class="tl" id="schedTl"></div></div>
+    <div class="cal-legend" id="schedLegend"></div>
+    <div id="schedEmptyState"></div>
   </section>
 
   <!-- 시험 범위 (학교별 비교표) -->
@@ -927,6 +988,7 @@ function onDataChange(){
   renderCalendar();
   renderExamTab();
   renderScopeTab();
+  renderScheduleTab();
   renderSummary();
   if(currentDayKey && document.getElementById("dayModal").classList.contains("active")) openDayModal(currentDayKey, true);
   if(currentStudentId && document.getElementById("studentModal").classList.contains("active")) openStudentModal(currentStudentId);
@@ -2262,6 +2324,166 @@ function renderSummary(){
     }
   }));
 }
+
+/* ---------- 학교별 일정 타임라인 ---------- */
+let schedSeason = "";
+let schedGrade = "";
+const TL_NAME_W = 118, TL_DAY_W = 26;
+
+function shiftKey(key, days){
+  const d = toDate(key);
+  d.setDate(d.getDate() + days);
+  return dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+}
+function dayIndex(fromKey, key){ return daysBetween(fromKey, key); }
+
+function renderScheduleTab(){
+  const sel = document.getElementById("schedSeasonSelect");
+  const tl = document.getElementById("schedTl");
+  const emptyBox = document.getElementById("schedEmptyState");
+  const legend = document.getElementById("schedLegend");
+
+  const dated = exams.filter(e=> e.startDate && e.endDate && !e.notConducted);
+  const seasons = uniq(dated.map(seasonKeyOf)).sort((a,b)=> seasonSortValue(a)-seasonSortValue(b));
+
+  if(seasons.length===0){
+    sel.innerHTML = ""; tl.innerHTML = ""; legend.innerHTML = "";
+    document.getElementById("schedGradeFilters").innerHTML = "";
+    document.getElementById("schedSummary").textContent = "";
+    emptyBox.innerHTML = `<div class="empty-state">날짜가 입력된 시험이 아직 없어요. '시험정보 입력' 탭에서 시험 기간을 저장해주세요.</div>`;
+    return;
+  }
+  emptyBox.innerHTML = "";
+
+  // 처음 열 때는 오늘과 가장 가까운 시즌
+  if(!schedSeason || !seasons.includes(schedSeason)){
+    const tk = todayKey();
+    let best = seasons[seasons.length-1], bestDiff = Infinity;
+    seasons.forEach(k=> dated.filter(e=> seasonKeyOf(e)===k).forEach(e=>{
+      const diff = Math.abs(daysBetween(tk, e.startDate));
+      if(diff < bestDiff){ bestDiff = diff; best = k; }
+    }));
+    schedSeason = best;
+  }
+  sel.innerHTML = seasons.map(k=>`<option value="${escapeHtml(k)}">${escapeHtml(seasonLabelOf(k))}</option>`).join("");
+  sel.value = schedSeason;
+
+  let list = dated.filter(e=> seasonKeyOf(e)===schedSeason);
+  const grades = sortGrades(uniq(list.map(e=>e.grade)));
+  if(schedGrade && !grades.includes(schedGrade)) schedGrade = "";
+
+  document.getElementById("schedGradeFilters").innerHTML =
+    `<span class="fl">학년</span>` +
+    `<button class="fbtn ${schedGrade===""?"active":""}" data-g="">전체</button>` +
+    grades.map(g=>`<button class="fbtn ${schedGrade===g?"active":""}" data-g="${escapeHtml(g)}">${escapeHtml(g)}</button>`).join("");
+  document.querySelectorAll("#schedGradeFilters .fbtn").forEach(b=>
+    b.addEventListener("click", ()=>{ schedGrade = b.dataset.g; renderScheduleTab(); }));
+
+  if(schedGrade) list = list.filter(e=> e.grade===schedGrade);
+
+  /* 시험이 빠른 학교부터 위에 오도록 정렬 */
+  const firstDateOf = {};
+  list.forEach(e=>{
+    if(!firstDateOf[e.school] || e.startDate < firstDateOf[e.school]) firstDateOf[e.school] = e.startDate;
+  });
+  const schools = uniq(list.map(e=>e.school))
+    .sort((a,b)=> firstDateOf[a].localeCompare(firstDateOf[b]) || a.localeCompare(b));
+  const noScope = list.filter(e=> !e.examScope).length;
+  document.getElementById("schedSummary").innerHTML =
+    `${schools.length}개교 · 시험 ${list.length}건` +
+    (noScope ? ` · <span style="color:var(--rust);">범위 미입력 ${noScope}건</span>` : "");
+
+  if(list.length===0){
+    tl.innerHTML = ""; legend.innerHTML = "";
+    emptyBox.innerHTML = `<div class="empty-state">이 조건에 맞는 시험이 없어요.</div>`;
+    return;
+  }
+
+  /* 표시 구간: 가장 이른 시작일 3일 전 ~ 가장 늦은 종료일 3일 후 */
+  const minStart = list.map(e=>e.startDate).sort()[0];
+  const maxEnd   = list.map(e=>e.endDate).sort().slice(-1)[0];
+  const from = shiftKey(minStart, -3), to = shiftKey(maxEnd, 3);
+  const days = daysBetween(from, to) + 1;
+  const trackW = days * TL_DAY_W;
+  const tk = todayKey();
+
+  /* 날짜 눈금 */
+  let cells = "", labels = "";
+  for(let i=0;i<days;i++){
+    const k = shiftKey(from, i);
+    const d = toDate(k);
+    const dow = d.getDay();
+    const isMstart = d.getDate()===1;
+    cells += `<div class="tl-daycell ${(dow===0||dow===6)?"wk":""} ${isMstart?"mstart":""}" style="left:${i*TL_DAY_W}px; width:${TL_DAY_W}px;"></div>`;
+    if(isMstart || i===0) labels += `<div class="tl-monthlabel" style="left:${i*TL_DAY_W}px;">${d.getMonth()+1}월</div>`;
+    else if(d.getDate()%5===0) labels += `<div class="tl-daylabel" style="left:${i*TL_DAY_W}px;">${d.getDate()}</div>`;
+  }
+  const todayLeft = dayIndex(from, tk) * TL_DAY_W;
+  const inRange = todayLeft >= 0 && todayLeft <= trackW;
+  const todayMark = inRange ? `<div class="tl-today" style="left:${todayLeft}px;"></div>` : "";
+  const todayMarkLbl = inRange ? `<div class="tl-today lbl" style="left:${todayLeft}px;"></div>` : "";
+
+  let html = `<div class="tl-row tl-head" style="grid-template-columns:${TL_NAME_W}px ${trackW}px;">
+      <div class="tl-name">학교 <span class="cnt">${schools.length}곳</span></div>
+      <div class="tl-track" style="height:26px;">${cells}${todayMarkLbl}${labels}</div>
+    </div>`;
+
+  schools.forEach(sc=>{
+    const rows = list.filter(e=> e.school===sc).sort((a,b)=> a.startDate.localeCompare(b.startDate));
+    /* 기간이 겹치면 아래 줄로 내려서 배치 */
+    const lanes = [];
+    rows.forEach(e=>{
+      let li = lanes.findIndex(l=> l.every(x=> e.startDate > x.endDate || e.endDate < x.startDate));
+      if(li===-1) lanes.push([e]); else lanes[li].push(e);
+    });
+    const h = lanes.length*28 + 8;
+    const bars = lanes.map((lane,li)=> lane.map(e=>{
+      const x = dayIndex(from, e.startDate) * TL_DAY_W;
+      const w = (daysBetween(e.startDate, e.endDate) + 1) * TL_DAY_W - 3;
+      const count = studentsForExam(e).length;
+      const past = e.endDate < tk;
+      const title = `${e.school} ${e.grade} ${e.examName}\n${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)} · ${count}명` +
+                    (e.examScope ? "" : "\n※ 시험 범위 미입력");
+      return `<div class="bar ${gradeColor(e.grade)} ${past?"past":""} ${e.examScope?"":"noscope"}"
+        style="left:${x}px; top:${li*28+4}px; width:${w}px;"
+        data-exam="${e.id}" title="${escapeHtml(title)}">${escapeHtml(e.grade||"")} ${count}명</div>`;
+    }).join("")).join("");
+
+    html += `<div class="tl-row" style="grid-template-columns:${TL_NAME_W}px ${trackW}px;">
+      <div class="tl-name">${escapeHtml(shortSchool(sc))} <span class="cnt">${rows.length}건</span></div>
+      <div class="tl-track" style="height:${h}px;">${cells}${todayMark}${bars}</div>
+    </div>`;
+  });
+
+  tl.innerHTML = html;
+  tl.querySelectorAll(".bar").forEach(b=> b.addEventListener("click", ()=> openDetailModal(b.dataset.exam)));
+
+  legend.innerHTML = `<span>학년 색상</span>` + grades.map(g=>{
+    const c = gradeColor(g);
+    return `<span class="lg"><span class="sw" style="background:${COLOR_HEX[c]}; border-color:${COLOR_BORDER[c]};"></span>${escapeHtml(g)}</span>`;
+  }).join("") + `<span style="margin-left:4px;">· 흐린 막대는 끝난 시험 · 빨간 점선 테두리는 시험 범위 미입력</span>`;
+
+  /* 오늘(또는 첫 시험)이 보이도록 가로 스크롤 위치 조정 */
+  const box = document.getElementById("schedScroll");
+  const target = inRange ? todayLeft : dayIndex(from, minStart)*TL_DAY_W;
+  box.scrollLeft = Math.max(0, target - box.clientWidth/3);
+}
+
+document.getElementById("schedSeasonSelect").addEventListener("change", (e)=>{
+  schedSeason = e.target.value; schedGrade = ""; renderScheduleTab();
+});
+document.getElementById("schedTodayBtn").addEventListener("click", ()=>{
+  const dated = exams.filter(e=> e.startDate && e.endDate && !e.notConducted);
+  if(dated.length===0){ showToast("표시할 시험이 없어요.", {type:"warn"}); return; }
+  const tk = todayKey();
+  let best = null, bestDiff = Infinity;
+  dated.forEach(e=>{
+    const diff = Math.abs(daysBetween(tk, e.startDate));
+    if(diff < bestDiff){ bestDiff = diff; best = e; }
+  });
+  schedSeason = seasonKeyOf(best); schedGrade = "";
+  renderScheduleTab();
+});
 
 /* ---------- 시험 범위 탭 (학교별 비교표) ---------- */
 let scopeSeason = "";
