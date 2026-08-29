@@ -575,6 +575,21 @@
   .pw-row > div{flex:1; min-width:150px;}
   .pw-note{font-size:11.5px; color:#8a8375; line-height:1.65; margin-top:10px;}
 
+  /* 캘린더 학교 검색 */
+  .school-search{position:relative; display:flex; align-items:center;}
+  .school-search input{padding-right:30px;}
+  .school-search .clr{position:absolute; right:6px; border:none; background:#eee9dc; color:#8a8375;
+    width:19px; height:19px; border-radius:50%; font-size:13px; line-height:1; cursor:pointer; display:none;
+    padding:0; align-items:center; justify-content:center;}
+  .school-search .clr.show{display:flex;}
+  .school-search .clr:hover{background:#e0d9c6; color:var(--rust);}
+  .search-hit{font-size:11.5px; font-weight:700; color:#a49c88; margin-top:5px; display:block;}
+  .search-hit.none{color:var(--rust);}
+  .hit-jump{border:none; background:none; padding:0; font:inherit; color:var(--rust);
+    font-weight:800; text-decoration:underline; cursor:pointer;}
+  .hit-jump:hover{opacity:.75;}
+  .school-search input{min-width:170px;}
+
   /* ---------- 토스트 알림 ---------- */
   .toast-wrap{position:fixed; left:50%; transform:translateX(-50%); bottom:22px; z-index:100;
     display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none; width:min(560px,calc(100% - 32px));}
@@ -773,6 +788,14 @@
     <div class="summary-row" id="summaryRow"></div>
 
     <div class="filter-bar">
+      <div>
+        <label>학교 검색</label>
+        <div class="school-search">
+          <input type="text" id="calSchoolSearch" list="schoolList" placeholder="학교 이름 (초성도 됩니다)">
+          <button class="clr" id="calSchoolClear" title="지우기">&times;</button>
+        </div>
+        <span class="search-hit" id="calSchoolHit"></span>
+      </div>
       <div>
         <label>선생님별 보기</label>
         <select id="calFilterTeacher"><option value="">전체 선생님</option></select>
@@ -2371,12 +2394,26 @@ function studentsForExam(exam){
   /* 퇴원한 학생은 시험 대상에서 빼요 */
   return students.filter(s=> s.school===exam.school && s.grade===exam.grade && statusOf(s)!=="퇴원");
 }
-/* 화면 필터(학생 없는 시험 숨기기 / 선생님별 보기)를 적용한 전체 시험 목록 */
+/* ---------- 캘린더 학교 검색 ----------
+   "가락", "가락중", "ㄱㄹ" 처럼 이름 일부나 초성으로 찾을 수 있어요. */
+let calSchoolQ = "";
+function normQ(t){ return (t||"").replace(/\s+/g,"").toLowerCase(); }
+function isChosungQuery(q){ return /^[\u3131-\u314e]+$/.test(q); }
+function schoolMatchesQuery(school, q){
+  if(!q) return true;
+  const name = (school||"").replace(/\s+/g,"");
+  if(!name) return false;
+  if(isChosungQuery(q)) return nameChosung(name).startsWith(q);
+  return name.toLowerCase().includes(q);
+}
+
+/* 화면 필터(학교 검색 / 학생 없는 시험 숨기기 / 선생님별 보기)를 적용한 전체 시험 목록 */
 function visibleExams(){
   const teacherFilter = document.getElementById("calFilterTeacher").value;
   const hideEmpty = document.getElementById("hideEmptyExams").checked;
   return exams.filter(e=>{
     if(!e.startDate || !e.endDate || e.notConducted) return false;
+    if(calSchoolQ && !schoolMatchesQuery(e.school, calSchoolQ)) return false;
     if(hideEmpty && studentsForExam(e).length === 0) return false;
     if(teacherFilter && !studentsForExam(e).some(s=>s.teacher===teacherFilter)) return false;
     return true;
@@ -2554,6 +2591,7 @@ function renderCalListView(){
 }
 
 function renderCalendar(){
+  renderSchoolHit();
   renderSeasonChips();
   document.getElementById("monthLabel").innerHTML = `${viewYear}년 ${viewMonth+1}월 <span class="caret">▾</span>`;
   if(monthPicker.classList.contains("open")) renderMonthPicker();
@@ -2631,6 +2669,80 @@ document.getElementById("nextMonth").addEventListener("click", ()=>{ viewMonth++
 document.getElementById("todayBtn").addEventListener("click", ()=> goToMonth(today.getFullYear(), today.getMonth()));
 document.getElementById("calFilterTeacher").addEventListener("change", renderCalendar);
 document.getElementById("hideEmptyExams").addEventListener("change", renderCalendar);
+
+/* ---------- 학교 검색 입력 / 결과 안내 ---------- */
+const calSchoolInput = document.getElementById("calSchoolSearch");
+const calSchoolClearBtn = document.getElementById("calSchoolClear");
+const calSchoolHit = document.getElementById("calSchoolHit");
+
+function renderSchoolHit(){
+  calSchoolClearBtn.classList.toggle("show", !!calSchoolQ);
+  calSchoolInput.classList.toggle("hit-none", false);
+  if(!calSchoolQ){ calSchoolHit.textContent = ""; calSchoolHit.className = "search-hit"; return; }
+
+  const list = visibleExams();   // 이미 학교 검색이 적용된 목록
+  if(list.length === 0){
+    calSchoolHit.className = "search-hit none";
+    // 다른 필터(선생님별 보기 등) 때문에 가려진 건지 구분해서 알려줘요
+    const raw = exams.filter(e=> e.startDate && e.endDate && !e.notConducted
+      && schoolMatchesQuery(e.school, calSchoolQ));
+    if(raw.length){
+      const nm = [...new Set(raw.map(e=>shortSchool(e.school)))];
+      calSchoolHit.textContent = `${nm.slice(0,3).join(", ")}${nm.length>3?" 외":""} — 다른 필터에 가려졌어요`;
+      return;
+    }
+    // 시험은 없어도 학생 명단에 그 학교가 있는지 알려줘요
+    const known = [...new Set(students.map(s=>s.school).filter(Boolean))]
+      .filter(sc=> schoolMatchesQuery(sc, calSchoolQ));
+    calSchoolHit.textContent = known.length
+      ? `${known.slice(0,3).map(shortSchool).join(", ")}${known.length>3?" 외":""} — 등록된 시험이 없어요`
+      : "일치하는 학교가 없어요";
+    return;
+  }
+
+  const names = [...new Set(list.map(e=>e.school))];
+  const first = dateKey(viewYear, viewMonth, 1);
+  const last  = dateKey(viewYear, viewMonth, new Date(viewYear, viewMonth+1, 0).getDate());
+  const inMonth = list.filter(e=> e.startDate<=last && e.endDate>=first).length;
+
+  calSchoolHit.className = "search-hit";
+  let html = `${names.length}개교 · 시험 ${list.length}개`;
+  if(inMonth === 0){
+    // 이번 달에 없으면 가장 가까운 시험 달로 건너뛸 수 있게
+    const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+    const sorted = [...list].sort((a,b)=> a.startDate.localeCompare(b.startDate));
+    const target = sorted.find(e=> e.endDate >= todayKey) || sorted[sorted.length-1];
+    const d = toDate(target.startDate);
+    html += ` · <button type="button" class="hit-jump" data-y="${d.getFullYear()}" data-m="${d.getMonth()}">${d.getFullYear()}년 ${d.getMonth()+1}월로 이동</button>`;
+  }else{
+    html += ` · 이번 달 ${inMonth}개`;
+  }
+  calSchoolHit.innerHTML = html;
+}
+
+calSchoolHit.addEventListener("click", e=>{
+  const b = e.target.closest(".hit-jump");
+  if(!b) return;
+  goToMonth(Number(b.dataset.y), Number(b.dataset.m));
+});
+
+let calSchoolTimer = null;
+calSchoolInput.addEventListener("input", ()=>{
+  clearTimeout(calSchoolTimer);
+  calSchoolTimer = setTimeout(()=>{
+    calSchoolQ = normQ(calSchoolInput.value);
+    renderCalendar();
+  }, 120);
+});
+calSchoolInput.addEventListener("keydown", e=>{
+  if(e.key === "Escape"){ e.stopPropagation(); clearSchoolSearch(); }
+});
+function clearSchoolSearch(){
+  calSchoolInput.value = ""; calSchoolQ = "";
+  clearTimeout(calSchoolTimer);
+  renderCalendar(); calSchoolInput.focus();
+}
+calSchoolClearBtn.addEventListener("click", clearSchoolSearch);
 
 /* ---------- 날짜별 시험 목록 모달 ---------- */
 let currentDayKey = null;
