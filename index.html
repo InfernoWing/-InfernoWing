@@ -521,16 +521,7 @@
   .promote-row.grad .to{color:var(--rust);}
   .promote-row .n{font-size:11.5px; color:#8a8375; font-weight:700;}
 
-  /* 입력완료 진행률 */
-  .prog-wrap{display:flex; align-items:center; gap:10px; margin:2px 0 12px;}
-  .prog-bar{flex:1; height:9px; background:#ece7d8; border-radius:999px; overflow:hidden;}
-  .prog-bar span{display:block; height:100%; background:var(--green); border-radius:999px; transition:width .25s;}
-  .prog-text{font-size:12px; font-weight:800; color:#6b7368; white-space:nowrap;}
-  .prog-text.done{color:var(--green);}
   .teacher-group .tname{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
-  .tname .allbtn{border:1.5px solid #ddd6c2; background:#fff; color:#6b7368; font-family:inherit;
-    font-weight:700; font-size:10.5px; padding:3px 9px; border-radius:20px; cursor:pointer; margin-left:auto;}
-  .tname .allbtn:hover{background:#f2eee2; border-color:var(--green); color:var(--green);}
 
   /* 상세 창에서 범위 바로 입력 */
   .scope-edit{border:1.5px solid #ece7d8; border-left:4px solid var(--mustard); border-radius:9px;
@@ -706,9 +697,6 @@
   .assign-row{display:flex; flex-wrap:wrap; gap:8px;}
   .assign-chip{ display:inline-flex; align-items:center; gap:7px; border:1.5px solid #ece7d8; border-radius:9px; padding:7px 11px; font-size:13px; background:#fffdf8; }
   .assign-chip .sname{font-weight:700;}
-  .status-tag{ font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; cursor:pointer; border:none; }
-  .status-tag.pending{background:#fbe4dc; color:var(--rust);}
-  .status-tag.done{background:#dcefe3; color:var(--green);}
 
   .empty-state{ text-align:center; color:#a49c88; padding:30px 10px; font-size:13px; }
 
@@ -1294,7 +1282,7 @@ const isConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
 
 let db, collection, onSnapshot, addDoc, deleteDoc, updateDoc, setDoc, doc, query, orderBy;
 let students = [];
-let exams = []; // {id, school, grade, examName, notConducted, notConductedReason, startDate, endDate, printStatus, inputTeacher, examScope, schoolNotice, makeupDate, statusMap, savedAt}
+let exams = []; // {id, school, grade, examName, notConducted, notConductedReason, startDate, endDate, printStatus, inputTeacher, examScope, schoolNotice, makeupDate, retros, savedAt}
 
 const GRADE_ORDER = ["초4","초5","초6","중1","중2","중3","고1","고2","고3"];
 const STATUS_LIST = ["재원","휴원","퇴원"];
@@ -2742,7 +2730,7 @@ async function saveExamCard(cardEl, extra={}){
   if(existing){
     await updateExamDoc(existing.id, {...data, ...extra, savedAt});
   } else {
-    await addExam({...data, makeupDate:"", statusMap:{}, ...extra, savedAt});
+    await addExam({...data, makeupDate:"", ...extra, savedAt});
   }
 }
 
@@ -4238,14 +4226,13 @@ function openStudentModal(studentId){
       ? `<div class="empty-state">등록된 시험이 없어요. 학교·학년이 맞게 입력됐는지 확인해주세요.</div>`
       : mine.map(e=>{
           const period = e.startDate===e.endDate ? fmtWithDow(e.startDate) : `${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)}`;
-          const done = (e.statusMap||{})[s.id]==="done";
           const scope = e.examScope
             ? escapeHtml(e.examScope.split("\n")[0]).slice(0,40) + (e.examScope.length>40?"…":"")
             : `<span class="noscope">시험 범위 미입력</span>`;
           return `<button class="stu-exam-row ${e.endDate<tk?"past":""}" data-exam="${e.id}">
             <span>
               <span class="en">${escapeHtml(e.examName||"")} <span style="font-weight:600; color:#8a8375; font-size:12px;">${escapeHtml(period)}</span></span>
-              <span class="ed">${scope}<br>${done ? '<span style="color:var(--green); font-weight:700;">입력완료</span>' : '<span style="color:var(--rust); font-weight:700;">미입력</span>'} · 직전보강 ${e.makeupDate ? escapeHtml(e.makeupDate) : "--"}</span>
+              <span class="ed">${scope} · 직전보강 ${e.makeupDate ? escapeHtml(e.makeupDate) : "--"}</span>
             </span>
             ${ddayBadge(e)}
           </button>`;
@@ -4305,14 +4292,6 @@ document.getElementById("studentModal").addEventListener("click", (e)=>{
 });
 
 /* ---------- 시험 상세 모달 ---------- */
-async function toggleAssignmentStatus(examId, studentId){
-  const exam = exams.find(e=>e.id===examId);
-  if(!exam) return;
-  const statusMap = {...(exam.statusMap||{})};
-  statusMap[studentId] = statusMap[studentId]==="done" ? "pending" : "done";
-  await updateExamDoc(examId, {statusMap});
-}
-
 let detailReturnTo = null;   // {type:"day", key} | {type:"student", id} | null
 
 function openDetailModal(examId, returnTo){
@@ -4444,17 +4423,8 @@ function openDetailModal(examId, returnTo){
     byTeacher[teacher].push(s);
   });
   const teacherNames = Object.keys(byTeacher).sort();
-  const statusMap = exam.statusMap || {};
 
-  const doneCount = relevant.filter(s=> statusMap[s.id]==="done").length;
-  const pct = relevant.length ? Math.round(doneCount/relevant.length*100) : 0;
   let bodyHtml = `<div class="section-label">담당 선생님별 학생 ${relevant.length}명</div>`;
-  if(relevant.length){
-    bodyHtml += `<div class="prog-wrap">
-      <div class="prog-bar"><span style="width:${pct}%;"></span></div>
-      <span class="prog-text ${doneCount===relevant.length?"done":""}">${doneCount} / ${relevant.length}명 입력완료</span>
-    </div>`;
-  }
   if(teacherNames.length===0){
     bodyHtml += `<div class="empty-state">이 학교·학년에 해당하는 학생이 없어요.</div>`;
   } else {
@@ -4462,44 +4432,15 @@ function openDetailModal(examId, returnTo){
       const list = byTeacher[t];
       return `
         <div class="teacher-group">
-          <div class="tname">${escapeHtml(t)}T <span class="cnt">${list.length}명</span>
-            <button class="allbtn" data-teacher="${escapeHtml(t)}">${
-              list.every(x=> statusMap[x.id]==="done") ? "전원 해제" : "전원 완료"
-            }</button>
-          </div>
+          <div class="tname">${escapeHtml(t)}T <span class="cnt">${list.length}명</span></div>
           <div class="assign-row">
-            ${list.map(s=>{
-              const st = statusMap[s.id]==="done" ? "done":"pending";
-              return `
-                <div class="assign-chip">
-                  <span class="sname">${escapeHtml(s.name)}</span>
-                  <button class="status-tag ${st}" data-student="${s.id}">${st==="done"?"입력완료":"미입력"}</button>
-                </div>
-              `;
-            }).join("")}
+            ${list.map(s=>`<div class="assign-chip"><span class="sname">${escapeHtml(s.name)}</span></div>`).join("")}
           </div>
         </div>
       `;
     }).join("");
   }
-  const box = document.getElementById("detailTeacherGroups");
-  box.innerHTML = bodyHtml;
-  box.querySelectorAll(".status-tag").forEach(btn=>{
-    btn.addEventListener("click", ()=> toggleAssignmentStatus(examId, btn.dataset.student));
-  });
-  box.querySelectorAll(".allbtn").forEach(btn=> btn.addEventListener("click", async ()=>{
-    const list = byTeacher[btn.dataset.teacher] || [];
-    const allDone = list.every(x=> statusMap[x.id]==="done");
-    const next = {...statusMap};
-    list.forEach(x=> next[x.id] = allDone ? "pending" : "done");
-    await updateExamDoc(examId, {statusMap: next});
-    showToast(`${btn.dataset.teacher}T 학생 ${list.length}명을 ${allDone?"미입력으로 되돌렸어요":"입력완료로 바꿨어요"}.`, {
-      type: allDone ? "warn" : "ok",
-      actionLabel:"되돌리기",
-      onAction: async ()=>{ await updateExamDoc(examId, {statusMap}); }
-    });
-  }));
-
+  document.getElementById("detailTeacherGroups").innerHTML = bodyHtml;
 }
 document.getElementById("closeDetailModal").addEventListener("click", ()=>{
   document.getElementById("detailModal").classList.remove("active");
