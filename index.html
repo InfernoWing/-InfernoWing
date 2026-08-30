@@ -590,6 +590,80 @@
   .hit-jump:hover{opacity:.75;}
   .school-search input{min-width:170px;}
 
+  /* ---------- 드라이브 자료 ---------- */
+  .drive-box{border:1px solid #e6e0d1; background:#fdfcf8; border-radius:12px; padding:14px 16px; margin-top:16px;}
+  .drive-box h4{margin:0 0 3px; font-size:14px; font-weight:900;}
+  .drive-box .dhint{font-size:11.5px; color:#8a8375; margin:0 0 11px;}
+  .drive-box label.small{display:block; margin:9px 0 5px;}
+  .drive-box input[type="text"]{width:100%; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px;}
+  .drive-row{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px;}
+  .drive-stat{font-size:11.5px; font-weight:800; color:#8a8375;}
+  .drive-stat.ok{color:var(--green);}
+  .drive-stat.bad{color:var(--rust);}
+  .file-line{display:flex; align-items:center; gap:9px; padding:7px 9px; border:1px solid #e6e0d1;
+    border-radius:9px; background:#fdfcf8; margin-bottom:6px; text-decoration:none; color:inherit;}
+  .file-line:hover{border-color:var(--mustard);}
+  .file-line .ico{width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center;
+    font-size:9px; font-weight:900; color:#fff; flex:0 0 auto; background:#8a8375;}
+  .file-line .ico.pdf{background:#c0503f;} .file-line .ico.hwp{background:#2f6b9e;}
+  .file-line .ico.img{background:#5c8f5c;} .file-line .ico.xls{background:#2f7d4f;}
+  .file-line .ico.doc{background:#2f5674;} .file-line .ico.ppt{background:#c4703a;}
+  .file-line .nm{flex:1 1 auto; min-width:0;}
+  .file-line .nm b{display:block; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .file-line .nm span{font-size:10.5px; color:#a49c88;}
+  .file-line .why{background:#eef3f7; border:1px solid #cfdde8; color:#2f5877; font-size:10px; font-weight:800;
+    padding:2px 7px; border-radius:999px; flex:0 0 auto;}
+  .file-line .why.loose{background:#f6f2e6; border-color:#e6dfcc; color:#8a8375;}
+  .file-line.dim{opacity:.72;}
+  .file-more{border:1px dashed #cfc7b2; background:none; color:#8a8375; font-weight:800; font-size:11.5px;
+    border-radius:8px; padding:5px 10px; cursor:pointer; font-family:inherit;}
+  .drive-files .section-label{margin-top:0;}
+  .unmatched-wrap{margin-top:13px; padding-top:12px; border-top:1px dashed #e3ddcd;}
+
+/* ---------- 시험 후 회고 ---------- */
+  .retro-box{background:#f6f2e6; border:1px solid #e6dfcc; border-radius:12px; padding:13px 14px; margin-top:14px;}
+  .retro-head{font-size:13px; font-weight:900; display:flex; align-items:center; gap:7px; flex-wrap:wrap;}
+  .retro-head .rsy{background:var(--mustard); color:#3a2a08; font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:999px;}
+  .retro-head .rat{font-size:10.5px; font-weight:700; color:#a49c88; margin-left:auto;}
+  .retro-hint{font-size:11.5px; color:#8a8375; margin:4px 0 10px;}
+  .retro-box label.small{display:block; margin:9px 0 5px;}
+  .retro-box input[type="text"]{width:100%;}
+  .retro-chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .retro-chip{border:1px solid #ded7c6; background:#fdfcf8; color:#7a7263; font-size:11.5px; font-weight:700;
+    padding:5px 10px; border-radius:999px; cursor:pointer; font-family:inherit;}
+  .retro-chip:hover{border-color:var(--mustard);}
+  .retro-chip.on{background:var(--board); border-color:var(--board); color:var(--chalk);}
+  .retro-seg{display:inline-flex; border:1px solid #ded7c6; border-radius:9px; overflow:hidden; background:#fdfcf8;}
+  .retro-seg button{border:none; background:none; padding:6px 14px; font-size:12px; font-weight:800;
+    color:#8a8375; cursor:pointer; font-family:inherit;}
+  .retro-seg button.on{background:var(--mustard); color:#3a2a08;}
+  /* 지난 회고 박스 */
+  .lastyear{background:#eef3f7; border:1px solid #cfdde8; border-left:4px solid var(--blue);
+    border-radius:10px; padding:12px 14px; margin-bottom:12px;}
+  .lastyear .ly-head{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:900; color:#2f5877; margin-bottom:7px; flex-wrap:wrap;}
+  .lastyear .ly-head .yr{background:#dbe7f1; border:1px solid #c3d6e6; padding:2px 8px; border-radius:999px; font-size:11px;}
+  .ly-chips{display:flex; flex-wrap:wrap; gap:5px; margin-bottom:7px;}
+  .ly-chips span{background:#fff; border:1px solid #c3d6e6; color:#2f5877; font-size:11px; font-weight:700; padding:3px 8px; border-radius:999px;}
+  .lastyear p{margin:0; font-size:12.5px; color:#3d5f78; line-height:1.6;}
+  .lastyear p .lbl{font-weight:800;}
+  .lastyear .retro-more{margin-top:8px; font-size:11.5px; font-weight:800; color:#2f5877; background:none;
+    border:none; padding:0; cursor:pointer; text-decoration:underline; font-family:inherit;}
+  .ly-rest{display:none; margin-top:10px; padding-top:10px; border-top:1px dashed #cfdde8;}
+  .ly-rest.show{display:block;}
+  .ly-rest .ly-one + .ly-one{margin-top:10px; padding-top:10px; border-top:1px dashed #cfdde8;}
+  /* 학교 회고 이력 */
+  .rh-list{border-left:2px solid #e3ddcd; margin-left:8px; padding-left:18px; margin-top:6px;}
+  .rh-item{position:relative; padding-bottom:15px;}
+  .rh-item::before{content:""; position:absolute; left:-25px; top:4px; width:11px; height:11px; border-radius:50%;
+    background:var(--paper-card); border:2px solid var(--mustard);}
+  .rh-item.old::before{border-color:#d5cdb8;}
+  .rh-top{display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-bottom:4px;}
+  .rh-top .rh-yr{font-size:12.5px; font-weight:900;}
+  .rh-grade{font-size:10.5px; font-weight:800; color:#5f5a4c; border:1px solid; border-radius:999px; padding:2px 8px;}
+  .rh-item p{margin:3px 0 0; font-size:12.5px; color:#5f5a4c; line-height:1.6;}
+  .tl-name.clickable{cursor:pointer;}
+  .tl-name.clickable:hover{color:var(--rust); text-decoration:underline;}
+
   /* ---------- 토스트 알림 ---------- */
   .toast-wrap{position:fixed; left:50%; transform:translateX(-50%); bottom:22px; z-index:100;
     display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none; width:min(560px,calc(100% - 32px));}
@@ -1050,6 +1124,25 @@
       <button class="btn secondary small edit-only" id="pwChangeBtn">🔑 비밀번호 바꾸기</button>
       <span id="backupStatus" style="font-size:11.5px; color:#8a8375;"></span>
     </div>
+
+    <div class="drive-box edit-only" id="driveBox">
+      <h4>기출 자료 폴더 연결</h4>
+      <p class="dhint">구글 드라이브 폴더를 연결하면, 파일명에 학교 이름이 있는 자료가 시험 카드에 저절로 붙습니다.</p>
+      <label class="small">스크립트 주소</label>
+      <input type="text" id="driveUrl" placeholder="https://script.google.com/macros/s/..../exec">
+      <label class="small">암호</label>
+      <input type="text" id="driveToken" placeholder="스크립트에 적어둔 TOKEN 값">
+      <div class="drive-row">
+        <button class="btn small" id="driveSaveBtn">연결</button>
+        <button class="btn secondary small" id="driveRefreshBtn">새로고침</button>
+        <span class="drive-stat" id="driveStat"></span>
+      </div>
+      <div class="unmatched-wrap" id="driveUnmatchedWrap" style="display:none;">
+        <div class="section-label">어디에도 안 붙은 파일 <span id="driveUnmatchedCount"></span></div>
+        <p class="dhint">파일명에 학교 이름을 넣으면 자동으로 붙습니다.</p>
+        <div id="driveUnmatched"></div>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -1122,6 +1215,16 @@
     <h3>데이터 정리</h3>
     <p class="modal-meta" id="cleanupMeta"></p>
     <div id="cleanupBody"></div>
+  </div>
+</div>
+
+<!-- 학교 회고 이력 모달 -->
+<div class="overlay" id="retroHistModal">
+  <div class="modal">
+    <button class="close-x" id="closeRetroHist">&times;</button>
+    <h3 id="retroHistTitle">학교 회고</h3>
+    <p class="modal-meta" id="retroHistMeta"></p>
+    <div id="retroHistBody"></div>
   </div>
 </div>
 
@@ -1211,6 +1314,8 @@ async function initFirebase(){
     try{
       const st = JSON.parse(localStorage.getItem("kladi_settings") || "{}");
       if(st.editPasswordHash) editPwHash = st.editPasswordHash;
+      if(st.driveUrl) driveUrl = st.driveUrl;
+      if(st.driveToken) driveToken = st.driveToken;
     }catch(e){}
     onDataChange();
     return;
@@ -1234,6 +1339,11 @@ async function initFirebase(){
   onSnapshot(doc(db,"settings","app"), snap=>{
     const d = snap.data();
     if(d && d.editPasswordHash) editPwHash = d.editPasswordHash;
+    if(d && (d.driveUrl !== driveUrl || d.driveToken !== driveToken)){
+      driveUrl = d.driveUrl || ""; driveToken = d.driveToken || "";
+      applyDriveSettings();
+      if(driveUrl && driveToken) refreshDrive(false);
+    }
   });
 }
 
@@ -2123,6 +2233,376 @@ document.getElementById("examSchoolSelect").addEventListener("change", (e)=>{
   updateDirtyCount();
 });
 
+/* ---------- 기출 자료 (구글 드라이브) ----------
+   Apps Script 중계에서 파일 "목록"만 받아옵니다.
+   불러오기 순서: 일반 요청 → JSONP → 저장해둔 목록 → (전부 실패) 폴더 링크만
+   파일은 앱을 거치지 않고 드라이브에서 바로 열립니다. */
+let driveUrl   = "";
+let driveToken = "";
+let driveFiles = [];          // [{id,name,path,mime,size,modified,url}]
+let driveMeta  = { at:"", folder:"", source:"" };
+let driveLoading = false;
+
+function loadDriveCache(){
+  try{
+    const c = JSON.parse(localStorage.getItem("kladi_drivefiles") || "null");
+    if(c && Array.isArray(c.files)){ driveFiles = c.files; driveMeta = c.meta || driveMeta; }
+  }catch(e){}
+}
+function saveDriveCache(){
+  try{
+    localStorage.setItem("kladi_drivefiles", JSON.stringify({files:driveFiles, meta:driveMeta}));
+  }catch(e){}
+}
+
+/* 브라우저가 막을 때를 대비한 두 번째 경로 */
+function jsonpGet(url, timeoutMs){
+  return new Promise((resolve, reject)=>{
+    const cb = "__drv" + Date.now() + Math.floor(Math.random()*1000);
+    const tag = document.createElement("script");
+    let done = false;
+    const cleanup = ()=>{ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } tag.remove(); };
+    const timer = setTimeout(()=>{ if(!done){ done=true; cleanup(); reject(new Error("timeout")); } }, timeoutMs||12000);
+    window[cb] = (data)=>{ if(done) return; done=true; clearTimeout(timer); cleanup(); resolve(data); };
+    tag.onerror = ()=>{ if(done) return; done=true; clearTimeout(timer); cleanup(); reject(new Error("jsonp failed")); };
+    tag.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cb;
+    document.body.appendChild(tag);
+  });
+}
+
+async function fetchDriveFiles(){
+  if(!driveUrl || !driveToken) return { ok:false, error:"미설정" };
+  const base = driveUrl + (driveUrl.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(driveToken);
+  /* 1) 일반 요청 */
+  try{
+    const res = await fetch(base, {method:"GET"});
+    const data = await res.json();
+    if(data && data.ok) return { ok:true, data, source:"직접" };
+    if(data && data.error) return { ok:false, error:data.error };
+  }catch(e){ /* 다음 경로로 */ }
+  /* 2) JSONP */
+  try{
+    const data = await jsonpGet(base, 15000);
+    if(data && data.ok) return { ok:true, data, source:"JSONP" };
+    if(data && data.error) return { ok:false, error:data.error };
+  }catch(e){ /* 다음 경로로 */ }
+  /* 3) 저장해둔 목록 */
+  if(driveFiles.length) return { ok:true, cached:true, source:"저장본" };
+  return { ok:false, error:"연결 실패" };
+}
+
+async function refreshDrive(showMsg){
+  if(driveLoading) return;
+  if(!driveUrl || !driveToken){ renderDriveStat("주소와 암호를 넣어주세요.", "bad"); return; }
+  driveLoading = true;
+  renderDriveStat("불러오는 중...", "");
+  const r = await fetchDriveFiles();
+  driveLoading = false;
+
+  if(r.ok && !r.cached){
+    driveFiles = r.data.files || [];
+    driveMeta = { at:new Date().toISOString(), folder:r.data.folder||"", source:r.source };
+    saveDriveCache();
+    renderDriveStat(`연결됨 · ${driveMeta.folder||"폴더"} · 파일 ${driveFiles.length}개`, "ok");
+    if(showMsg) showToast(`드라이브에서 ${driveFiles.length}개를 읽었어요.`, {type:"ok"});
+  } else if(r.ok && r.cached){
+    renderDriveStat(`드라이브에 연결하지 못해 저장해둔 목록을 씁니다 · 파일 ${driveFiles.length}개`, "bad");
+    if(showMsg) showToast("드라이브에 연결하지 못했어요. 마지막으로 받아둔 목록을 씁니다.", {type:"warn"});
+  } else {
+    const msg = r.error === "unauthorized" ? "암호가 맞지 않아요." : `연결하지 못했어요 (${r.error||"원인 불명"})`;
+    renderDriveStat(msg, "bad");
+    if(showMsg) showToast(msg, {type:"bad"});
+  }
+  renderDriveUnmatched();
+  renderExamTabForce();
+  if(currentDetailExamId) openDetailModal(currentDetailExamId);
+}
+
+function renderDriveStat(text, cls){
+  const el = document.getElementById("driveStat");
+  if(!el) return;
+  el.textContent = text;
+  el.className = "drive-stat" + (cls ? " " + cls : "");
+}
+
+/* ---------- 파일명 ↔ 시험 맞추기 ---------- */
+function normFile(t){
+  return (t||"").replace(/[\s_\-.()\[\]]/g, "").toLowerCase();
+}
+/* 학교 이름에서 급(중/고/초)을 뗀 부분 — 가락중학교 → 가락 */
+function schoolBase(name){
+  return (name||"").replace(/\s+/g,"").replace(/(초등학교|중학교|고등학교|초|중|고)$/,"");
+}
+function schoolLevel(name){
+  const n = (name||"").replace(/\s+/g,"");
+  if(/초등학교$|초$/.test(n)) return "초";
+  if(/중학교$|중$/.test(n)) return "중";
+  if(/고등학교$|고$/.test(n)) return "고";
+  return "";
+}
+/* 같은 이름(가락)에 급이 여러 개면 짧은 이름만으로는 못 가립니다 */
+function baseIsAmbiguous(base){
+  const levels = new Set();
+  uniq(students.map(s=>s.school).concat(exams.map(e=>e.school))).forEach(sc=>{
+    if(sc && schoolBase(sc) === base) levels.add(schoolLevel(sc));
+  });
+  return levels.size > 1;
+}
+function gradeTokens(grade){
+  const g = (grade||"").trim();
+  if(!g) return [];
+  const num = g.replace(/[^0-9]/g,"");
+  const out = [normFile(g)];
+  if(num) out.push(normFile(num + "학년"));
+  return out;
+}
+function examTokens(examName){
+  if(!examName) return [];
+  if(examName.includes("중간")) return ["중간"];
+  if(examName.includes("기말")) return ["기말"];
+  return [normFile(examName)];
+}
+
+/* 파일 하나가 이 시험에 붙는지 — 붙으면 점수(구체적일수록 높음), 아니면 0 */
+function fileScoreFor(file, exam){
+  const hay = normFile((file.path ? file.path + "/" : "") + file.name);
+  const full  = normFile((exam.school||"").replace(/\s+/g,""));
+  const short = normFile(shortSchool(exam.school||""));
+  const base  = normFile(schoolBase(exam.school||""));
+  if(!base) return 0;
+
+  let score = 0;
+  if(hay.includes(full) || hay.includes(short)) score = 1;          // 가락중 / 가락중학교
+  else if(hay.includes(base) && !baseIsAmbiguous(schoolBase(exam.school))) score = 1;  // 가락
+  else return 0;
+
+  /* 학년이 파일명에 있으면 맞아야 붙습니다 */
+  const gTok = gradeTokens(exam.grade);
+  const anyGrade = ["중1","중2","중3","고1","고2","고3","초4","초5","초6"]
+    .map(normFile).some(t=> hay.includes(t));
+  if(gTok.length && gTok.some(t=> hay.includes(t))) score += 1;
+  else if(anyGrade) return 0;                                        // 다른 학년 파일
+
+  /* 시험명도 마찬가지 */
+  const eTok = examTokens(exam.examName);
+  const anyExam = ["중간","기말"].some(t=> hay.includes(t));
+  if(eTok.length && eTok.some(t=> hay.includes(t))) score += 1;
+  else if(anyExam) return 0;                                         // 다른 시험 파일
+
+  return score;
+}
+
+function filesForExam(exam){
+  if(!exam || !driveFiles.length) return [];
+  return driveFiles
+    .map(f=> ({...f, score: fileScoreFor(f, exam)}))
+    .filter(f=> f.score > 0)
+    .sort((a,b)=> b.score - a.score || (b.modified||"").localeCompare(a.modified||""));
+}
+/* 학생 명단에서 만들어질 수 있는 모든 카드 (아직 저장 안 된 시험 포함) */
+function examCandidates(){
+  const seen = new Set(), out = [];
+  const add = (school, grade, examName)=>{
+    if(!school) return;
+    const k = `${school}|${grade}|${examName}`;
+    if(seen.has(k)) return;
+    seen.add(k); out.push({school, grade, examName});
+  };
+  students.forEach(s=> EXAM_TYPES.forEach(t=> add(s.school, s.grade, t)));
+  exams.forEach(e=> add(e.school, e.grade, e.examName));
+  return out;
+}
+function unmatchedFiles(){
+  if(!driveFiles.length) return [];
+  const cands = examCandidates();
+  return driveFiles.filter(f=> !cands.some(e=> fileScoreFor(f, e) > 0));
+}
+
+function fileIcon(f){
+  const n = (f.name||"").toLowerCase(), m = (f.mime||"").toLowerCase();
+  if(n.endsWith(".pdf") || m.includes("pdf")) return ["pdf","PDF"];
+  if(n.endsWith(".hwp") || n.endsWith(".hwpx")) return ["hwp","HWP"];
+  if(m.startsWith("image/")) return ["img","IMG"];
+  if(n.match(/\.(xlsx?|csv)$/) || m.includes("spreadsheet")) return ["xls","XLS"];
+  if(n.match(/\.(docx?)$/) || m.includes("document")) return ["doc","DOC"];
+  if(n.match(/\.(pptx?)$/) || m.includes("presentation")) return ["ppt","PPT"];
+  return ["", "FILE"];
+}
+function whyLabel(score){
+  return score >= 3 ? "학교 + 학년 + 시험" : score === 2 ? "학교 + 학년" : "학교";
+}
+function fileLineHtml(f, withWhy){
+  const [cls, txt] = fileIcon(f);
+  const sub = [f.path, f.modified].filter(Boolean).join(" · ");
+  return `<a class="file-line ${f.score===1?"dim":""}" href="${escapeHtml(f.url||"#")}" target="_blank" rel="noopener">
+    <span class="ico ${cls}">${txt}</span>
+    <span class="nm"><b>${escapeHtml(f.name||"")}</b><span>${escapeHtml(sub)}</span></span>
+    ${withWhy && f.score ? `<span class="why ${f.score===1?"loose":""}">${whyLabel(f.score)}</span>` : ""}
+  </a>`;
+}
+/* 시험 카드 · 상세 모달에 넣을 자료 목록 */
+function driveFilesHtml(exam, limit){
+  const list = filesForExam(exam);
+  if(!driveFiles.length || !list.length) return "";
+  const shown = list.slice(0, limit || 4);
+  const rest = list.length - shown.length;
+  return `<div class="drive-files">
+    <div class="section-label">드라이브 자료 ${list.length}개</div>
+    ${shown.map(f=> fileLineHtml(f, true)).join("")}
+    ${rest>0 ? `<button type="button" class="file-more" data-exam="${escapeHtml(exam.id||"")}">나머지 ${rest}개 더 보기</button>` : ""}
+  </div>`;
+}
+function expandDriveFiles(btn, exam){
+  const wrap = btn.closest(".drive-files");
+  if(!wrap || !exam) return;
+  const list = filesForExam(exam);
+  wrap.innerHTML = `<div class="section-label">드라이브 자료 ${list.length}개</div>` +
+    list.map(f=> fileLineHtml(f, true)).join("");
+}
+
+function renderDriveUnmatched(){
+  const wrap = document.getElementById("driveUnmatchedWrap");
+  if(!wrap) return;
+  const list = unmatchedFiles();
+  if(!driveFiles.length || !list.length){ wrap.style.display = "none"; return; }
+  wrap.style.display = "";
+  document.getElementById("driveUnmatchedCount").textContent = `${list.length}개`;
+  document.getElementById("driveUnmatched").innerHTML =
+    list.slice(0, 40).map(f=> fileLineHtml(f, false)).join("") +
+    (list.length > 40 ? `<p class="dhint">외 ${list.length-40}개</p>` : "");
+}
+
+/* 시험 카드 다시 그리기 (입력 중이면 건드리지 않음) */
+function renderExamTabForce(){
+  const grid = document.getElementById("examCardsGrid");
+  if(!grid || grid.querySelector(".exam-card.dirty")) return;
+  grid.dataset.school = "";
+  renderExamTab();
+}
+
+function applyDriveSettings(){
+  const u = document.getElementById("driveUrl"), t = document.getElementById("driveToken");
+  if(u) u.value = driveUrl;
+  if(t) t.value = driveToken;
+  if(driveFiles.length){
+    renderDriveStat(`연결됨 · ${driveMeta.folder||"폴더"} · 파일 ${driveFiles.length}개`, "ok");
+    renderDriveUnmatched();
+  }
+}
+
+document.getElementById("driveSaveBtn").addEventListener("click", async ()=>{
+  const u = document.getElementById("driveUrl").value.trim();
+  const t = document.getElementById("driveToken").value.trim();
+  if(!u || !t){ showToast("주소와 암호를 모두 넣어주세요.", {type:"warn"}); return; }
+  if(!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(u)){
+    showToast("주소가 .../exec 로 끝나는 웹 앱 주소인지 확인해주세요.", {type:"warn"}); return;
+  }
+  driveUrl = u; driveToken = t;
+  await saveSetting("driveUrl", u);
+  await saveSetting("driveToken", t);
+  refreshDrive(true);
+});
+document.getElementById("driveRefreshBtn").addEventListener("click", ()=> refreshDrive(true));
+
+
+/* ---------- 시험 후 회고 ----------
+   시험 카드는 학교·학년·시험명 하나당 한 장이라 매년 다시 씁니다.
+   그래서 회고는 학년도별로 따로 담아둡니다: exam.retros = { "2026": {...}, "2025": {...} } */
+const RETRO_TAGS = ["서술형 비중 높음","기출과 유사","교과서 중심","심화 문항 많음",
+                    "계산량 많음","신유형 등장","난이도 상승","난이도 하락"];
+const RETRO_HELP = ["낮음","보통","높음"];
+
+function curSchoolYear(){ return schoolYearOf(today.getFullYear(), today.getMonth()); }
+function examSY(e){
+  if(e && e.startDate){ const d = toDate(e.startDate); return schoolYearOf(d.getFullYear(), d.getMonth()); }
+  return curSchoolYear();
+}
+function retroFilled(r){
+  return !!(r && ((r.tags && r.tags.length) || r.weak || r.memo || r.help));
+}
+function retroOf(e, sy){
+  const r = e && e.retros ? e.retros[String(sy)] : null;
+  return retroFilled(r) ? r : null;
+}
+/* 최신 학년도부터 */
+function retroEntries(e){
+  const map = (e && e.retros) || {};
+  return Object.keys(map)
+    .filter(k=> /^\d{4}$/.test(k) && retroFilled(map[k]))
+    .map(k=> ({sy:Number(k), ...map[k]}))
+    .sort((a,b)=> b.sy - a.sy);
+}
+function isExamOver(e){
+  return !!(e && e.endDate && !e.notConducted && e.endDate < todayKey());
+}
+function retroLine(r){
+  const parts = [];
+  if(r.weak) parts.push(`<span class="lbl">많이 틀린 곳</span> · ${escapeHtml(r.weak)}`);
+  if(r.memo) parts.push(escapeHtml(r.memo));
+  return parts.join("<br>");
+}
+function retroChipsHtml(r){
+  const tags = (r.tags||[]).slice();
+  if(r.help) tags.push(`기출 도움 ${r.help}`);
+  if(!tags.length) return "";
+  return `<div class="ly-chips">${tags.map(t=>`<span>${escapeHtml(t)}</span>`).join("")}</div>`;
+}
+/* 카드 위에 뜨는 "지난번엔 이랬습니다" 박스 */
+function lastRetroBoxHtml(list){
+  if(!list.length) return "";
+  const top = list[0], rest = list.slice(1);
+  const body = retroLine(top);
+  return `<div class="lastyear">
+    <div class="ly-head"><span class="yr">${top.sy}학년도</span> 지난번엔 이랬습니다</div>
+    ${retroChipsHtml(top)}
+    ${body ? `<p>${body}</p>` : ""}
+    ${rest.length ? `<button type="button" class="retro-more">이전 회고 ${rest.length}건 더 보기</button>
+      <div class="ly-rest">${rest.map(r=>`<div class="ly-one">
+        <div class="ly-head"><span class="yr">${r.sy}학년도</span></div>
+        ${retroChipsHtml(r)}${retroLine(r) ? `<p>${retroLine(r)}</p>` : ""}
+      </div>`).join("")}</div>` : ""}
+  </div>`;
+}
+/* 카드 안 회고 입력칸 */
+function retroBoxHtml(existing, sy){
+  const r = retroOf(existing, sy) || {};
+  const tags = r.tags || [];
+  return `<div class="retro-box" data-sy="${sy}">
+    <div class="retro-head">시험 후 회고 <span class="rsy">${sy}학년도</span>${r.at? `<span class="rat">${escapeHtml(r.at)} 기록</span>`:""}</div>
+    <p class="retro-hint">기억이 살아있을 때 30초만 적어두면, 내년 같은 카드에 자동으로 다시 떠요.</p>
+    <div class="retro-chips">${RETRO_TAGS.map(t=>
+      `<button type="button" class="retro-chip ${tags.includes(t)?"on":""}">${t}</button>`).join("")}</div>
+    <label class="small">많이 틀린 단원</label>
+    <input type="text" data-field="retroWeak" placeholder="예: 3단원 이차함수(최대·최소), 서술형 2번" value="${escapeHtml(r.weak||"")}">
+    <label class="small">기출 도움 정도</label>
+    <div class="retro-seg">${RETRO_HELP.map(v=>
+      `<button type="button" data-v="${v}" class="${r.help===v?"on":""}">${v}</button>`).join("")}</div>
+    <label class="small">한 줄 메모</label>
+    <input type="text" data-field="retroMemo" placeholder="예: 기출 3개년 돌린 학생은 대부분 90점 이상" value="${escapeHtml(r.memo||"")}">
+  </div>`;
+}
+/* 입력칸에서 값을 읽어 학년도별 map으로 합쳐줍니다 */
+function collectRetros(container, existing){
+  const box = container.querySelector(".retro-box");
+  if(!box) return null;
+  const sy = box.dataset.sy;
+  const segOn = box.querySelector(".retro-seg button.on");
+  const entry = {
+    tags: [...box.querySelectorAll(".retro-chip.on")].map(b=> b.textContent.trim()),
+    weak: box.querySelector('[data-field="retroWeak"]').value.trim(),
+    help: segOn ? segOn.dataset.v : "",
+    memo: box.querySelector('[data-field="retroMemo"]').value.trim(),
+  };
+  const retros = {...((existing && existing.retros) || {})};
+  if(retroFilled(entry)){
+    entry.at = new Date().toISOString().slice(0,10);
+    retros[sy] = entry;
+  } else {
+    delete retros[sy];
+  }
+  return retros;
+}
+
 function findExam(school, grade, examName){
   return exams.find(e=>e.school===school && e.grade===grade && e.examName===examName);
 }
@@ -2131,6 +2611,8 @@ function examCardHtml(school, grade, examName){
   const existing = findExam(school, grade, examName);
   const studentCount = students.filter(s=>s.school===school && s.grade===grade).length;
   const notConducted = existing?.notConducted || false;
+  const sy = examSY(existing);
+  const past = retroEntries(existing).filter(r=> r.sy < sy);   // 이번 학년도 것은 아래 입력칸에서 씁니다
 
   return `
     <div class="exam-card" data-school="${escapeHtml(school)}" data-grade="${escapeHtml(grade)}" data-exam-name="${escapeHtml(examName)}">
@@ -2138,6 +2620,8 @@ function examCardHtml(school, grade, examName){
         <span class="ctitle">${escapeHtml(grade)} ${escapeHtml(examName)}</span>
         <span class="count-badge">재원생 ${studentCount}명</span>
       </div>
+
+      ${lastRetroBoxHtml(past)}
 
       <label class="not-held-row">
         <input type="checkbox" data-field="notConducted" ${notConducted?"checked":""}>
@@ -2178,6 +2662,9 @@ function examCardHtml(school, grade, examName){
         <label class="small">학교 안내 사항</label>
         <textarea data-field="schoolNotice" placeholder="예: 서술형 30%, 프린트 3종 배부, 시험 시간표 안내">${escapeHtml(existing?.schoolNotice||"")}</textarea>
       </div>
+
+      ${driveFilesHtml(existing || {school, grade, examName}, 4)}
+      ${isExamOver(existing) ? retroBoxHtml(existing, sy) : ""}
 
       <div class="save-row">
         <button class="btn small save-exam-btn">입력 저장</button>
@@ -2231,7 +2718,7 @@ function renderExamTab(){
 
 function collectCardData(cardEl){
   const get = f => cardEl.querySelector(`[data-field="${f}"]`);
-  return {
+  const data = {
     school: cardEl.dataset.school, grade: cardEl.dataset.grade, examName: cardEl.dataset.examName,
     notConducted: get("notConducted").checked,
     notConductedReason: get("notConductedReason").value.trim(),
@@ -2242,6 +2729,10 @@ function collectCardData(cardEl){
     examScope: get("examScope").value.trim(),
     schoolNotice: get("schoolNotice").value.trim(),
   };
+  const existing = findExam(data.school, data.grade, data.examName);
+  const retros = collectRetros(cardEl, existing);
+  if(retros) data.retros = retros;   // 회고칸이 없는 카드(아직 안 끝난 시험)는 건드리지 않아요
+  return data;
 }
 
 async function saveExamCard(cardEl, extra={}){
@@ -2258,7 +2749,36 @@ async function saveExamCard(cardEl, extra={}){
 document.getElementById("examCardsGrid").addEventListener("click", (e)=>{
   const card = e.target.closest(".exam-card");
   if(!card) return;
+
+  /* 드라이브 자료 더 보기 — 보기 모드에서도 열립니다 */
+  if(e.target.classList.contains("file-more")){
+    const {school, grade, examName} = card.dataset;
+    expandDriveFiles(e.target, findExam(school, grade, examName) || {school, grade, examName});
+    return;
+  }
+
+  /* 지난 회고 더 보기 — 보기 모드에서도 열립니다 */
+  if(e.target.classList.contains("retro-more")){
+    const rest = e.target.closest(".lastyear").querySelector(".ly-rest");
+    if(rest){
+      const open = rest.classList.toggle("show");
+      e.target.textContent = open ? "이전 회고 접기" : `이전 회고 ${rest.children.length}건 더 보기`;
+    }
+    return;
+  }
   if(!editMode) return;
+
+  /* 회고 태그 / 기출 도움 정도 */
+  if(e.target.classList.contains("retro-chip")){
+    e.target.classList.toggle("on"); markDirty(e.target); return;
+  }
+  const seg = e.target.closest(".retro-seg");
+  if(seg && e.target.tagName === "BUTTON"){
+    const was = e.target.classList.contains("on");
+    seg.querySelectorAll("button").forEach(x=> x.classList.remove("on"));
+    if(!was) e.target.classList.add("on");
+    markDirty(e.target); return;
+  }
   if(e.target.classList.contains("save-exam-btn")){
     const title = `${card.dataset.school} ${card.dataset.grade} ${card.dataset.examName}`;
     saveExamCard(card).then(()=>{
@@ -3081,14 +3601,17 @@ function renderScheduleTab(){
         data-exam="${e.id}" title="${escapeHtml(title)}">${escapeHtml(e.grade||"")} ${count}명</div>`;
     }).join("")).join("");
 
+    const hasHist = exams.some(e=> e.school===sc && retroEntries(e).length);
     html += `<div class="tl-row" style="grid-template-columns:${TL_NAME_W}px ${trackW}px;">
-      <div class="tl-name">${escapeHtml(shortSchool(sc))}${rows.length>1 ? ` <span class="cnt">${rows.length}건</span>` : ""}</div>
+      <div class="tl-name ${hasHist?"clickable":""}" ${hasHist?`data-school="${escapeHtml(sc)}" title="회고 이력 보기"`:""}>${escapeHtml(shortSchool(sc))}${rows.length>1 ? ` <span class="cnt">${rows.length}건</span>` : ""}</div>
       <div class="tl-track" style="height:${h}px;">${cells}${todayMark}${bars}</div>
     </div>`;
   });
 
   tl.innerHTML = html;
   tl.querySelectorAll(".bar").forEach(b=> b.addEventListener("click", ()=> openDetailModal(b.dataset.exam, null)));
+  tl.querySelectorAll(".tl-name.clickable").forEach(n=>
+    n.addEventListener("click", ()=> openRetroHistory(n.dataset.school)));
 
   legend.innerHTML = `<span>학년 색상</span>` + grades.map(g=>{
     const c = gradeColor(g);
@@ -3100,6 +3623,43 @@ function renderScheduleTab(){
   const target = inRange ? todayLeft : dayIndex(from, minStart)*TL_DAY_W;
   box.scrollLeft = Math.max(0, target - box.clientWidth/3);
 }
+
+/* ---------- 학교 회고 이력 ---------- */
+function openRetroHistory(school){
+  if(!school) return;
+  const rows = [];
+  exams.filter(e=> e.school===school).forEach(e=>{
+    retroEntries(e).forEach(r=> rows.push({...r, grade:e.grade, examName:e.examName}));
+  });
+  rows.sort((a,b)=> b.sy - a.sy
+    || semesterFromExamName(b.examName) - semesterFromExamName(a.examName)
+    || gradeSortIndex(a.grade) - gradeSortIndex(b.grade));
+
+  document.getElementById("retroHistTitle").textContent = `${school} 회고 이력`;
+  document.getElementById("retroHistMeta").textContent =
+    rows.length ? `${rows.length}건 · 최근 학년도부터` : "";
+  document.getElementById("retroHistBody").innerHTML = rows.length
+    ? `<div class="rh-list">${rows.map((r,i)=>`
+        <div class="rh-item ${i>1?"old":""}">
+          <div class="rh-top">
+            <span class="rh-yr">${r.sy} ${escapeHtml(r.examName||"")}</span>
+            ${r.grade ? `<span class="rh-grade" style="background:${COLOR_HEX[gradeColor(r.grade)]}; border-color:${COLOR_BORDER[gradeColor(r.grade)]};">${escapeHtml(r.grade)}</span>` : ""}
+          </div>
+          ${retroChipsHtml(r)}
+          ${retroLine(r) ? `<p>${retroLine(r)}</p>` : ""}
+        </div>`).join("")}</div>`
+    : `<div class="empty-state">아직 이 학교의 회고가 없어요. 시험이 끝나면 시험 카드에 회고칸이 생깁니다.</div>`;
+  document.getElementById("retroHistModal").classList.add("active");
+}
+/* 1학기 중간 → 1, 기말 → 2 ... 정렬용 */
+function semesterFromExamName(n){
+  return (n||"").includes("기말") ? 2 : 1;
+}
+document.getElementById("closeRetroHist").addEventListener("click", ()=>
+  document.getElementById("retroHistModal").classList.remove("active"));
+document.getElementById("retroHistModal").addEventListener("click", (e)=>{
+  if(e.target.id === "retroHistModal") e.target.classList.remove("active");
+});
 
 document.getElementById("schedSeasonSelect").addEventListener("change", (e)=>{
   schedSeason = e.target.value; schedGrade = ""; renderScheduleTab();
@@ -3788,8 +4348,14 @@ function openDetailModal(examId, returnTo){
 
   /* 시험 범위 · 안내 — 창 안에서 바로 쓰고 저장 */
   const scopeBox = document.getElementById("detailScope");
+  const dSY = examSY(exam);
+  const dPast = retroEntries(exam).filter(r=> r.sy < dSY);
+  const dAll  = retroEntries(exam);
   if(!editMode){
-    scopeBox.innerHTML = `<div class="section-label">시험 범위 · 안내</div>` +
+    scopeBox.innerHTML =
+      driveFilesHtml(exam, 3) +
+      (dAll.length ? `<div class="section-label">시험 회고</div>` + lastRetroBoxHtml(dAll) : "") +
+      `<div class="section-label">시험 범위 · 안내</div>` +
       (exam.examScope
         ? `<div class="scope-box"><div class="st">시험 범위</div><div class="sv">${escapeHtml(exam.examScope)}</div></div>`
         : `<div class="scope-box missing"><div class="st">시험 범위</div><div class="sv">아직 입력되지 않았어요</div></div>`) +
@@ -3797,12 +4363,16 @@ function openDetailModal(examId, returnTo){
         ? `<div class="scope-box notice"><div class="st">학교 안내 사항</div><div class="sv">${escapeHtml(exam.schoolNotice)}</div></div>`
         : "");
   } else {
-  scopeBox.innerHTML = `<div class="section-label">시험 범위 · 안내</div>
+  scopeBox.innerHTML =
+    driveFilesHtml(exam, 3) +
+    (dPast.length ? `<div class="section-label">지난 회고</div>` + lastRetroBoxHtml(dPast) : "") +
+    `<div class="section-label">시험 범위 · 안내</div>
     <div class="scope-edit ${exam.examScope?"":"empty"}">
       <span class="st">시험 범위${exam.examScope?"":" — 아직 입력되지 않았어요"}</span>
       <textarea id="detailScopeInput" placeholder="예: 수학(상) 2단원 전체 ~ 3-1, 교과서 유인물 포함">${escapeHtml(exam.examScope||"")}</textarea>
       <span class="st" style="margin-top:9px;">학교 안내 사항</span>
       <textarea id="detailNoticeInput" placeholder="예: 서술형 30%, 프린트 3종 배부">${escapeHtml(exam.schoolNotice||"")}</textarea>
+      ${isExamOver(exam) ? retroBoxHtml(exam, dSY) : ""}
       <div class="row">
         <button class="btn small" id="detailScopeSave">저장</button>
         <button class="mini-btn" id="goFillScope" style="margin-top:0;">시험정보 입력에서 열기 →</button>
@@ -3814,14 +4384,18 @@ function openDetailModal(examId, returnTo){
   document.getElementById("detailScopeSave").addEventListener("click", async (ev)=>{
     const scope = document.getElementById("detailScopeInput").value.trim();
     const notice = document.getElementById("detailNoticeInput").value.trim();
-    if(scope===(exam.examScope||"") && notice===(exam.schoolNotice||"")){
+    const retros = collectRetros(scopeBox, exam);
+    const retroChanged = retros && JSON.stringify(retros) !== JSON.stringify(exam.retros||{});
+    if(scope===(exam.examScope||"") && notice===(exam.schoolNotice||"") && !retroChanged){
       showToast("바뀐 내용이 없어요.", {type:"warn"}); return;
     }
-    const before = {examScope: exam.examScope||"", schoolNotice: exam.schoolNotice||""};
+    const before = {examScope: exam.examScope||"", schoolNotice: exam.schoolNotice||"", retros: exam.retros||{}};
+    const payload = {examScope: scope, schoolNotice: notice};
+    if(retros) payload.retros = retros;
     const btn = ev.currentTarget;
     btn.disabled = true; btn.textContent = "저장 중...";
-    await updateExamDoc(examId, {examScope: scope, schoolNotice: notice});
-    showToast("시험 범위를 저장했어요.", {
+    await updateExamDoc(examId, payload);
+    showToast(retroChanged ? "회고와 시험 범위를 저장했어요." : "시험 범위를 저장했어요.", {
       type:"ok", actionLabel:"되돌리기",
       onAction: async ()=>{
         await updateExamDoc(examId, before);
@@ -3830,6 +4404,30 @@ function openDetailModal(examId, returnTo){
     });
   });
   }
+
+  /* 상세 모달 안의 회고 칩 · 세그 · 더 보기 */
+  scopeBox.onclick = (ev)=>{
+    if(ev.target.classList.contains("file-more")){
+      expandDriveFiles(ev.target, exam);
+      return;
+    }
+    if(ev.target.classList.contains("retro-more")){
+      const rest = ev.target.closest(".lastyear").querySelector(".ly-rest");
+      if(rest){
+        const open = rest.classList.toggle("show");
+        ev.target.textContent = open ? "이전 회고 접기" : `이전 회고 ${rest.children.length}건 더 보기`;
+      }
+      return;
+    }
+    if(!editMode) return;
+    if(ev.target.classList.contains("retro-chip")){ ev.target.classList.toggle("on"); return; }
+    const sg = ev.target.closest(".retro-seg");
+    if(sg && ev.target.tagName === "BUTTON"){
+      const was = ev.target.classList.contains("on");
+      sg.querySelectorAll("button").forEach(x=> x.classList.remove("on"));
+      if(!was) ev.target.classList.add("on");
+    }
+  };
 
   document.getElementById("detailCopyBtn").onclick = ()=>
     openCopyModal([exam], `${exam.school||""} ${exam.grade||""}`.trim());
@@ -3912,7 +4510,11 @@ document.getElementById("detailModal").addEventListener("click", (e)=>{
   }
 });
 
+loadDriveCache();
 initFirebase();
+applyDriveSettings();
+/* 저장해둔 목록으로 먼저 그리고, 뒤에서 조용히 최신으로 갱신합니다 */
+setTimeout(()=>{ if(driveUrl && driveToken) refreshDrive(false); }, 1200);
 </script>
 <div class="toast-wrap" id="toastWrap"></div>
 
