@@ -3098,7 +3098,7 @@ function renderCalListView(){
           const count = studentsForExam(e).length;
           const scope = e.examScope ? escapeHtml(e.examScope.split("\n")[0]).slice(0,34) : "시험 범위 미입력";
           return `<button class="cl-item ${gradeColor(e.grade)}" data-exam="${e.id}">
-            <span>${escapeHtml(shortSchool(e.school))} ${escapeHtml(e.grade||"")} ${escapeHtml(shortExamName(e.examName))}
+            <span>${escapeHtml(shortSchool(e.school))} ${escapeHtml(e.grade||"")}
               <span class="sub">${scope}</span></span>
             <span class="cnt">${count}명</span>
           </button>`;
@@ -3142,7 +3142,8 @@ function renderCalendar(){
     const tKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
     const pillsHtml = shown.map(e=>{
       const count = studentsForExam(e).length;
-      const label = `${shortSchool(e.school)} ${e.grade||""} ${shortExamName(e.examName)}`.trim();
+      /* 날짜만 봐도 중간·기말은 알 수 있어서 알약에서는 뺐습니다 */
+      const label = `${shortSchool(e.school)} ${e.grade||""}`.trim();
       const full = `${e.school||""} ${e.grade||""} ${e.examName||""}`.trim();
       const state = e.endDate < tKey ? "past" : (e.startDate <= tKey ? "ongoing" : "");
       return `<div class="exam-pill ${gradeColor(e.grade)} ${state}" data-exam="${e.id}" title="${escapeHtml(full)} · ${count}명"><span class="label">${escapeHtml(label)}</span><span class="count">${count}</span></div>`;
@@ -3474,6 +3475,7 @@ function renderSummary(){
 /* ---------- 학교별 일정 타임라인 ---------- */
 let schedSeason = "";
 let schedGrade = "";
+let schedGradeTouched = false;   // 사용자가 학년을 한 번이라도 직접 고르면 true
 const TL_NAME_W = 124, TL_DAY_W = 30;
 
 function shiftKey(key, days){
@@ -3517,13 +3519,15 @@ function renderScheduleTab(){
   let list = dated.filter(e=> seasonKeyOf(e)===schedSeason);
   const grades = sortGrades(uniq(list.map(e=>e.grade)));
   if(schedGrade && !grades.includes(schedGrade)) schedGrade = "";
+  /* 처음 열 때는 중1부터 (없으면 전체) */
+  if(!schedGradeTouched && !schedGrade && grades.includes("중1")) schedGrade = "중1";
 
   document.getElementById("schedGradeFilters").innerHTML =
     `<span class="fl">학년</span>` +
     `<button class="fbtn ${schedGrade===""?"active":""}" data-g="">전체</button>` +
     grades.map(g=>`<button class="fbtn ${schedGrade===g?"active":""}" data-g="${escapeHtml(g)}">${escapeHtml(g)}</button>`).join("");
   document.querySelectorAll("#schedGradeFilters .fbtn").forEach(b=>
-    b.addEventListener("click", ()=>{ schedGrade = b.dataset.g; renderScheduleTab(); }));
+    b.addEventListener("click", ()=>{ schedGrade = b.dataset.g; schedGradeTouched = true; renderScheduleTab(); }));
 
   if(schedGrade) list = list.filter(e=> e.grade===schedGrade);
 
