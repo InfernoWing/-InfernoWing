@@ -601,6 +601,14 @@
   .imp-row .chg del{color:#b3ab99; text-decoration:line-through; margin-right:5px;}
   .imp-row .chg ins{color:#2f5877; text-decoration:none; font-weight:800;}
   .imp-note{font-size:12px; color:#8a8375; line-height:1.65; margin:8px 0 0;}
+  .imp-target{display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin:2px 0 14px;
+    background:#f6f2e6; border:1px solid #e6dfcc; border-radius:10px; padding:9px 12px;}
+  .imp-target .lbl{font-size:12px; font-weight:800; color:#8a8375;}
+  .imp-target .seg{display:inline-flex; border:1px solid #ded7c6; border-radius:9px; overflow:hidden; background:#fdfcf8;}
+  .imp-target .seg button{border:none; background:none; padding:6px 13px; font-size:12.5px; font-weight:800;
+    color:#8a8375; cursor:pointer; font-family:inherit;}
+  .imp-target .seg button.on{background:var(--board); color:var(--chalk);}
+  .imp-target .hint{font-size:11.5px; color:#a49c88; font-weight:700;}
 
   /* ---------- 드라이브 자료 ---------- */
   .drive-box{border:1px solid #e6e0d1; background:#fdfcf8; border-radius:12px; padding:14px 16px; margin-top:16px;}
@@ -766,6 +774,10 @@
     border:none; background:transparent; font-family:inherit; font-size:12.5px; font-weight:700; color:#5c6459;
     padding:7px 8px; border-radius:8px; cursor:pointer; text-align:left;}
   .idx-item:hover{background:#f2eee2;}
+  .idx-item .il{display:flex; flex-direction:column; align-items:flex-start; line-height:1.25; min-width:0;}
+  .idx-item .il b{font-weight:800;}
+  .idx-item .il i{font-style:normal; font-size:10px; font-weight:700; color:#a49c88;}
+  .idx-item.active .il i{color:var(--chalk-dim);}
   .idx-item.active{background:var(--board); color:var(--chalk);}
   .idx-item.none-item{color:var(--rust);}
   .idx-item.none-item.active{background:var(--rust); color:#fff;}
@@ -812,6 +824,8 @@
   }
 
   table.student-table{width:100%; border-collapse:collapse; font-size:13px; min-width:760px;}
+  .tag.cls{display:inline-flex; flex-direction:column; align-items:flex-start; line-height:1.25; padding:3px 8px;}
+  .tag.cls .ct{font-size:9.5px; font-weight:700; opacity:.68; letter-spacing:-.01em;}
   .student-table th.chk, .student-table td.chk{width:34px; text-align:center; padding-left:6px; padding-right:6px;}
   .student-table input[type=checkbox]{width:15px; height:15px; cursor:pointer;}
   .student-table tr.sel td{background:#fff5e2;}
@@ -1029,7 +1043,7 @@
     </div>
     <div class="form-row edit-only">
       <div>
-        <label>학기중 반</label>
+        <label>정규반</label>
         <input type="text" id="stuRegularClass" placeholder="예: 월수금 A반" list="regularClassList">
       </div>
       <div>
@@ -1068,7 +1082,7 @@
         <button data-view="card">카드</button>
       </div>
       <button class="btn secondary small" id="clearFilterBtn">조건 모두 해제</button>
-      <button class="badge-warn" id="incompleteBadge">학기중 반 미배정 0명</button>
+      <button class="badge-warn" id="incompleteBadge">정규반 미배정 0명</button>
       <button class="badge-info" id="sameNameBadge" style="display:none;">동명이인 0명</button>
     </div>
 
@@ -1086,7 +1100,7 @@
           <button data-tab="class">반</button>
         </div>
         <div class="sub-toggle" id="stuSubToggle" style="display:none;">
-          <button data-cf="regularClass" class="active">학기중</button>
+          <button data-cf="regularClass" class="active">정규반</button>
           <button data-cf="examClass">시험대비</button>
         </div>
         <div class="idx-list" id="stuIdxList"></div>
@@ -1100,7 +1114,7 @@
               <tr>
                 <th class="chk edit-only"><input type="checkbox" id="stuChkAll"></th>
                 <th>학번</th><th>이름</th><th>학교</th><th>학년</th><th>담임</th>
-                <th>학기중 반</th><th>시험대비 반</th><th>상태</th><th class="act"></th>
+                <th>정규반</th><th>시험대비 반</th><th>상태</th><th class="act"></th>
               </tr>
             </thead>
             <tbody id="studentTableBody"></tbody>
@@ -1116,7 +1130,7 @@
         <option value="teacher">담임 선생님</option>
         <option value="grade">학년</option>
         <option value="school">학교</option>
-        <option value="regularClass">학기중 반</option>
+        <option value="regularClass">정규반</option>
         <option value="examClass">시험대비 반</option>
         <option value="status">재원 상태</option>
       </select>
@@ -1238,6 +1252,14 @@
     <button class="close-x" id="closeClassImport">&times;</button>
     <h3>반 배정 가져오기</h3>
     <p class="modal-meta" id="classImportMeta"></p>
+    <div class="imp-target">
+      <span class="lbl">이 표는</span>
+      <div class="seg" id="impTarget">
+        <button data-f="examClass" class="on">시험대비 반</button>
+        <button data-f="regularClass">정규반</button>
+      </div>
+      <span class="hint" id="impTargetHint"></span>
+    </div>
     <div id="classImportBody"></div>
     <div class="btn-row" style="display:flex; gap:8px; margin-top:16px;">
       <button class="btn" id="classImportApply">적용하기</button>
@@ -1267,7 +1289,7 @@
     <div class="stu-quick edit-only" id="stuQuick">
       <div class="sq-row">
         <div><label class="small">담임</label><input type="text" id="sqTeacher" list="teacherList" placeholder="예: 강지성"></div>
-        <div><label class="small">학기중 반</label><input type="text" id="sqRegular" list="regularClassList" placeholder="예: 월수금 A반"></div>
+        <div><label class="small">정규반</label><input type="text" id="sqRegular" list="regularClassList" placeholder="예: 월수금 A반"></div>
         <div><label class="small">시험대비 반</label><input type="text" id="sqExam" list="examClassList" placeholder="예: 내신A"></div>
         <div style="flex:0 0 90px;"><label class="small">재원 상태</label><select id="sqStatus"></select></div>
         <button class="btn small" id="sqSave">저장</button>
@@ -1658,7 +1680,7 @@ function fillSelect(id, values, placeholder){
 }
 
 /* ---------- 학생 관리 ---------- */
-let showIncompleteOnly = false;   // 학기중 반 미배정만 보기
+let showIncompleteOnly = false;   // 정규반 미배정만 보기
 let showSameNameOnly = false;    // 이름이 겹치는 학생만 보기
 let stuStatusOn = new Set(["재원","휴원"]);   // 기본은 퇴원생 숨김
 let stuView = (window.innerWidth <= 820) ? "card" : "table";   // 좁은 화면은 카드로 시작
@@ -1787,7 +1809,12 @@ function renderIdxPanel(){
     const names = uniq(students.map(s=>s[k])).sort();
     const cur = stuF[k];
     html = `<button class="idx-item ${cur===null?"active":""}" data-k="${k}" data-v="__all">전체 <span class="c">${students.length}</span></button>` +
-      names.map(v=>`<button class="idx-item ${cur===v?"active":""}" data-k="${k}" data-v="${escapeHtml(v)}">${escapeHtml(v)} <span class="c">${counts[v]||0}</span></button>`).join("") +
+      names.map(v=>{
+        const [code, time] = splitCls(v);
+        return `<button class="idx-item ${cur===v?"active":""}" data-k="${k}" data-v="${escapeHtml(v)}" title="${escapeHtml(v)}">` +
+          `<span class="il"><b>${escapeHtml(code)}</b>${time?`<i>${escapeHtml(time)}</i>`:""}</span>` +
+          `<span class="c">${counts[v]||0}</span></button>`;
+      }).join("") +
       (counts["__none"] ? `<button class="idx-item none-item ${cur===""?"active":""}" data-k="${k}" data-v="__none">미배정 <span class="c">${counts["__none"]}</span></button>` : "");
   }
   box.innerHTML = html;
@@ -1806,9 +1833,9 @@ function renderCrumbs(){
   if(stuF.school) items.push({label:`학교 ${shortSchool(stuF.school)}`, k:"school"});
   if(stuF.grade) items.push({label:`학년 ${stuF.grade}`, k:"grade"});
   if(stuF.teacher!==null) items.push({label: stuF.teacher? `담임 ${stuF.teacher}T` : "담임 미지정", k:"teacher"});
-  if(stuF.regularClass!==null) items.push({label: stuF.regularClass? `학기중 ${stuF.regularClass}` : "학기중 미배정", k:"regularClass"});
+  if(stuF.regularClass!==null) items.push({label: stuF.regularClass? `정규반 ${stuF.regularClass}` : "정규반 미배정", k:"regularClass"});
   if(stuF.examClass!==null) items.push({label: stuF.examClass? `시험대비 ${stuF.examClass}` : "시험대비 미배정", k:"examClass"});
-  if(showIncompleteOnly) items.push({label:"학기중 반 미배정", k:"incomplete"});
+  if(showIncompleteOnly) items.push({label:"정규반 미배정", k:"incomplete"});
   if(showSameNameOnly) items.push({label:"동명이인만", k:"samename"});
   const stDefault = stuStatusOn.size===2 && stuStatusOn.has("재원") && stuStatusOn.has("휴원");
   if(!stDefault) items.push({label:`상태 ${[...stuStatusOn].join("·")}`, k:"status"});
@@ -1831,7 +1858,17 @@ function renderCrumbs(){
   }));
 }
 
-function clsTag(v){ return v ? `<span class="tag cls">${escapeHtml(v)}</span>` : `<span class="tag none">미배정</span>`; }
+/* "1T후A1 (화목토 1부)" → 코드와 시간으로 나눠 두 줄로 보여줍니다 (표 폭 절약) */
+function splitCls(v){
+  const m = String(v||"").match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+  return m ? [m[1].trim(), m[2].trim()] : [String(v||"").trim(), ""];
+}
+function clsTag(v){
+  if(!v) return `<span class="tag none">미배정</span>`;
+  const [code, time] = splitCls(v);
+  return `<span class="tag cls" title="${escapeHtml(v)}">${escapeHtml(code)}` +
+         (time ? `<span class="ct">${escapeHtml(time)}</span>` : "") + `</span>`;
+}
 
 function renderStudents(){
   const tbody = document.getElementById("studentTableBody");
@@ -1839,7 +1876,7 @@ function renderStudents(){
 
   const incompleteCount = students.filter(s=> !s.regularClass).length;
   const badge = document.getElementById("incompleteBadge");
-  badge.textContent = `학기중 반 미배정 ${incompleteCount}명`;
+  badge.textContent = `정규반 미배정 ${incompleteCount}명`;
   badge.classList.toggle("active", showIncompleteOnly);
 
   /* 동명이인 배지 */
@@ -2061,7 +2098,7 @@ function renderBulkValueInput(){
   const ph = field==="teacher" ? "예: 강지성"
     : field==="school" ? "예: 가락중학교"
     : field==="grade" ? "예: 중2"
-    : field==="regularClass" ? "학기중 반 이름" : "시험대비 반 이름";
+    : field==="regularClass" ? "정규반 이름" : "시험대비 반 이름";
   const prev = document.getElementById("stuBulkValue");
   const keep = (prev && prev.tagName==="INPUT" && prev.dataset.list===listId) ? prev.value : "";
   wrap.innerHTML = `<input type="text" id="stuBulkValue" list="${listId}" data-list="${listId}" placeholder="${ph}" value="${escapeHtml(keep)}">`;
@@ -2173,7 +2210,7 @@ document.getElementById("excelUploadBtn").addEventListener("click", ()=>{
 document.getElementById("excelDownloadBtn").addEventListener("click", ()=>{
   const rows = filteredStudents().map(s=>({
     "학번": s.studentNumber||"", "이름": s.name||"", "학교": s.school||"", "학년": s.grade||"",
-    "담임": s.teacher||"", "학기중 반": s.regularClass||"", "시험대비 반": s.examClass||"",
+    "담임": s.teacher||"", "정규반": s.regularClass||"", "시험대비 반": s.examClass||"",
     "상태": statusOf(s),
   }));
   exportRows(rows, "학생명단", "학생명단");
@@ -2212,7 +2249,7 @@ document.getElementById("excelFileInput").addEventListener("change", (e)=>{
         const teacher = pick(row, ["담임","담당","담당선생님","담임선생님","담당 선생님","담임 선생님"]);
         const rawGroup = pick(row, ["수업요일","요일"]);
         const classDayGroup = (rawGroup==="월수금" || rawGroup==="화목토") ? rawGroup : "";
-        const regularClass = pick(row, ["학기중 반","학기중반","반","정규반","학기반"]);
+        const regularClass = pick(row, ["정규반","학기중 반","학기중반","반","학기반"]);
         const examClass = pick(row, ["시험대비 반","시험대비반","시험반","대비반"]);
         const rawStatus = pick(row, ["상태","재원상태","재원 상태"]);
         const status = STATUS_LIST.includes(rawStatus) ? rawStatus : "재원";
@@ -2221,7 +2258,7 @@ document.getElementById("excelFileInput").addEventListener("change", (e)=>{
 
       if(parsed.length===0){
         statusEl.textContent = "";
-        alert("추가할 학생을 찾지 못했어요. '이름' 열이 채워져 있는지 확인해주세요.\n(제목행 예: 학번, 이름, 학교, 학년, 담임, 수업요일, 학기중 반, 시험대비 반)");
+        alert("추가할 학생을 찾지 못했어요. '이름' 열이 채워져 있는지 확인해주세요.\n(제목행 예: 학번, 이름, 학교, 학년, 담임, 수업요일, 정규반, 시험대비 반)");
         return;
       }
 
@@ -2289,29 +2326,37 @@ function findLabelRows(grid){
 
 function parseClassSheet(grid){
   const out = [];
+  const DOW = /[월화수목금토일]/;
+  const NUM = /^\d+(\.\d+)?$/;
   const labelRows = findLabelRows(grid);
   labelRows.forEach((lr, bi)=>{
-    const r = lr.row, LC = lr.col;          // LC = 라벨이 있는 열
-    /* 블록 안에서 라벨이 몇 번째 줄에 있는지 찾습니다 */
+    const r = lr.row, LC = lr.col;
     const off = {};
     for(let k = 0; k < 14; k++){
       const lab = normLabel(cellStr(grid, r + k, LC));
       if(lab && !(lab in off)) off[lab] = r + k;
     }
-    const start = (off["반별인원"] !== undefined ? off["반별인원"] : r + 8) + 1;
+    if(off["반별인원"] === undefined || off["수업시간"] === undefined) return;
+    const start = off["반별인원"] + 1;
     const end = (bi + 1 < labelRows.length) ? labelRows[bi + 1].row - 1 : grid.length - 1;
 
-    for(let c = LC + 1; c < LC + 30; c += 3){
+    /* 오른쪽 끝까지 훑되, 진짜 반만 고릅니다
+       — 반 이름이 숫자가 아니고, 수업시간에 요일이 들어 있어야 합니다.
+         (옆에 붙은 집계표가 딸려 들어오는 걸 막습니다) */
+    const width = Math.max(...grid.map(row => (row ? row.length : 0)), 0);
+    for(let c = LC + 1; c < width; c += 3){
       const cls = cellStr(grid, r, c);
-      if(!cls) continue;
+      if(!cls || NUM.test(cls)) continue;
+      const time = cellStr(grid, off["수업시간"], c);
+      if(!DOW.test(time)) continue;
       const teacher = off["담임(심화)"] !== undefined ? cellStr(grid, off["담임(심화)"], c)
                     : off["담임"]       !== undefined ? cellStr(grid, off["담임"], c) : "";
-      const time    = off["수업시간"]   !== undefined ? cellStr(grid, off["수업시간"], c)   : "";
       for(let rr = start; rr <= end; rr++){
         const name = cellStr(grid, rr, c);
         const school = cellStr(grid, rr, c + 1);
         if(!name || !school) continue;
         if(normLabel(name) === "반명") break;
+        if(NUM.test(name) || NUM.test(school)) continue;
         out.push({ name, school, cls, teacher, time });
       }
     }
@@ -2365,7 +2410,11 @@ function sameSchool(a, b){
   return norm(a) === norm(b) && norm(a) !== "";
 }
 
-function buildClassImportPlan(rows){
+let classImportRows = null;
+let classImportField = "examClass";   // examClass | regularClass
+
+function buildClassImportPlan(rows, field){
+  const FIELD = field || classImportField;
   const updates = [], adds = [], same = [], ambiguous = [];
   rows.forEach(r=>{
     const grade = gradeFromClassName(r.cls);
@@ -2380,7 +2429,7 @@ function buildClassImportPlan(rows){
     if(matched.length === 1){
       const s = matched[0];
       const payload = {};
-      if((s.examClass || "") !== examClass) payload.examClass = examClass;
+      if((s[FIELD] || "") !== examClass) payload[FIELD] = examClass;
       if(r.teacher && (s.teacher || "") !== r.teacher) payload.teacher = r.teacher;
       if(grade && (s.grade || "") !== grade) payload.grade = grade;
       if(Object.keys(payload).length === 0){ same.push({ ...r, examClass }); return; }
@@ -2391,22 +2440,25 @@ function buildClassImportPlan(rows){
       });
       return;
     }
-    adds.push({
-      name: r.name, school: r.school, grade,
-      teacher: r.teacher || "", examClass, regularClass: "", status: "재원"
-    });
+    const add = { name: r.name, school: r.school, grade,
+      teacher: r.teacher || "", examClass: "", regularClass: "", status: "재원" };
+    add[FIELD] = examClass;
+    adds.push(add);
   });
   return { updates, adds, same, ambiguous };
 }
 
 function changeText(before, payload){
-  const label = { examClass: "시험대비 반", teacher: "담임", grade: "학년" };
+  const label = { examClass: "시험대비 반", regularClass: "정규반", teacher: "담임", grade: "학년" };
   return Object.keys(payload).map(k=>
     `${label[k]} <del>${escapeHtml(before[k] || "없음")}</del><ins>${escapeHtml(payload[k])}</ins>`
   ).join(" · ");
 }
 
+let classImportFile = "";
 function renderClassImportPlan(plan, fileName){
+  if(fileName) classImportFile = fileName;
+  fileName = classImportFile;
   const total = plan.updates.length + plan.adds.length + plan.same.length + plan.ambiguous.length;
   document.getElementById("classImportMeta").textContent =
     `${escapeHtml(fileName)} · 표에서 학생 ${total}명을 읽었어요`;
@@ -2434,7 +2486,7 @@ function renderClassImportPlan(plan, fileName){
       listOf(plan.adds, a=>`<div class="imp-row">
         <span class="who">${escapeHtml(a.name)}</span>
         <span class="sch">${escapeHtml(shortSchool(a.school))}</span>
-        <span class="chg">${escapeHtml(a.grade)} · ${escapeHtml(a.examClass)} · 담임 ${escapeHtml(a.teacher || "미지정")}</span></div>`) + `</div>`;
+        <span class="chg">${escapeHtml(a.grade)} · ${escapeHtml(a[classImportField] || "")} · 담임 ${escapeHtml(a.teacher || "미지정")}</span></div>`) + `</div>`;
   }
   if(plan.ambiguous.length){
     html += `<div class="imp-sec"><h5>동명이인이라 건너뛴 학생 ${plan.ambiguous.length}명</h5>` +
@@ -2443,7 +2495,8 @@ function renderClassImportPlan(plan, fileName){
         <span class="sch">${escapeHtml(shortSchool(a.school))}</span>
         <span class="chg">같은 학교에 동명이인 ${a.count}명 — 학생 관리에서 직접 지정해주세요</span></div>`) + `</div>`;
   }
-  html += `<p class="imp-note">학번·학기중 반 등 다른 값은 건드리지 않습니다. 적용 뒤 “되돌리기”로 한 번에 취소할 수 있어요.</p>`;
+  const other = classImportField === "examClass" ? "정규반" : "시험대비 반";
+  html += `<p class="imp-note">학번과 ${other} 등 다른 값은 건드리지 않습니다. 적용 뒤 “되돌리기”로 한 번에 취소할 수 있어요.</p>`;
 
   document.getElementById("classImportBody").innerHTML = html;
   document.getElementById("classImportApply").disabled = (plan.updates.length + plan.adds.length) === 0;
@@ -2478,7 +2531,13 @@ document.getElementById("classImportInput").addEventListener("change", (e)=>{
           {type:"warn", duration:12000});
         return;
       }
-      classImportPlan = buildClassImportPlan(rows);
+      classImportRows = rows;
+      /* 파일 이름으로 어느 반인지 먼저 추측해둡니다 (바꿀 수 있어요) */
+      const fn = file.name.replace(/\s+/g, "");
+      if(/정규|분기/.test(fn) && !/내신|시험대비/.test(fn)) classImportField = "regularClass";
+      else classImportField = "examClass";
+      syncImpTarget();
+      classImportPlan = buildClassImportPlan(rows, classImportField);
       renderClassImportPlan(classImportPlan, file.name);
     }catch(err){
       console.error(err);
@@ -2490,9 +2549,24 @@ document.getElementById("classImportInput").addEventListener("change", (e)=>{
   reader.readAsArrayBuffer(file);
 });
 
+function syncImpTarget(){
+  document.querySelectorAll("#impTarget button").forEach(b=>
+    b.classList.toggle("on", b.dataset.f === classImportField));
+  document.getElementById("impTargetHint").textContent =
+    classImportField === "examClass" ? "학생의 시험대비 반 칸을 채웁니다" : "학생의 정규반 칸을 채웁니다";
+}
+document.getElementById("impTarget").addEventListener("click", (e)=>{
+  const b = e.target.closest("button");
+  if(!b || !classImportRows) return;
+  classImportField = b.dataset.f;
+  syncImpTarget();
+  classImportPlan = buildClassImportPlan(classImportRows, classImportField);
+  renderClassImportPlan(classImportPlan);
+});
+
 function closeClassImport(){
   document.getElementById("classImportModal").classList.remove("active");
-  classImportPlan = null;
+  classImportPlan = null; classImportRows = null;
 }
 document.getElementById("closeClassImport").addEventListener("click", closeClassImport);
 document.getElementById("classImportCancel").addEventListener("click", closeClassImport);
@@ -3726,10 +3800,10 @@ function renderSummary(){
     <span class="sv">${noTeacher.length}<span class="su">명</span></span>
     <span class="sd">${noTeacher.length ? "학생 관리에서 채우기" : "모두 지정됨"}</span></button>`;
 
-  /* 5) 학기중 반 미배정 */
+  /* 5) 정규반 미배정 */
   const noClass = students.filter(s=> !s.regularClass);
   const card5 = `<button class="stat-card ${noClass.length?"alert":"done"}" data-go="class-missing">
-    <span class="sl">학기중 반 미배정</span>
+    <span class="sl">정규반 미배정</span>
     <span class="sv">${noClass.length}<span class="su">명</span></span>
     <span class="sd">전체 ${students.length}명 중</span></button>`;
 
@@ -4510,7 +4584,7 @@ function openStudentModal(studentId){
   document.getElementById("stuTags").innerHTML =
     `<span class="tag st-${statusOf(s)}">${statusOf(s)}</span>` +
     (s.teacher ? `<span class="tag teacher">${escapeHtml(s.teacher)}T</span>` : `<span class="tag none">담임 미지정</span>`) +
-    (s.regularClass ? `<span class="tag cls">학기중 ${escapeHtml(s.regularClass)}</span>` : `<span class="tag none">학기중 반 미배정</span>`) +
+    (s.regularClass ? `<span class="tag cls">정규반 ${escapeHtml(s.regularClass)}</span>` : `<span class="tag none">정규반 미배정</span>`) +
     (s.examClass ? `<span class="tag cls">시험대비 ${escapeHtml(s.examClass)}</span>` : `<span class="tag none">시험대비 반 미배정</span>`);
 
   /* 이 학생이 치르는 시험 (학교+학년 일치) */
