@@ -3850,6 +3850,12 @@ function shiftKey(key, days){
 }
 function dayIndex(fromKey, key){ return daysBetween(fromKey, key); }
 
+/* 막대에 뭘 적을지 — 학년을 골라놨으면 학년은 이미 아니까 학교 이름을 적습니다.
+   '전체'일 때는 한 학교에 막대가 여러 개 겹치므로 학년을 적어야 구분됩니다. */
+function barLabel(e, school){
+  return schedGrade ? shortSchool(school) : (e.grade || "");
+}
+
 function renderScheduleTab(){
   const sel = document.getElementById("schedSeasonSelect");
   const tl = document.getElementById("schedTl");
@@ -3967,7 +3973,7 @@ function renderScheduleTab(){
                     (e.examScope ? "" : "\n※ 시험 범위 미입력");
       return `<div class="bar ${gradeColor(e.grade)} ${past?"past":""} ${e.examScope?"":"noscope"}"
         style="left:${x}px; top:${li*28+4}px; width:${w}px;"
-        data-exam="${e.id}" title="${escapeHtml(title)}">${escapeHtml(e.grade||"")} ${count}명</div>`;
+        data-exam="${e.id}" title="${escapeHtml(title)}">${escapeHtml(barLabel(e, sc))} ${count}명</div>`;
     }).join("")).join("");
 
     const hasHist = exams.some(e=> e.school===sc && retroEntries(e).length);
