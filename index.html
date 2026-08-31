@@ -581,6 +581,27 @@
   .hit-jump:hover{opacity:.75;}
   .school-search input{min-width:170px;}
 
+  /* ---------- 반 배정 가져오기 ---------- */
+  .imp-sum{display:flex; flex-wrap:wrap; gap:9px; margin:4px 0 14px;}
+  .imp-card{border:1px solid #e6e0d1; border-radius:11px; padding:10px 13px; background:#fdfcf8; min-width:104px;}
+  .imp-card .n{font-size:20px; font-weight:900; line-height:1.15;}
+  .imp-card .l{font-size:11px; font-weight:800; color:#8a8375;}
+  .imp-card.upd{background:#eef3f7; border-color:#cfdde8;} .imp-card.upd .n{color:#2f5877;}
+  .imp-card.new{background:#e9f2ec; border-color:#c2e0d0;} .imp-card.new .n{color:var(--green);}
+  .imp-card.same{background:#f4f1e8;} .imp-card.same .n{color:#8a8375;}
+  .imp-card.warn{background:#fbf3ec; border-color:#f0dccd;} .imp-card.warn .n{color:var(--rust);}
+  .imp-sec{margin-top:16px;}
+  .imp-sec > h5{margin:0 0 7px; font-size:13px; font-weight:900; display:flex; align-items:center; gap:7px;}
+  .imp-list{max-height:220px; overflow-y:auto; border:1px solid #efeade; border-radius:10px;}
+  .imp-row{display:flex; align-items:center; gap:9px; padding:7px 11px; border-bottom:1px solid #f4f1e8; font-size:12.5px;}
+  .imp-row:last-child{border-bottom:none;}
+  .imp-row .who{font-weight:800; min-width:72px;}
+  .imp-row .sch{color:#8a8375; font-size:11.5px; min-width:64px;}
+  .imp-row .chg{flex:1; color:#5f5a4c; overflow:hidden; text-overflow:ellipsis;}
+  .imp-row .chg del{color:#b3ab99; text-decoration:line-through; margin-right:5px;}
+  .imp-row .chg ins{color:#2f5877; text-decoration:none; font-weight:800;}
+  .imp-note{font-size:12px; color:#8a8375; line-height:1.65; margin:8px 0 0;}
+
   /* ---------- 드라이브 자료 ---------- */
   .drive-box{border:1px solid #e6e0d1; background:#fdfcf8; border-radius:12px; padding:14px 16px; margin-top:16px;}
   .drive-box h4{margin:0 0 3px; font-size:14px; font-weight:900;}
@@ -695,8 +716,11 @@
   .teacher-group .tname{font-size:13px; font-weight:800; color:#8a5a13; margin-bottom:7px;}
   .teacher-group .tname .cnt{color:#a49c88; font-weight:600; font-size:12px;}
   .assign-row{display:flex; flex-wrap:wrap; gap:8px;}
-  .assign-chip{ display:inline-flex; align-items:center; gap:7px; border:1.5px solid #ece7d8; border-radius:9px; padding:7px 11px; font-size:13px; background:#fffdf8; }
-  .assign-chip .sname{font-weight:700;}
+  .assign-chip{ display:inline-flex; flex-direction:column; align-items:flex-start; gap:2px;
+    border:1.5px solid #ece7d8; border-radius:9px; padding:6px 11px; font-size:13px; background:#fffdf8; }
+  .assign-chip .sname{font-weight:700; line-height:1.3;}
+  .assign-chip .sclass{font-size:11px; font-weight:700; color:var(--violet); line-height:1.3;}
+  .assign-chip .sclass.none{color:#c1b9a5; font-weight:600;}
 
   .empty-state{ text-align:center; color:#a49c88; padding:30px 10px; font-size:13px; }
 
@@ -1024,6 +1048,8 @@
     <div class="btn-row" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
       <button class="btn edit-only" id="addStudentBtn">+ 학생 추가</button>
       <button class="btn secondary edit-only" id="excelUploadBtn">📄 엑셀로 일괄 등록</button>
+      <button class="btn secondary edit-only" id="classImportBtn" title="반별 현황표 엑셀에서 반·담임을 읽어옵니다">📋 반 배정 가져오기</button>
+      <input type="file" id="classImportInput" accept=".xlsx,.xls" style="display:none;">
       <button class="btn secondary" id="excelDownloadBtn" title="지금 화면에 보이는 학생만 내보냅니다">⤓ 엑셀로 내보내기</button>
       <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
       <span id="excelUploadStatus" style="font-size:12px; color:#8a8375;"></span>
@@ -1203,6 +1229,20 @@
     <h3>데이터 정리</h3>
     <p class="modal-meta" id="cleanupMeta"></p>
     <div id="cleanupBody"></div>
+  </div>
+</div>
+
+<!-- 반 배정 가져오기 모달 -->
+<div class="overlay" id="classImportModal">
+  <div class="modal" style="max-width:640px;">
+    <button class="close-x" id="closeClassImport">&times;</button>
+    <h3>반 배정 가져오기</h3>
+    <p class="modal-meta" id="classImportMeta"></p>
+    <div id="classImportBody"></div>
+    <div class="btn-row" style="display:flex; gap:8px; margin-top:16px;">
+      <button class="btn" id="classImportApply">적용하기</button>
+      <button class="btn secondary" id="classImportCancel">취소</button>
+    </div>
   </div>
 </div>
 
@@ -2219,6 +2259,217 @@ document.getElementById("examSchoolSelect").addEventListener("change", (e)=>{
   document.getElementById("examCardsGrid").dataset.school = "";
   renderExamTab();
   updateDirtyCount();
+});
+
+/* ---------- 반 배정 가져오기 (반별 현황표 엑셀) ----------
+   시트 모양: "반명" 줄 아래로 담임·과정·교재·수업시간·반별인원이 오고,
+   그 아래부터 학생이 (이름 | 학교 | 이전반) 세 칸씩 반마다 옆으로 늘어섭니다.
+   같은 모양의 블록이 세로로 반복돼요. */
+let classImportPlan = null;
+
+function cellStr(grid, r, c){
+  const row = grid[r];
+  const v = row ? row[c] : undefined;
+  return (v === undefined || v === null) ? "" : String(v).trim();
+}
+
+function parseClassSheet(grid){
+  const out = [];
+  const labelRows = [];
+  for(let r = 0; r < grid.length; r++){
+    if(cellStr(grid, r, 1) === "반명") labelRows.push(r);
+  }
+  labelRows.forEach((r, bi)=>{
+    /* 블록 안에서 라벨이 몇 번째 줄에 있는지 찾습니다 */
+    const off = {};
+    for(let k = 0; k < 12; k++){
+      const lab = cellStr(grid, r + k, 1);
+      if(lab && !(lab in off)) off[lab] = r + k;
+    }
+    const start = (off["반별인원"] !== undefined ? off["반별인원"] : r + 8) + 1;
+    const end = (bi + 1 < labelRows.length) ? labelRows[bi + 1] - 1 : grid.length - 1;
+
+    for(let c = 2; c < 30; c += 3){
+      const cls = cellStr(grid, r, c);
+      if(!cls) continue;
+      const teacher = off["담임(심화)"] !== undefined ? cellStr(grid, off["담임(심화)"], c) : "";
+      const time    = off["수업시간"]   !== undefined ? cellStr(grid, off["수업시간"], c)   : "";
+      for(let rr = start; rr <= end; rr++){
+        const name = cellStr(grid, rr, c);
+        const school = cellStr(grid, rr, c + 1);
+        if(!name || !school) continue;
+        out.push({ name, school, cls, teacher, time });
+      }
+    }
+  });
+  return out;
+}
+
+/* 표의 학년은 반명 앞글자로 봅니다: 1M전A1 → 중1 */
+function gradeFromClassName(cls){
+  const n = (cls || "").match(/^(\d)/);
+  if(!n) return "";
+  return "중" + n[1];
+}
+/* 표는 "감일중", 앱은 "감일중학교" 처럼 다를 수 있어 짧은 이름으로 맞춥니다 */
+function sameSchool(a, b){
+  const norm = x => shortSchool((x || "").replace(/\s+/g, ""));
+  return norm(a) === norm(b) && norm(a) !== "";
+}
+
+function buildClassImportPlan(rows){
+  const updates = [], adds = [], same = [], ambiguous = [];
+  rows.forEach(r=>{
+    const grade = gradeFromClassName(r.cls);
+    const examClass = r.time ? `${r.cls} (${r.time})` : r.cls;
+    const matched = students.filter(s=>
+      s.name === r.name && sameSchool(s.school, r.school) && statusOf(s) !== "퇴원"
+    );
+    if(matched.length > 1){
+      ambiguous.push({ ...r, examClass, grade, count: matched.length });
+      return;
+    }
+    if(matched.length === 1){
+      const s = matched[0];
+      const payload = {};
+      if((s.examClass || "") !== examClass) payload.examClass = examClass;
+      if(r.teacher && (s.teacher || "") !== r.teacher) payload.teacher = r.teacher;
+      if(grade && (s.grade || "") !== grade) payload.grade = grade;
+      if(Object.keys(payload).length === 0){ same.push({ ...r, examClass }); return; }
+      updates.push({
+        id: s.id, name: s.name, school: s.school,
+        before: { examClass: s.examClass || "", teacher: s.teacher || "", grade: s.grade || "" },
+        payload
+      });
+      return;
+    }
+    adds.push({
+      name: r.name, school: r.school, grade,
+      teacher: r.teacher || "", examClass, regularClass: "", status: "재원"
+    });
+  });
+  return { updates, adds, same, ambiguous };
+}
+
+function changeText(before, payload){
+  const label = { examClass: "시험대비 반", teacher: "담임", grade: "학년" };
+  return Object.keys(payload).map(k=>
+    `${label[k]} <del>${escapeHtml(before[k] || "없음")}</del><ins>${escapeHtml(payload[k])}</ins>`
+  ).join(" · ");
+}
+
+function renderClassImportPlan(plan, fileName){
+  const total = plan.updates.length + plan.adds.length + plan.same.length + plan.ambiguous.length;
+  document.getElementById("classImportMeta").textContent =
+    `${escapeHtml(fileName)} · 표에서 학생 ${total}명을 읽었어요`;
+
+  let html = `<div class="imp-sum">
+    <div class="imp-card upd"><div class="n">${plan.updates.length}</div><div class="l">반·담임 바뀜</div></div>
+    <div class="imp-card new"><div class="n">${plan.adds.length}</div><div class="l">새로 추가</div></div>
+    <div class="imp-card same"><div class="n">${plan.same.length}</div><div class="l">이미 같음</div></div>
+    ${plan.ambiguous.length ? `<div class="imp-card warn"><div class="n">${plan.ambiguous.length}</div><div class="l">동명이인 — 건너뜀</div></div>` : ""}
+  </div>`;
+
+  const listOf = (arr, render, limit=60) =>
+    `<div class="imp-list">${arr.slice(0, limit).map(render).join("")}</div>` +
+    (arr.length > limit ? `<p class="imp-note">외 ${arr.length - limit}명</p>` : "");
+
+  if(plan.updates.length){
+    html += `<div class="imp-sec"><h5>바뀌는 학생 ${plan.updates.length}명</h5>` +
+      listOf(plan.updates, u=>`<div class="imp-row">
+        <span class="who">${escapeHtml(u.name)}</span>
+        <span class="sch">${escapeHtml(shortSchool(u.school))}</span>
+        <span class="chg">${changeText(u.before, u.payload)}</span></div>`) + `</div>`;
+  }
+  if(plan.adds.length){
+    html += `<div class="imp-sec"><h5>새로 추가되는 학생 ${plan.adds.length}명</h5>` +
+      listOf(plan.adds, a=>`<div class="imp-row">
+        <span class="who">${escapeHtml(a.name)}</span>
+        <span class="sch">${escapeHtml(shortSchool(a.school))}</span>
+        <span class="chg">${escapeHtml(a.grade)} · ${escapeHtml(a.examClass)} · 담임 ${escapeHtml(a.teacher || "미지정")}</span></div>`) + `</div>`;
+  }
+  if(plan.ambiguous.length){
+    html += `<div class="imp-sec"><h5>동명이인이라 건너뛴 학생 ${plan.ambiguous.length}명</h5>` +
+      listOf(plan.ambiguous, a=>`<div class="imp-row">
+        <span class="who">${escapeHtml(a.name)}</span>
+        <span class="sch">${escapeHtml(shortSchool(a.school))}</span>
+        <span class="chg">같은 학교에 동명이인 ${a.count}명 — 학생 관리에서 직접 지정해주세요</span></div>`) + `</div>`;
+  }
+  html += `<p class="imp-note">학번·학기중 반 등 다른 값은 건드리지 않습니다. 적용 뒤 “되돌리기”로 한 번에 취소할 수 있어요.</p>`;
+
+  document.getElementById("classImportBody").innerHTML = html;
+  document.getElementById("classImportApply").disabled = (plan.updates.length + plan.adds.length) === 0;
+  document.getElementById("classImportModal").classList.add("active");
+}
+
+document.getElementById("classImportBtn").addEventListener("click", ()=>{
+  if(!guardEdit()) return;
+  document.getElementById("classImportInput").click();
+});
+document.getElementById("classImportInput").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(typeof XLSX === "undefined"){
+    showToast("엑셀을 읽는 기능을 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해주세요.", {type:"bad"});
+    e.target.value = ""; return;
+  }
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const wb = XLSX.read(new Uint8Array(ev.target.result), {type:"array"});
+      let rows = [];
+      wb.SheetNames.forEach(nm=>{
+        const grid = XLSX.utils.sheet_to_json(wb.Sheets[nm], {header:1, defval:""});
+        rows = rows.concat(parseClassSheet(grid));
+      });
+      if(rows.length === 0){
+        showToast("표에서 학생을 찾지 못했어요. '반명' 줄이 있는 반별 현황표가 맞는지 확인해주세요.", {type:"warn"});
+        return;
+      }
+      classImportPlan = buildClassImportPlan(rows);
+      renderClassImportPlan(classImportPlan, file.name);
+    }catch(err){
+      console.error(err);
+      showToast("파일을 읽는 중 문제가 생겼어요.", {type:"bad"});
+    }finally{
+      e.target.value = "";
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+function closeClassImport(){
+  document.getElementById("classImportModal").classList.remove("active");
+  classImportPlan = null;
+}
+document.getElementById("closeClassImport").addEventListener("click", closeClassImport);
+document.getElementById("classImportCancel").addEventListener("click", closeClassImport);
+
+document.getElementById("classImportApply").addEventListener("click", async (ev)=>{
+  if(!classImportPlan) return;
+  const plan = classImportPlan;
+  const btn = ev.currentTarget;
+  btn.disabled = true; btn.textContent = "적용 중...";
+
+  const undoFields = plan.updates.map(u=>({
+    id: u.id,
+    payload: Object.fromEntries(Object.keys(u.payload).map(k=> [k, u.before[k]]))
+  }));
+
+  if(plan.updates.length) await restoreStudentFields(plan.updates.map(u=>({id:u.id, payload:u.payload})));
+  const addedIds = plan.adds.length ? await addStudentsBulk(plan.adds) : [];
+
+  btn.disabled = false; btn.textContent = "적용하기";
+  closeClassImport();
+
+  showToast(`반 배정 ${plan.updates.length}명 변경, ${addedIds.length}명 추가했어요.`, {
+    type:"ok", actionLabel:"되돌리기",
+    onAction: async ()=>{
+      if(undoFields.length) await restoreStudentFields(undoFields);
+      if(addedIds.length) await removeStudentsBulk(addedIds);
+      showToast("가져오기를 되돌렸어요.", {type:"warn"});
+    }
+  });
 });
 
 /* ---------- 기출 자료 (구글 드라이브) ----------
@@ -4434,7 +4685,13 @@ function openDetailModal(examId, returnTo){
         <div class="teacher-group">
           <div class="tname">${escapeHtml(t)}T <span class="cnt">${list.length}명</span></div>
           <div class="assign-row">
-            ${list.map(s=>`<div class="assign-chip"><span class="sname">${escapeHtml(s.name)}</span></div>`).join("")}
+            ${list.map(s=>{
+              const cls = (s.examClass||"").trim();
+              return `<div class="assign-chip">
+                <span class="sname">${escapeHtml(s.name)}</span>
+                <span class="sclass ${cls?"":"none"}">${cls ? escapeHtml(cls) : "반 미배정"}</span>
+              </div>`;
+            }).join("")}
           </div>
         </div>
       `;
