@@ -2273,36 +2273,84 @@ function cellStr(grid, r, c){
   return (v === undefined || v === null) ? "" : String(v).trim();
 }
 
+function normLabel(t){ return String(t || "").replace(/\s+/g, ""); }
+
+/* "반명" 이 어느 열에 있든 찾아냅니다 (열이 밀려도 읽히도록) */
+function findLabelRows(grid){
+  const found = [];
+  for(let r = 0; r < grid.length; r++){
+    const row = grid[r] || [];
+    for(let c = 0; c < Math.min(row.length, 6); c++){
+      if(normLabel(row[c]) === "반명"){ found.push({row:r, col:c}); break; }
+    }
+  }
+  return found;
+}
+
 function parseClassSheet(grid){
   const out = [];
-  const labelRows = [];
-  for(let r = 0; r < grid.length; r++){
-    if(cellStr(grid, r, 1) === "반명") labelRows.push(r);
-  }
-  labelRows.forEach((r, bi)=>{
+  const labelRows = findLabelRows(grid);
+  labelRows.forEach((lr, bi)=>{
+    const r = lr.row, LC = lr.col;          // LC = 라벨이 있는 열
     /* 블록 안에서 라벨이 몇 번째 줄에 있는지 찾습니다 */
     const off = {};
-    for(let k = 0; k < 12; k++){
-      const lab = cellStr(grid, r + k, 1);
+    for(let k = 0; k < 14; k++){
+      const lab = normLabel(cellStr(grid, r + k, LC));
       if(lab && !(lab in off)) off[lab] = r + k;
     }
     const start = (off["반별인원"] !== undefined ? off["반별인원"] : r + 8) + 1;
-    const end = (bi + 1 < labelRows.length) ? labelRows[bi + 1] - 1 : grid.length - 1;
+    const end = (bi + 1 < labelRows.length) ? labelRows[bi + 1].row - 1 : grid.length - 1;
 
-    for(let c = 2; c < 30; c += 3){
+    for(let c = LC + 1; c < LC + 30; c += 3){
       const cls = cellStr(grid, r, c);
       if(!cls) continue;
-      const teacher = off["담임(심화)"] !== undefined ? cellStr(grid, off["담임(심화)"], c) : "";
+      const teacher = off["담임(심화)"] !== undefined ? cellStr(grid, off["담임(심화)"], c)
+                    : off["담임"]       !== undefined ? cellStr(grid, off["담임"], c) : "";
       const time    = off["수업시간"]   !== undefined ? cellStr(grid, off["수업시간"], c)   : "";
       for(let rr = start; rr <= end; rr++){
         const name = cellStr(grid, rr, c);
         const school = cellStr(grid, rr, c + 1);
         if(!name || !school) continue;
+        if(normLabel(name) === "반명") break;
         out.push({ name, school, cls, teacher, time });
       }
     }
   });
   return out;
+}
+
+/* 블록형이 아니라 평범한 표(제목줄 + 한 줄에 한 명)일 때도 읽습니다 */
+function parseFlatSheet(grid){
+  const KEY = {
+    name:   ["이름","성명","학생명","학생"],
+    school: ["학교","출신학교","중학교"],
+    cls:    ["반","반명","수강반","내신대비반","시험대비반"],
+    teacher:["담임","담임(심화)","담당","선생님"],
+    time:   ["수업시간","요일","시간"],
+  };
+  for(let r = 0; r < Math.min(grid.length, 20); r++){
+    const row = (grid[r] || []).map(normLabel);
+    const idx = {};
+    Object.keys(KEY).forEach(k=>{
+      const c = row.findIndex(v=> v && KEY[k].some(w=> v === normLabel(w)));
+      if(c >= 0) idx[k] = c;
+    });
+    if(idx.name === undefined || idx.school === undefined) continue;
+    const out = [];
+    for(let rr = r + 1; rr < grid.length; rr++){
+      const name = cellStr(grid, rr, idx.name);
+      const school = cellStr(grid, rr, idx.school);
+      if(!name || !school) continue;
+      out.push({
+        name, school,
+        cls: idx.cls !== undefined ? cellStr(grid, rr, idx.cls) : "",
+        teacher: idx.teacher !== undefined ? cellStr(grid, rr, idx.teacher) : "",
+        time: idx.time !== undefined ? cellStr(grid, rr, idx.time) : "",
+      });
+    }
+    if(out.length) return out;
+  }
+  return [];
 }
 
 /* 표의 학년은 반명 앞글자로 봅니다: 1M전A1 → 중1 */
@@ -2418,12 +2466,16 @@ document.getElementById("classImportInput").addEventListener("change", (e)=>{
     try{
       const wb = XLSX.read(new Uint8Array(ev.target.result), {type:"array"});
       let rows = [];
-      wb.SheetNames.forEach(nm=>{
-        const grid = XLSX.utils.sheet_to_json(wb.Sheets[nm], {header:1, defval:""});
-        rows = rows.concat(parseClassSheet(grid));
-      });
+      const grids = wb.SheetNames.map(nm=> XLSX.utils.sheet_to_json(wb.Sheets[nm], {header:1, defval:""}));
+      grids.forEach(g=>{ rows = rows.concat(parseClassSheet(g)); });
       if(rows.length === 0){
-        showToast("표에서 학생을 찾지 못했어요. '반명' 줄이 있는 반별 현황표가 맞는지 확인해주세요.", {type:"warn"});
+        /* 블록형이 아니면 평범한 표로 한 번 더 시도 */
+        grids.forEach(g=>{ rows = rows.concat(parseFlatSheet(g)); });
+      }
+      if(rows.length === 0){
+        const shape = grids.map((g,i)=> `${wb.SheetNames[i]} ${g.length}행`).join(", ");
+        showToast(`표에서 학생을 찾지 못했어요 (${shape}). 반별 현황표이거나, 이름·학교 제목줄이 있는 표여야 합니다.`,
+          {type:"warn", duration:12000});
         return;
       }
       classImportPlan = buildClassImportPlan(rows);
