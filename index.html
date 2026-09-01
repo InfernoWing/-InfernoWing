@@ -474,6 +474,12 @@
   .stu-quick .sq-row > div{flex:1; min-width:120px;}
   .stu-quick label.small{font-size:10.5px; color:#8a8375; margin-bottom:4px;}
   .stu-quick input{padding:7px 9px; font-size:12.5px; background:#fff;}
+  .stu-quick .sq-grp{display:flex; align-items:flex-end; gap:9px; margin-bottom:8px;}
+  .stu-quick .sq-grp .sq-row{flex:1;}
+  .stu-quick .sq-tag{flex:0 0 auto; font-size:10.5px; font-weight:800; letter-spacing:.03em;
+    padding:5px 8px; border-radius:7px; margin-bottom:1px;}
+  .stu-quick .sq-tag.ex{background:#e8eef7; color:#3f5c86;}
+  .stu-quick .sq-tag.rg{background:#eaf1e6; color:#4c6b3f;}
 
   /* 데이터 관리 · 정리 */
   .data-tools{display:flex; gap:8px; flex-wrap:wrap; align-items:center;
@@ -755,6 +761,7 @@
   .assign-chip .cl.tea{color:var(--rust);}      .assign-chip .cl.tea i{background:#fbe4dc; color:#a8452c;}
   .assign-chip .cl.ex{color:var(--violet);}     .assign-chip .cl.ex i{background:#ece4f6; color:#5b4386;}
   .assign-chip .cl.rg{color:var(--blue);}       .assign-chip .cl.rg i{background:#dde8f1; color:#2c5773;}
+  .assign-chip .cl.tv{color:#4c6b3f;}           .assign-chip .cl.tv i{background:#e4eddd; color:#4c6b3f;}
   .assign-chip .cl.none{color:#c1b9a5; font-weight:600;}
   .assign-chip .cl.none i{background:#f1ede0; color:#a49c88;}
 
@@ -1072,7 +1079,15 @@
     <div class="form-row edit-only">
       <div>
         <label>정규반</label>
-        <input type="text" id="stuRegularClass" placeholder="예: 월수금 A반" list="regularClassList">
+        <input type="text" id="stuRegularClass" placeholder="예: 1M1S" list="regularClassList">
+      </div>
+      <div>
+        <label>정규 담임(심화)</label>
+        <input type="text" id="stuRegularTeacher" placeholder="예: 이노윤" list="teacherList">
+      </div>
+      <div>
+        <label>정규 부담임(선행)</label>
+        <input type="text" id="stuRegularAssistant" placeholder="예: 이소영" list="teacherList">
       </div>
       <div>
         <label>시험대비 반</label>
@@ -1315,11 +1330,23 @@
     <div class="stu-tags" id="stuTags"></div>
 
     <div class="stu-quick edit-only" id="stuQuick">
-      <div class="sq-row">
-        <div><label class="small">담임</label><input type="text" id="sqTeacher" list="teacherList" placeholder="예: 강지성"></div>
-        <div><label class="small">정규반</label><input type="text" id="sqRegular" list="regularClassList" placeholder="예: 월수금 A반"></div>
-        <div><label class="small">시험대비 반</label><input type="text" id="sqExam" list="examClassList" placeholder="예: 내신A"></div>
-        <div style="flex:0 0 90px;"><label class="small">재원 상태</label><select id="sqStatus"></select></div>
+      <div class="sq-grp">
+        <span class="sq-tag ex">내신대비</span>
+        <div class="sq-row">
+          <div><label class="small">담임</label><input type="text" id="sqTeacher" list="teacherList" placeholder="예: 강지성"></div>
+          <div><label class="small">반</label><input type="text" id="sqExam" list="examClassList" placeholder="예: 내신A"></div>
+        </div>
+      </div>
+      <div class="sq-grp">
+        <span class="sq-tag rg">정규</span>
+        <div class="sq-row">
+          <div><label class="small">담임(심화)</label><input type="text" id="sqRegT" list="teacherList" placeholder="예: 이노윤"></div>
+          <div><label class="small">부담임(선행)</label><input type="text" id="sqRegA" list="teacherList" placeholder="예: 이소영"></div>
+          <div><label class="small">반</label><input type="text" id="sqRegular" list="regularClassList" placeholder="예: 1M1S"></div>
+        </div>
+      </div>
+      <div class="sq-row" style="margin-top:9px;">
+        <div style="flex:0 0 100px;"><label class="small">재원 상태</label><select id="sqStatus"></select></div>
         <button class="btn small" id="sqSave">저장</button>
       </div>
     </div>
@@ -2229,10 +2256,14 @@ document.getElementById("addStudentBtn").addEventListener("click", async ()=>{
   const grade = document.getElementById("stuGrade").value.trim();
   const teacher = document.getElementById("stuTeacher").value.trim();
   const regularClass = document.getElementById("stuRegularClass").value.trim();
+  const regularTeacher = document.getElementById("stuRegularTeacher").value.trim();
+  const regularAssistant = document.getElementById("stuRegularAssistant").value.trim();
   const examClass = document.getElementById("stuExamClass").value.trim();
   if(!name){ alert("이름을 입력해주세요."); return; }
-  await addStudent({studentNumber, name, school, grade, teacher, regularClass, examClass, status:"재원"});
-  ["stuNumber","stuName","stuSchool","stuGrade","stuTeacher","stuRegularClass","stuExamClass"]
+  await addStudent({studentNumber, name, school, grade, teacher, examTeacher: teacher,
+                    regularClass, regularTeacher, regularAssistant, examClass, status:"재원"});
+  ["stuNumber","stuName","stuSchool","stuGrade","stuTeacher","stuRegularClass",
+   "stuRegularTeacher","stuRegularAssistant","stuExamClass"]
     .forEach(id=> document.getElementById(id).value="");
 });
 
@@ -2243,7 +2274,8 @@ document.getElementById("excelUploadBtn").addEventListener("click", ()=>{
 document.getElementById("excelDownloadBtn").addEventListener("click", ()=>{
   const rows = filteredStudents().map(s=>({
     "학번": s.studentNumber||"", "이름": s.name||"", "학교": s.school||"", "학년": s.grade||"",
-    "담임": s.teacher||"", "정규반": s.regularClass||"", "시험대비 반": s.examClass||"",
+    "담임": s.teacher||"", "내신 담임": s.examTeacher||"", "시험대비 반": s.examClass||"",
+    "정규 담임": s.regularTeacher||"", "정규 부담임": s.regularAssistant||"", "정규반": s.regularClass||"",
     "상태": statusOf(s),
   }));
   exportRows(rows, "학생명단", "학생명단");
@@ -2284,14 +2316,18 @@ document.getElementById("excelFileInput").addEventListener("change", (e)=>{
         const classDayGroup = (rawGroup==="월수금" || rawGroup==="화목토") ? rawGroup : "";
         const regularClass = pick(row, ["정규반","학기중 반","학기중반","반","학기반"]);
         const examClass = pick(row, ["시험대비 반","시험대비반","시험반","대비반"]);
+        const examTeacher = pick(row, ["내신 담임","내신담임","시험대비 담임","내신대비 담임"]) || teacher;
+        const regularTeacher = pick(row, ["정규 담임","정규담임","담임(심화)","심화담임"]);
+        const regularAssistant = pick(row, ["정규 부담임","정규부담임","부담임","부담임(선행)","선행담임","보조담임"]);
         const rawStatus = pick(row, ["상태","재원상태","재원 상태"]);
         const status = STATUS_LIST.includes(rawStatus) ? rawStatus : "재원";
-        parsed.push({studentNumber, name, school, grade, teacher, classDayGroup, regularClass, examClass, status});
+        parsed.push({studentNumber, name, school, grade, teacher, examTeacher,
+                     regularTeacher, regularAssistant, classDayGroup, regularClass, examClass, status});
       });
 
       if(parsed.length===0){
         statusEl.textContent = "";
-        alert("추가할 학생을 찾지 못했어요. '이름' 열이 채워져 있는지 확인해주세요.\n(제목행 예: 학번, 이름, 학교, 학년, 담임, 수업요일, 정규반, 시험대비 반)");
+        alert("추가할 학생을 찾지 못했어요. '이름' 열이 채워져 있는지 확인해주세요.\n(제목행 예: 학번, 이름, 학교, 학년, 담임, 정규 담임, 정규 부담임, 수업요일, 정규반, 시험대비 반)");
         return;
       }
 
@@ -2384,13 +2420,17 @@ function parseClassSheet(grid){
       if(!DOW.test(time)) continue;
       const teacher = off["담임(심화)"] !== undefined ? cellStr(grid, off["담임(심화)"], c)
                     : off["담임"]       !== undefined ? cellStr(grid, off["담임"], c) : "";
+      /* 정규반 표에는 담임(심화) 밑에 부담임(선행)이 한 줄 더 있습니다 */
+      const assistant = off["부담임(선행)"] !== undefined ? cellStr(grid, off["부담임(선행)"], c)
+                      : off["부담임"]       !== undefined ? cellStr(grid, off["부담임"], c)
+                      : off["보조담임"]     !== undefined ? cellStr(grid, off["보조담임"], c) : "";
       for(let rr = start; rr <= end; rr++){
         const name = cellStr(grid, rr, c);
         const school = cellStr(grid, rr, c + 1);
         if(!name || !school) continue;
         if(normLabel(name) === "반명") break;
         if(NUM.test(name) || NUM.test(school)) continue;
-        out.push({ name, school, cls, teacher, time });
+        out.push({ name, school, cls, teacher, assistant, time });
       }
     }
   });
@@ -2404,6 +2444,7 @@ function parseFlatSheet(grid){
     school: ["학교","출신학교","중학교"],
     cls:    ["반","반명","수강반","내신대비반","시험대비반"],
     teacher:["담임","담임(심화)","담당","선생님"],
+    assist: ["부담임","부담임(선행)","부담당","보조담임"],
     time:   ["수업시간","요일","시간"],
   };
   for(let r = 0; r < Math.min(grid.length, 20); r++){
@@ -2423,6 +2464,7 @@ function parseFlatSheet(grid){
         name, school,
         cls: idx.cls !== undefined ? cellStr(grid, rr, idx.cls) : "",
         teacher: idx.teacher !== undefined ? cellStr(grid, rr, idx.teacher) : "",
+        assistant: idx.assist !== undefined ? cellStr(grid, rr, idx.assist) : "",
         time: idx.time !== undefined ? cellStr(grid, rr, idx.time) : "",
       });
     }
@@ -2463,11 +2505,13 @@ function buildClassImportPlan(rows, field){
       const s = matched[0];
       const payload = {};
       const TFIELD = FIELD === "examClass" ? "examTeacher" : "regularTeacher";
+      const AFIELD = FIELD === "examClass" ? "examAssistant" : "regularAssistant";
       if((s[FIELD] || "") !== examClass) payload[FIELD] = examClass;
       if(r.teacher){
         if((s[TFIELD] || "") !== r.teacher) payload[TFIELD] = r.teacher;   // 반 종류별 담임
         if((s.teacher || "") !== r.teacher) payload.teacher = r.teacher;   // 기존 담임 칸도 최신값으로
       }
+      if(r.assistant && (s[AFIELD] || "") !== r.assistant) payload[AFIELD] = r.assistant;   // 부담임(선행)
       if(grade && (s.grade || "") !== grade) payload.grade = grade;
       if(Object.keys(payload).length === 0){ same.push({ ...r, examClass }); return; }
       updates.push({
@@ -2479,9 +2523,11 @@ function buildClassImportPlan(rows, field){
     }
     const add = { name: r.name, school: r.school, grade,
       teacher: r.teacher || "", examTeacher: "", regularTeacher: "",
+      examAssistant: "", regularAssistant: "",
       examClass: "", regularClass: "", status: "재원" };
     add[FIELD] = examClass;
     add[FIELD === "examClass" ? "examTeacher" : "regularTeacher"] = r.teacher || "";
+    add[FIELD === "examClass" ? "examAssistant" : "regularAssistant"] = r.assistant || "";
     adds.push(add);
   });
   return { updates, adds, same, ambiguous };
@@ -2489,7 +2535,8 @@ function buildClassImportPlan(rows, field){
 
 function changeText(before, payload){
   const label = { examClass: "시험대비 반", regularClass: "정규반", teacher: "담임",
-                  examTeacher: "내신 담임", regularTeacher: "정규 담임", grade: "학년" };
+                  examTeacher: "내신 담임", regularTeacher: "정규 담임",
+                  examAssistant: "내신 부담임", regularAssistant: "정규 부담임", grade: "학년" };
   return Object.keys(payload).map(k=>
     `${label[k]} <del>${escapeHtml(before[k] || "없음")}</del><ins>${escapeHtml(payload[k])}</ins>`
   ).join(" · ");
@@ -2526,7 +2573,10 @@ function renderClassImportPlan(plan, fileName){
       listOf(plan.adds, a=>`<div class="imp-row">
         <span class="who">${escapeHtml(a.name)}</span>
         <span class="sch">${escapeHtml(shortSchool(a.school))}</span>
-        <span class="chg">${escapeHtml(a.grade)} · ${escapeHtml(a[classImportField] || "")} · 담임 ${escapeHtml(a.teacher || "미지정")}</span></div>`) + `</div>`;
+        <span class="chg">${escapeHtml(a.grade)} · ${escapeHtml(a[classImportField] || "")} · 담임 ${escapeHtml(a.teacher || "미지정")}${
+          a[classImportField==="examClass"?"examAssistant":"regularAssistant"]
+            ? " · 부담임 " + escapeHtml(a[classImportField==="examClass"?"examAssistant":"regularAssistant"]) : ""
+        }</span></div>`) + `</div>`;
   }
   if(plan.ambiguous.length){
     html += `<div class="imp-sec"><h5>동명이인이라 건너뛴 학생 ${plan.ambiguous.length}명</h5>` +
@@ -4641,6 +4691,7 @@ function openStudentModal(studentId){
   document.getElementById("stuTags").innerHTML =
     `<span class="tag st-${statusOf(s)}">${statusOf(s)}</span>` +
     (s.teacher ? `<span class="tag teacher">${escapeHtml(s.teacher)}T</span>` : `<span class="tag none">담임 미지정</span>`) +
+    (s.regularAssistant ? `<span class="tag teacher">부 ${escapeHtml(s.regularAssistant)}T</span>` : ``) +
     (s.regularClass ? `<span class="tag cls">정규반 ${escapeHtml(s.regularClass)}</span>` : `<span class="tag none">정규반 미배정</span>`) +
     (s.examClass ? `<span class="tag cls">시험대비 ${escapeHtml(s.examClass)}</span>` : `<span class="tag none">시험대비 반 미배정</span>`);
 
@@ -4679,20 +4730,31 @@ function openStudentModal(studentId){
   }));
 
   /* 담임·반 즉시 수정 */
-  document.getElementById("sqTeacher").value = s.teacher || "";
+  /* 정규담임이 따로 있으면 기본 담임 칸을 내신 자리에 끌어오지 않습니다 */
+  document.getElementById("sqTeacher").value =
+    s.examTeacher || (s.regularTeacher ? "" : (s.teacher || ""));
+  document.getElementById("sqRegT").value = s.regularTeacher || "";
+  document.getElementById("sqRegA").value = s.regularAssistant || "";
   document.getElementById("sqRegular").value = s.regularClass || "";
   document.getElementById("sqExam").value = s.examClass || "";
   document.getElementById("sqStatus").innerHTML =
     STATUS_LIST.map(st=>`<option value="${st}" ${statusOf(s)===st?"selected":""}>${st}</option>`).join("");
   document.getElementById("sqSave").onclick = async ()=>{
     if(!guardEdit()) return;
+    const eT = document.getElementById("sqTeacher").value.trim();
+    const rT = document.getElementById("sqRegT").value.trim();
     const payload = {
-      teacher: document.getElementById("sqTeacher").value.trim(),
+      examTeacher: eT,
+      regularTeacher: rT,
+      regularAssistant: document.getElementById("sqRegA").value.trim(),
+      teacher: eT || rT,          /* 목록·색인이 쓰는 기본 담임 칸도 같이 맞춥니다 */
       regularClass: document.getElementById("sqRegular").value.trim(),
       examClass: document.getElementById("sqExam").value.trim(),
       status: document.getElementById("sqStatus").value,
     };
-    const before = {teacher: s.teacher||"", regularClass: s.regularClass||"", examClass: s.examClass||"", status: statusOf(s)};
+    const before = {examTeacher: s.examTeacher||"", regularTeacher: s.regularTeacher||"",
+      regularAssistant: s.regularAssistant||"", teacher: s.teacher||"",
+      regularClass: s.regularClass||"", examClass: s.examClass||"", status: statusOf(s)};
     const changed = Object.keys(payload).some(k=> payload[k] !== before[k]);
     if(!changed){ showToast("바뀐 내용이 없어요.", {type:"warn"}); return; }
     await updateStudentDoc(studentId, payload);
@@ -4927,6 +4989,7 @@ function openDetailModal(examId, returnTo){
               };
               const eT = (s.examTeacher || (teacherBasis==="exam" ? s.teacher : "") || "").trim();
               const rT = (s.regularTeacher || (teacherBasis==="regular" ? s.teacher : "") || "").trim();
+              const rA = (s.regularAssistant || "").trim();
               const teaLine = (kind, v, cn, active) =>
                 `<span class="cl ${cn} ${v?"":"none"} ${active?"cur":""}"><i>${kind}</i>${v ? escapeHtml(v) : "미지정"}</span>`;
               return `<div class="assign-chip">
@@ -4934,6 +4997,7 @@ function openDetailModal(examId, returnTo){
                 ${teaLine("내신담임", eT, "tea", teacherBasis==="exam")}
                 ${line("내신반", exam, "ex")}
                 ${teaLine("정규담임", rT, "tg", teacherBasis==="regular")}
+                ${rA ? teaLine("정규부담임", rA, "tv", false) : ""}
                 ${line("정규반", reg, "rg")}
               </div>`;
             }).join("")}
