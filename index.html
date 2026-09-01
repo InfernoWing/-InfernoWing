@@ -727,8 +727,17 @@
   .assign-chip{ display:inline-flex; flex-direction:column; align-items:flex-start; gap:2px;
     border:1.5px solid #ece7d8; border-radius:9px; padding:6px 11px; font-size:13px; background:#fffdf8; }
   .assign-chip .sname{font-weight:700; line-height:1.3;}
-  .assign-chip .sclass{font-size:11px; font-weight:700; color:var(--violet); line-height:1.3;}
-  .assign-chip .sclass.none{color:#c1b9a5; font-weight:600;}
+  .assign-chip{min-width:132px;}
+  .assign-chip .sname{margin-bottom:2px;}
+  .assign-chip .cl{font-size:11px; font-weight:800; line-height:1.35; display:flex; align-items:baseline; gap:5px;}
+  .assign-chip .cl i{font-style:normal; font-size:9.5px; font-weight:800; letter-spacing:.02em;
+    padding:1px 5px; border-radius:4px; flex:0 0 auto;}
+  .assign-chip .cl em{font-style:normal; font-size:9.5px; font-weight:700; color:#a49c88;}
+  .assign-chip .cl.tea{color:var(--rust);}      .assign-chip .cl.tea i{background:#fbe4dc; color:#a8452c;}
+  .assign-chip .cl.ex{color:var(--violet);}     .assign-chip .cl.ex i{background:#ece4f6; color:#5b4386;}
+  .assign-chip .cl.rg{color:var(--blue);}       .assign-chip .cl.rg i{background:#dde8f1; color:#2c5773;}
+  .assign-chip .cl.none{color:#c1b9a5; font-weight:600;}
+  .assign-chip .cl.none i{background:#f1ede0; color:#a49c88;}
 
   .empty-state{ text-align:center; color:#a49c88; padding:30px 10px; font-size:13px; }
 
@@ -4819,9 +4828,20 @@ function openDetailModal(examId, returnTo){
           <div class="assign-row">
             ${list.map(s=>{
               const cls = (s.examClass||"").trim();
+              const exam = (s.examClass||"").trim();
+              const reg  = (s.regularClass||"").trim();
+              const tea  = (s.teacher||"").trim();
+              const line = (kind, v, cn) => {
+                if(!v) return `<span class="cl ${cn} none"><i>${kind}</i>미배정</span>`;
+                const [code, time] = splitCls(v);
+                return `<span class="cl ${cn}" title="${escapeHtml(v)}"><i>${kind}</i>${escapeHtml(code)}` +
+                       (time ? `<em>${escapeHtml(time)}</em>` : "") + `</span>`;
+              };
               return `<div class="assign-chip">
                 <span class="sname">${escapeHtml(s.name)}</span>
-                <span class="sclass ${cls?"":"none"}">${cls ? escapeHtml(cls) : "반 미배정"}</span>
+                <span class="cl tea ${tea?"":"none"}"><i>담임</i>${tea ? escapeHtml(tea) : "미지정"}</span>
+                ${line("내신", exam, "ex")}
+                ${line("정규", reg, "rg")}
               </div>`;
             }).join("")}
           </div>
