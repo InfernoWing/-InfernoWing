@@ -733,6 +733,16 @@
   .assign-chip .cl i{font-style:normal; font-size:9.5px; font-weight:800; letter-spacing:.02em;
     padding:1px 5px; border-radius:4px; flex:0 0 auto;}
   .assign-chip .cl em{font-style:normal; font-size:9.5px; font-weight:700; color:#a49c88;}
+  .assign-chip{min-width:150px;}
+  .tbasis-row{display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin:16px 0 10px;}
+  .tbasis-row .tb-lbl{font-size:11px; font-weight:800; color:#8a8375; margin-left:auto;}
+  .seg.tb-seg{display:inline-flex; border:1px solid #ded7c6; border-radius:8px; overflow:hidden; background:#fdfcf8;}
+  .seg.tb-seg button{border:none; background:none; padding:4px 11px; font-size:11.5px; font-weight:800;
+    color:#8a8375; cursor:pointer; font-family:inherit;}
+  .seg.tb-seg button.on{background:var(--board); color:var(--chalk);}
+  .assign-chip .cl.cur{position:relative;}
+  .assign-chip .cl.cur i{outline:1.5px solid currentColor; outline-offset:-1px;}
+  .assign-chip .cl.tg{color:#2c5773;}           .assign-chip .cl.tg i{background:#dde8f1; color:#2c5773;}
   .assign-chip .cl.tea{color:var(--rust);}      .assign-chip .cl.tea i{background:#fbe4dc; color:#a8452c;}
   .assign-chip .cl.ex{color:var(--violet);}     .assign-chip .cl.ex i{background:#ece4f6; color:#5b4386;}
   .assign-chip .cl.rg{color:var(--blue);}       .assign-chip .cl.rg i{background:#dde8f1; color:#2c5773;}
@@ -2438,8 +2448,12 @@ function buildClassImportPlan(rows, field){
     if(matched.length === 1){
       const s = matched[0];
       const payload = {};
+      const TFIELD = FIELD === "examClass" ? "examTeacher" : "regularTeacher";
       if((s[FIELD] || "") !== examClass) payload[FIELD] = examClass;
-      if(r.teacher && (s.teacher || "") !== r.teacher) payload.teacher = r.teacher;
+      if(r.teacher){
+        if((s[TFIELD] || "") !== r.teacher) payload[TFIELD] = r.teacher;   // 반 종류별 담임
+        if((s.teacher || "") !== r.teacher) payload.teacher = r.teacher;   // 기존 담임 칸도 최신값으로
+      }
       if(grade && (s.grade || "") !== grade) payload.grade = grade;
       if(Object.keys(payload).length === 0){ same.push({ ...r, examClass }); return; }
       updates.push({
@@ -2450,15 +2464,18 @@ function buildClassImportPlan(rows, field){
       return;
     }
     const add = { name: r.name, school: r.school, grade,
-      teacher: r.teacher || "", examClass: "", regularClass: "", status: "재원" };
+      teacher: r.teacher || "", examTeacher: "", regularTeacher: "",
+      examClass: "", regularClass: "", status: "재원" };
     add[FIELD] = examClass;
+    add[FIELD === "examClass" ? "examTeacher" : "regularTeacher"] = r.teacher || "";
     adds.push(add);
   });
   return { updates, adds, same, ambiguous };
 }
 
 function changeText(before, payload){
-  const label = { examClass: "시험대비 반", regularClass: "정규반", teacher: "담임", grade: "학년" };
+  const label = { examClass: "시험대비 반", regularClass: "정규반", teacher: "담임",
+                  examTeacher: "내신 담임", regularTeacher: "정규 담임", grade: "학년" };
   return Object.keys(payload).map(k=>
     `${label[k]} <del>${escapeHtml(before[k] || "없음")}</del><ins>${escapeHtml(payload[k])}</ins>`
   ).join(" · ");
@@ -4683,6 +4700,20 @@ document.getElementById("studentModal").addEventListener("click", (e)=>{
   if(e.target.id==="studentModal") closeStudentModal();
 });
 
+/* ---------- 담임 기준 (내신대비 반 담임 / 정규반 담임) ----------
+   학생 한 명에게 담임이 둘일 수 있어서, 어느 쪽을 기준으로 묶을지 고릅니다. */
+let teacherBasis = localStorage.getItem("kladi_tbasis") || "exam";   // exam | regular
+function teacherOf(s, basis){
+  const b = basis || teacherBasis;
+  const v = b === "regular" ? s.regularTeacher : s.examTeacher;
+  return (v || s.teacher || "").trim();
+}
+function setTeacherBasis(v){
+  teacherBasis = v;
+  try{ localStorage.setItem("kladi_tbasis", v); }catch(e){}
+  if(currentDetailExamId) openDetailModal(currentDetailExamId);
+}
+
 /* ---------- 시험 상세 모달 ---------- */
 let detailReturnTo = null;   // {type:"day", key} | {type:"student", id} | null
 
@@ -4810,13 +4841,20 @@ function openDetailModal(examId, returnTo){
   const relevant = studentsForExam(exam);
   const byTeacher = {};
   relevant.forEach(s=>{
-    const teacher = s.teacher || "담당 미지정";
+    const teacher = teacherOf(s) || "담당 미지정";
     if(!byTeacher[teacher]) byTeacher[teacher]=[];
     byTeacher[teacher].push(s);
   });
   const teacherNames = Object.keys(byTeacher).sort();
 
-  let bodyHtml = `<div class="section-label">담당 선생님별 학생 ${relevant.length}명</div>`;
+  let bodyHtml = `<div class="tbasis-row">
+      <span class="section-label" style="margin:0;">담당 선생님별 학생 ${relevant.length}명</span>
+      <span class="tb-lbl">담임 기준</span>
+      <span class="seg tb-seg" id="tbasisSeg">
+        <button data-b="exam" class="${teacherBasis==="exam"?"on":""}">내신대비 반</button>
+        <button data-b="regular" class="${teacherBasis==="regular"?"on":""}">정규반</button>
+      </span>
+    </div>`;
   if(teacherNames.length===0){
     bodyHtml += `<div class="empty-state">이 학교·학년에 해당하는 학생이 없어요.</div>`;
   } else {
@@ -4837,11 +4875,16 @@ function openDetailModal(examId, returnTo){
                 return `<span class="cl ${cn}" title="${escapeHtml(v)}"><i>${kind}</i>${escapeHtml(code)}` +
                        (time ? `<em>${escapeHtml(time)}</em>` : "") + `</span>`;
               };
+              const eT = (s.examTeacher || (teacherBasis==="exam" ? s.teacher : "") || "").trim();
+              const rT = (s.regularTeacher || (teacherBasis==="regular" ? s.teacher : "") || "").trim();
+              const teaLine = (kind, v, cn, active) =>
+                `<span class="cl ${cn} ${v?"":"none"} ${active?"cur":""}"><i>${kind}</i>${v ? escapeHtml(v) : "미지정"}</span>`;
               return `<div class="assign-chip">
                 <span class="sname">${escapeHtml(s.name)}</span>
-                <span class="cl tea ${tea?"":"none"}"><i>담임</i>${tea ? escapeHtml(tea) : "미지정"}</span>
-                ${line("내신", exam, "ex")}
-                ${line("정규", reg, "rg")}
+                ${teaLine("내신담임", eT, "tea", teacherBasis==="exam")}
+                ${line("내신반", exam, "ex")}
+                ${teaLine("정규담임", rT, "tg", teacherBasis==="regular")}
+                ${line("정규반", reg, "rg")}
               </div>`;
             }).join("")}
           </div>
@@ -4849,7 +4892,13 @@ function openDetailModal(examId, returnTo){
       `;
     }).join("");
   }
-  document.getElementById("detailTeacherGroups").innerHTML = bodyHtml;
+  const tgBox = document.getElementById("detailTeacherGroups");
+  tgBox.innerHTML = bodyHtml;
+  const seg = document.getElementById("tbasisSeg");
+  if(seg) seg.addEventListener("click", (ev)=>{
+    const b = ev.target.closest("button");
+    if(b) setTeacherBasis(b.dataset.b);
+  });
 }
 document.getElementById("closeDetailModal").addEventListener("click", ()=>{
   document.getElementById("detailModal").classList.remove("active");
