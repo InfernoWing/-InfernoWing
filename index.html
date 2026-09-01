@@ -640,6 +640,15 @@
   .drive-files .section-label{margin-top:0;}
   .unmatched-wrap{margin-top:13px; padding-top:12px; border-top:1px dashed #e3ddcd;}
 
+  /* ---------- 학교별 교과서 ---------- */
+  .tb-line{display:flex; align-items:center; gap:8px; margin:10px 0 2px;}
+  .tb-line .tb-lb{font-size:11px; font-weight:800; color:#8a8375; letter-spacing:.04em; flex:0 0 auto;}
+  .tb-line .tb-input{flex:1 1 auto; font-size:12.5px; padding:5px 9px;}
+  .tb-line .tb-view{display:none; font-size:12.5px; font-weight:700; color:#5f5a4c;}
+  .tb-line.empty .tb-view{color:#b3ab99; font-weight:600;}
+  body.view-mode .tb-line .tb-view{display:inline;}
+  .meta-tb{font-weight:700; color:#5b4386;}
+
 /* ---------- 시험 후 회고 ---------- */
   .retro-box{background:#f6f2e6; border:1px solid #e6dfcc; border-radius:12px; padding:13px 14px; margin-top:14px;}
   .retro-head{font-size:13px; font-weight:900; display:flex; align-items:center; gap:7px; flex-wrap:wrap;}
@@ -1385,6 +1394,7 @@ async function initFirebase(){
       if(st.editPasswordHash) editPwHash = st.editPasswordHash;
       if(st.driveUrl) driveUrl = st.driveUrl;
       if(st.driveToken) driveToken = st.driveToken;
+      if(st.textbooks) textbooks = st.textbooks;
     }catch(e){}
     onDataChange();
     return;
@@ -1408,6 +1418,10 @@ async function initFirebase(){
   onSnapshot(doc(db,"settings","app"), snap=>{
     const d = snap.data();
     if(d && d.editPasswordHash) editPwHash = d.editPasswordHash;
+    if(d && d.textbooks && JSON.stringify(d.textbooks) !== JSON.stringify(textbooks)){
+      textbooks = d.textbooks; renderExamTabForce();
+      if(currentDetailExamId) openDetailModal(currentDetailExamId);
+    }
     if(d && (d.driveUrl !== driveUrl || d.driveToken !== driveToken)){
       driveUrl = d.driveUrl || ""; driveToken = d.driveToken || "";
       applyDriveSettings();
@@ -3012,6 +3026,7 @@ function examCardHtml(school, grade, examName){
         <span class="count-badge">재원생 ${studentCount}명</span>
       </div>
 
+      ${textbookHtml(school, grade)}
       ${lastRetroBoxHtml(past)}
 
       <label class="not-held-row">
@@ -3199,6 +3214,15 @@ document.getElementById("examCardsGrid").addEventListener("click", (e)=>{
   }
 });
 document.getElementById("examCardsGrid").addEventListener("change", (e)=>{
+  if(e.target.classList.contains("tb-input")){
+    const {school, grade} = e.target.dataset;
+    saveTextbook(school, grade, e.target.value.trim()).then(()=>{
+      showToast(`${school} ${grade} 교과서를 저장했어요.`, {type:"ok"});
+      renderExamTabForce();
+      if(currentDetailExamId) openDetailModal(currentDetailExamId);
+    });
+    return;
+  }
   if(e.target.matches('[data-field="notConducted"]')){
     e.target.closest(".exam-card").querySelector(".reason-box").classList.toggle("show", e.target.checked);
   }
@@ -3207,6 +3231,7 @@ document.getElementById("examCardsGrid").addEventListener("change", (e)=>{
 document.getElementById("examCardsGrid").addEventListener("input", (e)=> markDirty(e.target));
 
 function markDirty(el){
+  if(el && el.classList && el.classList.contains("tb-input")) return;   // 교과서는 바로 저장됩니다
   const card = el && el.closest ? el.closest(".exam-card") : null;
   if(!card) return;
   if(el.dataset && el.dataset.field === "makeupDateInput") return;
@@ -4700,6 +4725,29 @@ document.getElementById("studentModal").addEventListener("click", (e)=>{
   if(e.target.id==="studentModal") closeStudentModal();
 });
 
+/* ---------- 학교별 교과서 ----------
+   학교·학년 하나당 하나. 중간고사·기말고사 카드가 같은 값을 씁니다.
+   settings/app.textbooks 에 { "동북중학교|중1": "㈜동아출판 강옥기" } 형태로 저장됩니다. */
+let textbooks = {};
+function tbKey(school, grade){ return `${school||""}|${grade||""}`; }
+function textbookOf(school, grade){ return (textbooks[tbKey(school, grade)] || "").trim(); }
+async function saveTextbook(school, grade, value){
+  const next = {...textbooks};
+  const k = tbKey(school, grade);
+  if(value) next[k] = value; else delete next[k];
+  textbooks = next;
+  await saveSetting("textbooks", next);
+}
+function textbookHtml(school, grade){
+  const v = textbookOf(school, grade);
+  return `<div class="tb-line ${v?"":"empty"}">
+    <span class="tb-lb">교과서</span>
+    <input type="text" class="tb-input edit-only" data-school="${escapeHtml(school)}" data-grade="${escapeHtml(grade)}"
+      placeholder="예: ㈜동아출판 강옥기" value="${escapeHtml(v)}">
+    <span class="tb-view">${v ? escapeHtml(v) : "미입력"}</span>
+  </div>`;
+}
+
 /* ---------- 담임 기준 (내신대비 반 담임 / 정규반 담임) ----------
    학생 한 명에게 담임이 둘일 수 있어서, 어느 쪽을 기준으로 묶을지 고릅니다. */
 let teacherBasis = localStorage.getItem("kladi_tbasis") || "exam";   // exam | regular
@@ -4749,8 +4797,10 @@ function openDetailModal(examId, returnTo){
   const makeupHtml = exam.makeupDate ? `직전보강 ${fmtWithDow(exam.makeupDate)}` : `직전보강 <span class="flag-bad">--</span>`;
   const printHtml = exam.printStatus==="confirmed" ? `<span class="flag-ok">프린트 확인</span>` : `<span class="flag-bad">프린트 미확인</span>`;
 
+  const tbook = textbookOf(exam.school, exam.grade);
   document.getElementById("detailMeta").innerHTML =
-    `시험기간 ${period}<span class="dot">·</span>${makeupHtml}<span class="dot">·</span>${printHtml}`;
+    `시험기간 ${period}<span class="dot">·</span>${makeupHtml}<span class="dot">·</span>${printHtml}` +
+    (tbook ? `<span class="dot">·</span><span class="meta-tb">교과서 ${escapeHtml(tbook)}</span>` : "");
 
   /* 시험 범위 · 안내 — 창 안에서 바로 쓰고 저장 */
   const scopeBox = document.getElementById("detailScope");
