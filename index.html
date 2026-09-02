@@ -20,7 +20,7 @@
     --radius:14px;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0;padding:0; overscroll-behavior-x:contain;}   /* 좌우로 밀 때 브라우저가 뒤로 가지 않게 */
   body{ background:var(--paper); color:var(--ink); font-family:'Noto Sans KR',sans-serif; min-height:100vh; }
   ::selection{background:var(--mustard-dim);}
 
@@ -209,7 +209,8 @@
   }
 
   /* 좁은 화면에서 셀이 찌그러지지 않도록 가로 스크롤 */
-  .cal-scroll{ overflow-x:auto; padding-bottom:6px; }
+  .cal-scroll{ overflow-x:auto; padding-bottom:6px;
+    overscroll-behavior-x:contain;   /* 옆으로 밀 때 브라우저 뒤로가기가 걸리지 않게 */ }
   .cal-inner{ min-width:700px; }
   .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
   .cal-dow{ text-align:center; font-size:11.5px; font-weight:700; color:#9a9484; padding-bottom:4px; }
@@ -440,6 +441,9 @@
   .tl-dnum{position:absolute; top:20px; font-size:10.5px; color:#6b7368; font-weight:700;
     text-align:center; line-height:1.15;}
   .tl-dnum .dw{display:block; font-size:8.5px; color:#a49c88; font-weight:600;}
+  /* 좁힌 토·일 칸 — 숫자만 작게 */
+  .tl-dnum.nar{font-size:9px; letter-spacing:-.03em;}
+  .tl-dnum.nar .dw{font-size:8px;}
   .tl-dnum.sat{color:var(--blue);} .tl-dnum.sat .dw{color:var(--blue); opacity:.75;}
   .tl-dnum.sun{color:var(--rust);} .tl-dnum.sun .dw{color:var(--rust); opacity:.75;}
   .tl-dnum.tday{color:#fff; background:var(--rust); border-radius:6px; font-weight:800;}
@@ -962,7 +966,7 @@
         </div>
       </div>
     </div>
-    <p class="hint-line">알약을 클릭하면 상세 정보와 학생 명단이 열립니다. 시험이 많은 날은 “+N개 더”를 누르면 전체 목록이 열려요.</p>
+    <p class="hint-line">알약을 클릭하면 상세 정보와 학생 명단이 열립니다. 달력 위에서 <b>옆으로 밀면 이전·다음 달</b>로 넘어가요.</p>
     <div class="cal-legend" id="calLegend"></div>
     <div class="cal-scroll" id="calGridWrap">
       <div class="cal-inner">
@@ -3651,8 +3655,47 @@ function renderCalLegend(){
   }).join("") + `<span style="margin-left:4px;">· 흐린 알약은 이미 끝난 시험</span>`;
 }
 function goToMonth(y,m){ viewYear=y; viewMonth=m; renderCalendar(); }
-document.getElementById("prevMonth").addEventListener("click", ()=>{ viewMonth--; if(viewMonth<0){viewMonth=11; viewYear--;} renderCalendar(); });
-document.getElementById("nextMonth").addEventListener("click", ()=>{ viewMonth++; if(viewMonth>11){viewMonth=0; viewYear++;} renderCalendar(); });
+function shiftMonth(delta){
+  viewMonth += delta;
+  while(viewMonth < 0){ viewMonth += 12; viewYear--; }
+  while(viewMonth > 11){ viewMonth -= 12; viewYear++; }
+  renderCalendar();
+}
+document.getElementById("prevMonth").addEventListener("click", ()=> shiftMonth(-1));
+document.getElementById("nextMonth").addEventListener("click", ()=> shiftMonth(1));
+
+/* ---------- 옆으로 밀어서 달 넘기기 ----------
+   트랙패드 좌우 스와이프 · 가로 휠 · Shift+휠 로 이전/다음 달.
+   달력이 화면보다 넓어서 진짜로 가로 스크롤할 게 남아 있으면 그쪽이 먼저입니다.
+   위아래 휠은 그대로 페이지 스크롤. */
+(function(){
+  const wrap = document.getElementById("calGridWrap");
+  if(!wrap) return;
+  let acc = 0, lockUntil = 0, resetTimer = null;
+  wrap.addEventListener("wheel", (e)=>{
+    const dx = e.shiftKey ? e.deltaY : e.deltaX;
+    if(!dx) return;
+    if(!e.shiftKey && Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;   // 세로 스크롤은 건드리지 않음
+
+    const room = wrap.scrollWidth - wrap.clientWidth;
+    if(room > 1){
+      const atStart = wrap.scrollLeft <= 0;
+      const atEnd   = wrap.scrollLeft >= room - 1;
+      if(!((dx < 0 && atStart) || (dx > 0 && atEnd))) return;             // 아직 밀 칸이 남았으면 스크롤 먼저
+    }
+    e.preventDefault();                                                   // 브라우저 뒤로가기·탭 이동 막기
+
+    const now = Date.now();
+    if(now < lockUntil) return;
+    acc += dx;
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(()=>{ acc = 0; }, 220);
+    if(Math.abs(acc) >= 60){
+      shiftMonth(acc > 0 ? 1 : -1);
+      acc = 0; lockUntil = now + 360;
+    }
+  }, {passive:false});
+})();
 document.getElementById("todayBtn").addEventListener("click", ()=> goToMonth(today.getFullYear(), today.getMonth()));
 document.getElementById("calFilterTeacher").addEventListener("change", renderCalendar);
 document.getElementById("hideEmptyExams").addEventListener("change", renderCalendar);
@@ -3942,7 +3985,7 @@ function renderSummary(){
 let schedSeason = "";
 let schedGrade = "";
 let schedGradeTouched = false;   // 사용자가 학년을 한 번이라도 직접 고르면 true
-const TL_NAME_W = 124, TL_DAY_W = 30;
+const TL_NAME_W = 124, TL_DAY_W = 30, TL_WKND_W = 13;   /* 시험이 없는 토·일은 좁게 */
 
 function shiftKey(key, days){
   const d = toDate(key);
@@ -4026,8 +4069,17 @@ function renderScheduleTab(){
   const maxEnd   = list.map(e=>e.endDate).sort().slice(-1)[0];
   const from = shiftKey(minStart, -3), to = shiftKey(maxEnd, 3);
   const days = daysBetween(from, to) + 1;
-  const trackW = days * TL_DAY_W;
   const tk = todayKey();
+
+  /* 날짜별 가로 위치 — 시험이 없는 토·일은 좁은 폭으로 잡습니다 */
+  const dayLeft = new Array(days), dayWid = new Array(days);
+  let cursorX = 0;
+  for(let i=0;i<days;i++){
+    const dw = toDate(shiftKey(from, i)).getDay();
+    const w = (dw===0 || dw===6) ? TL_WKND_W : TL_DAY_W;
+    dayLeft[i] = cursorX; dayWid[i] = w; cursorX += w;
+  }
+  const trackW = cursorX;
 
   /* 날짜 눈금 — 모든 날짜에 일자와 요일을 표시 */
   const DOW_KO = ["일","월","화","수","목","금","토"];
@@ -4036,18 +4088,20 @@ function renderScheduleTab(){
     const k = shiftKey(from, i);
     const d = toDate(k);
     const dow = d.getDay();
+    const isWknd = (dow===0 || dow===6);
     const isMstart = d.getDate()===1;
     const isWstart = dow===1;                       // 월요일마다 주 구분선
     const cls = dow===0 ? "sun" : dow===6 ? "wk" : "";
     cells += `<div class="tl-daycell ${cls} ${isWstart?"wstart":""} ${isMstart?"mstart":""}"
-      style="left:${i*TL_DAY_W}px; width:${TL_DAY_W}px;"></div>`;
+      style="left:${dayLeft[i]}px; width:${dayWid[i]}px;"></div>`;
     if(isMstart || i===0)
-      labels += `<div class="tl-monthlabel" style="left:${i*TL_DAY_W}px;">${d.getMonth()+1}월</div>`;
+      labels += `<div class="tl-monthlabel" style="left:${dayLeft[i]}px;">${d.getMonth()+1}월</div>`;
     const dcls = (k===tk) ? "tday" : dow===6 ? "sat" : dow===0 ? "sun" : "";
-    labels += `<div class="tl-dnum ${dcls}" style="left:${i*TL_DAY_W}px; width:${TL_DAY_W}px;">${d.getDate()}<span class="dw">${DOW_KO[dow]}</span></div>`;
+    labels += `<div class="tl-dnum ${dcls} ${isWknd?"nar":""}" style="left:${dayLeft[i]}px; width:${dayWid[i]}px;">${d.getDate()}<span class="dw">${DOW_KO[dow]}</span></div>`;
   }
-  const todayLeft = dayIndex(from, tk) * TL_DAY_W;
-  const inRange = todayLeft >= 0 && todayLeft <= trackW;
+  const todayIdx = dayIndex(from, tk);
+  const inRange = todayIdx >= 0 && todayIdx < days;
+  const todayLeft = inRange ? dayLeft[todayIdx] : 0;
   const todayMark = inRange ? `<div class="tl-today" style="left:${todayLeft}px;"></div>` : "";
   const todayMarkLbl = inRange ? `<div class="tl-today lbl" style="left:${todayLeft}px;"></div>` : "";
 
@@ -4066,8 +4120,10 @@ function renderScheduleTab(){
     });
     const h = lanes.length*28 + 8;
     const bars = lanes.map((lane,li)=> lane.map(e=>{
-      const x = dayIndex(from, e.startDate) * TL_DAY_W;
-      const w = (daysBetween(e.startDate, e.endDate) + 1) * TL_DAY_W - 3;
+      const si = Math.max(0, Math.min(days-1, dayIndex(from, e.startDate)));
+      const ei = Math.max(si, Math.min(days-1, dayIndex(from, e.endDate)));
+      const x = dayLeft[si];
+      const w = Math.max(18, dayLeft[ei] + dayWid[ei] - x - 3);
       const count = studentsForExam(e).length;
       const past = e.endDate < tk;
       const title = `${e.school} ${e.grade} ${e.examName}\n${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)} · ${count}명` +
@@ -4096,7 +4152,7 @@ function renderScheduleTab(){
 
   /* 오늘(또는 첫 시험)이 보이도록 가로 스크롤 위치 조정 */
   const box = document.getElementById("schedScroll");
-  const target = inRange ? todayLeft : dayIndex(from, minStart)*TL_DAY_W;
+  const target = inRange ? todayLeft : (dayLeft[Math.max(0, dayIndex(from, minStart))] || 0);
   box.scrollLeft = Math.max(0, target - box.clientWidth/3);
 }
 
