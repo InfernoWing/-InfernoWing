@@ -759,6 +759,12 @@
   .teacher-group{margin-bottom:14px;}
   .teacher-group .tname{font-size:13px; font-weight:800; color:#8a5a13; margin-bottom:7px;}
   .teacher-group .tname .cnt{color:#a49c88; font-weight:600; font-size:12px;}
+  /* 담임 빈자리 — 눈에 띄게 */
+  .teacher-group.missing{border-left:3px solid #d9a08c; padding-left:9px; background:#fdf7f4;
+    border-radius:0 8px 8px 0; padding-top:7px; padding-bottom:4px;}
+  .teacher-group.missing .tname{color:var(--rust);}
+  .teacher-group.missing.rg{border-left-color:#9ab08c; background:#f7faf4;}
+  .teacher-group.missing.rg .tname{color:#4c6b3f;}
   .assign-row{display:flex; flex-wrap:wrap; gap:8px;}
   .assign-chip{ display:inline-flex; flex-direction:column; align-items:flex-start; gap:2px;
     border:1.5px solid #ece7d8; border-radius:9px; padding:6px 11px; font-size:13px; background:#fffdf8; }
@@ -4988,10 +4994,17 @@ function textbookHtml(school, grade){
 /* ---------- 담임 기준 (내신대비 반 담임 / 정규반 담임) ----------
    학생 한 명에게 담임이 둘일 수 있어서, 어느 쪽을 기준으로 묶을지 고릅니다. */
 let teacherBasis = localStorage.getItem("kladi_tbasis") || "exam";   // exam | regular
+/* 예전 데이터는 담임 칸 하나만 있었어요. 그때 값은 내신대비 담임으로 봅니다
+   (정규 담임이 따로 들어와 있으면 끌어오지 않습니다). */
+function examTeacherOf(s){
+  return ((s.examTeacher || "").trim() ||
+          ((s.regularTeacher || "").trim() ? "" : (s.teacher || "").trim()));
+}
+function regularTeacherOf(s){ return (s.regularTeacher || "").trim(); }
+function assistantOf(s){ return (s.regularAssistant || "").trim(); }
 function teacherOf(s, basis){
   const b = basis || teacherBasis;
-  const v = b === "regular" ? s.regularTeacher : s.examTeacher;
-  return (v || s.teacher || "").trim();
+  return b === "regular" ? regularTeacherOf(s) : examTeacherOf(s);
 }
 function setTeacherBasis(v){
   teacherBasis = v;
@@ -5131,11 +5144,16 @@ function openDetailModal(examId, returnTo){
   const relevant = studentsForExam(exam);
   const byTeacher = {};
   relevant.forEach(s=>{
-    const teacher = teacherOf(s) || "담당 미지정";
+    const teacher = teacherOf(s);
+    if(!teacher) return;                       // 미지정은 아래에서 따로 묶습니다
     if(!byTeacher[teacher]) byTeacher[teacher]=[];
     byTeacher[teacher].push(s);
   });
-  const teacherNames = Object.keys(byTeacher).sort();
+  const teacherNames = Object.keys(byTeacher).sort((a,b)=> a.localeCompare(b, "ko"));
+
+  /* 담임 미지정은 어느 쪽이 비었는지 따로 봅니다 — 담임 기준과 상관없이 둘 다 표시 */
+  const missingExam    = relevant.filter(s=> !examTeacherOf(s));
+  const missingRegular = relevant.filter(s=> !regularTeacherOf(s));
 
   let bodyHtml = `<div class="tbasis-row">
       <span class="section-label" style="margin:0;">담당 선생님별 학생 ${relevant.length}명</span>
@@ -5145,44 +5163,40 @@ function openDetailModal(examId, returnTo){
         <button data-b="regular" class="${teacherBasis==="regular"?"on":""}">정규반</button>
       </span>
     </div>`;
-  if(teacherNames.length===0){
+  const line = (kind, v, cn) => {
+    if(!v) return `<span class="cl ${cn} none"><i>${kind}</i>미배정</span>`;
+    const [code, time] = splitCls(v);
+    return `<span class="cl ${cn}" title="${escapeHtml(v)}"><i>${kind}</i>${escapeHtml(code)}` +
+           (time ? `<em>${escapeHtml(time)}</em>` : "") + `</span>`;
+  };
+  const teaLine = (kind, v, cn, active) =>
+    `<span class="cl ${cn} ${v?"":"none"} ${active?"cur":""}"><i>${kind}</i>${v ? escapeHtml(v) : "미지정"}</span>`;
+  const chipHtml = (s)=>{
+    const rA = assistantOf(s);
+    return `<div class="assign-chip">
+      <span class="sname">${escapeHtml(s.name)}</span>
+      ${teaLine("내신담임", examTeacherOf(s), "tea", teacherBasis==="exam")}
+      ${line("내신반", (s.examClass||"").trim(), "ex")}
+      ${teaLine("정규담임", regularTeacherOf(s), "tg", teacherBasis==="regular")}
+      ${rA ? teaLine("정규부담임", rA, "tv", false) : ""}
+      ${line("정규반", (s.regularClass||"").trim(), "rg")}
+    </div>`;
+  };
+  const groupHtml = (title, list, cls="") => !list.length ? "" : `
+    <div class="teacher-group ${cls}">
+      <div class="tname">${title} <span class="cnt">${list.length}명</span></div>
+      <div class="assign-row">${list.map(chipHtml).join("")}</div>
+    </div>`;
+
+  if(relevant.length===0){
     bodyHtml += `<div class="empty-state">이 학교·학년에 해당하는 학생이 없어요.</div>`;
   } else {
-    bodyHtml += teacherNames.map(t=>{
-      const list = byTeacher[t];
-      return `
-        <div class="teacher-group">
-          <div class="tname">${escapeHtml(t)}T <span class="cnt">${list.length}명</span></div>
-          <div class="assign-row">
-            ${list.map(s=>{
-              const cls = (s.examClass||"").trim();
-              const exam = (s.examClass||"").trim();
-              const reg  = (s.regularClass||"").trim();
-              const tea  = (s.teacher||"").trim();
-              const line = (kind, v, cn) => {
-                if(!v) return `<span class="cl ${cn} none"><i>${kind}</i>미배정</span>`;
-                const [code, time] = splitCls(v);
-                return `<span class="cl ${cn}" title="${escapeHtml(v)}"><i>${kind}</i>${escapeHtml(code)}` +
-                       (time ? `<em>${escapeHtml(time)}</em>` : "") + `</span>`;
-              };
-              const eT = (s.examTeacher || (teacherBasis==="exam" ? s.teacher : "") || "").trim();
-              const rT = (s.regularTeacher || (teacherBasis==="regular" ? s.teacher : "") || "").trim();
-              const rA = (s.regularAssistant || "").trim();
-              const teaLine = (kind, v, cn, active) =>
-                `<span class="cl ${cn} ${v?"":"none"} ${active?"cur":""}"><i>${kind}</i>${v ? escapeHtml(v) : "미지정"}</span>`;
-              return `<div class="assign-chip">
-                <span class="sname">${escapeHtml(s.name)}</span>
-                ${teaLine("내신담임", eT, "tea", teacherBasis==="exam")}
-                ${line("내신반", exam, "ex")}
-                ${teaLine("정규담임", rT, "tg", teacherBasis==="regular")}
-                ${rA ? teaLine("정규부담임", rA, "tv", false) : ""}
-                ${line("정규반", reg, "rg")}
-              </div>`;
-            }).join("")}
-          </div>
-        </div>
-      `;
-    }).join("");
+    bodyHtml += teacherNames.map(t=> groupHtml(`${escapeHtml(t)}T`, byTeacher[t])).join("");
+    /* 담임 기준과 상관없이 빈자리를 항상 따로 보여줍니다 */
+    bodyHtml += groupHtml("내신대비 담임 미지정", missingExam, "missing ex");
+    bodyHtml += groupHtml("정규반 담임 미지정", missingRegular, "missing rg");
+    if(!teacherNames.length && !missingExam.length && !missingRegular.length)
+      bodyHtml += `<div class="empty-state">담당 선생님 정보가 없어요.</div>`;
   }
   const tgBox = document.getElementById("detailTeacherGroups");
   tgBox.innerHTML = bodyHtml;
