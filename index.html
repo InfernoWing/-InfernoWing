@@ -252,6 +252,19 @@
   .exam-pill.past{opacity:.45; filter:saturate(.5);}
   .exam-pill.past:hover{opacity:.8;}
   .exam-pill.ongoing{box-shadow:0 0 0 1.5px var(--pc); font-weight:800;}
+  /* 수학 시험일 — 진하게 + 배지 */
+  .exam-pill.math{border-color:var(--pc); border-width:1.5px; font-weight:800;
+    box-shadow:inset 3px 0 0 var(--pc);}
+  .exam-pill.math.past{opacity:.6;}
+  .exam-pill .mbadge{background:var(--pc); color:#fff; border-radius:5px; font-size:9px;
+    font-weight:800; padding:1px 4px; flex-shrink:0; letter-spacing:.02em;}
+  .cl-item.math{border-color:var(--pc); box-shadow:inset 3px 0 0 var(--pc);}
+  .cl-item .mbadge{background:var(--pc); color:#fff; border-radius:5px; font-size:9.5px;
+    font-weight:800; padding:1px 5px; margin-left:2px;}
+  .meta-math{font-weight:800; color:var(--rust);}
+  .math-lb{color:var(--rust) !important; font-weight:800 !important;}
+  input.math-date{border-color:#e8c9bd;}
+  .math-warn{margin:4px 0 0; font-size:11.5px; font-weight:700; color:var(--rust);}
   .cal-cell.past{background:#f8f6f0;}
   .cal-cell.past .num{color:#c9c2ac;}
 
@@ -462,6 +475,10 @@
   .bar.c5{--pb:#f8dfd7; --pd:#eec8bc; --pt:#8a3f27;}
   .bar.c6{--pb:#d6ebeb; --pd:#bcdcdc; --pt:#205e5e;}
   .bar.c7{--pb:#e9e6dc; --pd:#d7d2c3; --pt:#5c5a4f;}
+  .bar .btx{position:relative; z-index:1;}
+  /* 수학 시험일 — 막대 아래에 굵은 밑줄 */
+  .bar .mday{position:absolute; left:0; bottom:1px; height:3px; border-radius:2px;
+    background:var(--pt); opacity:.9; z-index:0;}
   .bar.past{opacity:.45;}
   .bar.noscope{border-style:dashed; border-width:1.5px; border-color:var(--rust);}
 
@@ -865,6 +882,10 @@
   table.student-table{width:100%; border-collapse:collapse; font-size:13px; min-width:760px;}
   .tag.cls{display:inline-flex; flex-direction:column; align-items:flex-start; line-height:1.25; padding:3px 8px;}
   .tag.cls .ct{font-size:9.5px; font-weight:700; opacity:.68; letter-spacing:-.01em;}
+  .student-table th.sortable{cursor:pointer; user-select:none; white-space:nowrap;}
+  .student-table th.sortable:hover{color:var(--rust);}
+  .student-table th.sortable::after{content:attr(data-arrow); font-size:9px; margin-left:3px; color:var(--rust);}
+  .student-table th.sortable.on{color:var(--rust);}
   .student-table th.chk, .student-table td.chk{width:34px; text-align:center; padding-left:6px; padding-right:6px;}
   .student-table input[type=checkbox]{width:15px; height:15px; cursor:pointer;}
   .student-table tr.sel td{background:#fff5e2;}
@@ -1160,8 +1181,15 @@
             <thead>
               <tr>
                 <th class="chk edit-only"><input type="checkbox" id="stuChkAll"></th>
-                <th>학번</th><th>이름</th><th>학교</th><th>학년</th><th>담임</th>
-                <th>정규반</th><th>시험대비 반</th><th>상태</th><th class="act"></th>
+                <th class="sortable" data-sort="studentNumber">학번</th>
+                <th class="sortable" data-sort="name">이름</th>
+                <th class="sortable" data-sort="school">학교</th>
+                <th class="sortable" data-sort="grade">학년</th>
+                <th class="sortable" data-sort="teacher">담임</th>
+                <th class="sortable" data-sort="regularClass">정규반</th>
+                <th class="sortable" data-sort="examClass">시험대비 반</th>
+                <th class="sortable" data-sort="status">상태</th>
+                <th class="act"></th>
               </tr>
             </thead>
             <tbody id="studentTableBody"></tbody>
@@ -1776,9 +1804,62 @@ let stuF = {cho:"", school:"", grade:"", teacher:null, regularClass:null, examCl
 let selectedStudents = new Set();
 let lastStuRow = null;
 
+/* ---------- 학생 표 정렬 ----------
+   머리글을 누르면 오름차순 → 내림차순 → 원래 순서로 돌아갑니다. */
+let stuSort = { key:"", dir:"asc" };
+try{
+  const saved = JSON.parse(localStorage.getItem("kladi_stusort") || "null");
+  if(saved && typeof saved.key === "string") stuSort = saved;
+}catch(e){}
+
+function sortKeyOf(s, key){
+  if(key === "grade")  return gradeSortIndex(s.grade || "");
+  if(key === "status") return STATUS_LIST.indexOf(statusOf(s));
+  return (s[key] || "").trim();
+}
+function isEmptyKey(s, key){
+  if(key === "status") return false;
+  if(key === "grade")  return !(s.grade || "").trim();
+  return !((s[key] || "").trim());
+}
+function compareStudents(a, b, key){
+  const va = sortKeyOf(a, key), vb = sortKeyOf(b, key);
+  if(typeof va === "number" && typeof vb === "number") return va - vb;
+  return String(va).localeCompare(String(vb), "ko", {numeric:true});
+}
+function applyStuSort(list){
+  if(!stuSort.key) return list;
+  const sign = stuSort.dir === "desc" ? -1 : 1;
+  return [...list].sort((a,b)=>{
+    /* 빈 값(미배정·미입력)은 오름/내림 상관없이 항상 맨 뒤 */
+    const ea = isEmptyKey(a, stuSort.key), eb = isEmptyKey(b, stuSort.key);
+    if(ea !== eb) return ea ? 1 : -1;
+    const r = compareStudents(a, b, stuSort.key);
+    if(r !== 0) return r * sign;
+    /* 같으면 이름 → 학교로 안정적으로 */
+    return (a.name||"").localeCompare(b.name||"", "ko") ||
+           (a.school||"").localeCompare(b.school||"", "ko");
+  });
+}
+function setStuSort(key){
+  if(stuSort.key !== key)            stuSort = { key, dir:"asc" };
+  else if(stuSort.dir === "asc")     stuSort = { key, dir:"desc" };
+  else                               stuSort = { key:"", dir:"asc" };   // 세 번째 클릭 → 원래 순서
+  try{ localStorage.setItem("kladi_stusort", JSON.stringify(stuSort)); }catch(e){}
+  renderStudents();
+}
+function renderSortHeaders(){
+  document.querySelectorAll(".student-table th.sortable").forEach(th=>{
+    const on = th.dataset.sort === stuSort.key;
+    th.classList.toggle("on", on);
+    th.classList.toggle("desc", on && stuSort.dir === "desc");
+    th.dataset.arrow = on ? (stuSort.dir === "desc" ? "▼" : "▲") : "";
+  });
+}
+
 function filteredStudents(){
   const searchTerm = document.getElementById("studentSearch").value.trim().toLowerCase();
-  return students.filter(s=>{
+  const base = students.filter(s=>{
     if(!stuStatusOn.has(statusOf(s))) return false;
     if(stuF.cho && chosungOf(s.name)!==stuF.cho) return false;
     if(stuF.school && s.school!==stuF.school) return false;
@@ -1800,6 +1881,7 @@ function filteredStudents(){
     }
     return true;
   });
+  return applyStuSort(base);
 }
 function stuHasFilter(){
   const statusChanged = !(stuStatusOn.size===2 && stuStatusOn.has("재원") && stuStatusOn.has("휴원"));
@@ -1953,6 +2035,7 @@ function renderStudents(){
   dupBadge.classList.toggle("active", showSameNameOnly);
 
   renderChoBar(); renderStatusFilters(); renderGradeFilters(); renderIdxPanel(); renderCrumbs();
+  renderSortHeaders();
 
   const list = filteredStudents();
   document.getElementById("studentCountText").textContent =
@@ -2223,6 +2306,9 @@ document.getElementById("stuBulkDelete").addEventListener("click", async ()=>{
     }
   });
 });
+document.querySelectorAll(".student-table th.sortable").forEach(th=>
+  th.addEventListener("click", ()=> setStuSort(th.dataset.sort)));
+
 document.getElementById("stuChkAll").addEventListener("click", ()=>{
   const list = filteredStudents();
   const allSel = list.length>0 && list.every(s=> selectedStudents.has(s.id));
@@ -3094,7 +3180,9 @@ function examCardHtml(school, grade, examName){
       <div class="mini-row">
         <div><label class="small">시험 시작</label><input type="date" data-field="startDate" value="${existing?.startDate||""}"></div>
         <div><label class="small">시험 종료</label><input type="date" data-field="endDate" value="${existing?.endDate||""}"></div>
+        <div><label class="small math-lb">수학 시험일</label><input type="date" class="math-date" data-field="mathDate" value="${existing?.mathDate||""}"></div>
       </div>
+      <p class="math-warn" style="display:none;">수학 시험일이 시험기간 밖이에요. 확인해주세요.</p>
       <button type="button" class="copy-prev-btn spread-date-btn">이 날짜를 다른 학년에도</button>
 
       <div class="mini-row">
@@ -3174,6 +3262,7 @@ function renderExamTab(){
     });
   });
   gridEl.innerHTML = html;
+  checkAllMathDates();
 }
 
 function collectCardData(cardEl){
@@ -3184,6 +3273,7 @@ function collectCardData(cardEl){
     notConductedReason: get("notConductedReason").value.trim(),
     startDate: get("startDate").value,
     endDate: get("endDate").value,
+    mathDate: get("mathDate") ? get("mathDate").value : "",
     printStatus: get("printStatus").value,
     inputTeacher: get("inputTeacher").value.trim(),
     examScope: get("examScope").value.trim(),
@@ -3282,7 +3372,26 @@ document.getElementById("examCardsGrid").addEventListener("change", (e)=>{
   }
   markDirty(e.target);
 });
-document.getElementById("examCardsGrid").addEventListener("input", (e)=> markDirty(e.target));
+document.getElementById("examCardsGrid").addEventListener("input", (e)=>{
+  markDirty(e.target);
+  const card = e.target.closest && e.target.closest(".exam-card");
+  if(card && ["startDate","endDate","mathDate"].includes(e.target.dataset.field)) checkMathDate(card);
+});
+
+/* 수학 시험일이 시험기간 안에 있는지 확인 */
+function checkMathDate(card){
+  const g = f => card.querySelector(`[data-field="${f}"]`);
+  const sd = g("startDate")?.value, ed = g("endDate")?.value, md = g("mathDate")?.value;
+  const warn = card.querySelector(".math-warn");
+  if(!warn) return;
+  const bad = !!(md && sd && ed && (md < sd || md > ed));
+  warn.style.display = bad ? "block" : "none";
+  if(md && sd) g("mathDate").min = sd;
+  if(md && ed) g("mathDate").max = ed;
+}
+function checkAllMathDates(){
+  document.querySelectorAll("#examCardsGrid .exam-card").forEach(checkMathDate);
+}
 
 function markDirty(el){
   if(el && el.classList && el.classList.contains("tb-input")) return;   // 교과서는 바로 저장됩니다
@@ -3567,8 +3676,9 @@ function renderCalListView(){
         ${list.map(e=>{
           const count = studentsForExam(e).length;
           const scope = e.examScope ? escapeHtml(e.examScope.split("\n")[0]).slice(0,34) : "시험 범위 미입력";
-          return `<button class="cl-item ${gradeColor(e.grade)}" data-exam="${e.id}">
-            <span>${escapeHtml(shortSchool(e.school))} ${escapeHtml(e.grade||"")}
+          const isMath = !!e.mathDate && e.mathDate === key;
+          return `<button class="cl-item ${gradeColor(e.grade)} ${isMath?"math":""}" data-exam="${e.id}">
+            <span>${escapeHtml(shortSchool(e.school))} ${escapeHtml(e.grade||"")}${isMath?` <span class="mbadge">수학</span>`:""}
               <span class="sub">${scope}</span></span>
             <span class="cnt">${count}명</span>
           </button>`;
@@ -3616,7 +3726,9 @@ function renderCalendar(){
       const label = `${shortSchool(e.school)} ${e.grade||""}`.trim();
       const full = `${e.school||""} ${e.grade||""} ${e.examName||""}`.trim();
       const state = e.endDate < tKey ? "past" : (e.startDate <= tKey ? "ongoing" : "");
-      return `<div class="exam-pill ${gradeColor(e.grade)} ${state}" data-exam="${e.id}" title="${escapeHtml(full)} · ${count}명"><span class="label">${escapeHtml(label)}</span><span class="count">${count}</span></div>`;
+      const isMath = !!e.mathDate && e.mathDate === key;
+      const tip = `${escapeHtml(full)} · ${count}명` + (e.mathDate ? ` · 수학 ${escapeHtml(fmtWithDow(e.mathDate))}` : "");
+      return `<div class="exam-pill ${gradeColor(e.grade)} ${state} ${isMath?"math":""}" data-exam="${e.id}" title="${tip}"><span class="label">${escapeHtml(label)}</span>${isMath?`<span class="mbadge">수학</span>`:""}<span class="count">${count}</span></div>`;
     }).join("");
     const moreHtml = restCount>0
       ? `<button class="more-pill" data-more="${key}">+${restCount}개 더</button>`
@@ -4127,10 +4239,17 @@ function renderScheduleTab(){
       const count = studentsForExam(e).length;
       const past = e.endDate < tk;
       const title = `${e.school} ${e.grade} ${e.examName}\n${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)} · ${count}명` +
+                    (e.mathDate ? `\n수학 ${fmtWithDow(e.mathDate)}` : "") +
                     (e.examScope ? "" : "\n※ 시험 범위 미입력");
+      /* 수학 시험일 표시 */
+      let mathMark = "";
+      if(e.mathDate){
+        const mi = dayIndex(from, e.mathDate);
+        if(mi >= 0 && mi < days) mathMark = `<i class="mday" style="left:${dayLeft[mi]-x}px; width:${dayWid[mi]}px;"></i>`;
+      }
       return `<div class="bar ${gradeColor(e.grade)} ${past?"past":""} ${e.examScope?"":"noscope"}"
         style="left:${x}px; top:${li*28+4}px; width:${w}px;"
-        data-exam="${e.id}" title="${escapeHtml(title)}">${escapeHtml(barLabel(e, sc))} ${count}명</div>`;
+        data-exam="${e.id}" title="${escapeHtml(title)}">${mathMark}<span class="btx">${escapeHtml(barLabel(e, sc))} ${count}명</span></div>`;
     }).join("")).join("");
 
     const hasHist = exams.some(e=> e.school===sc && retroEntries(e).length);
@@ -4916,8 +5035,11 @@ function openDetailModal(examId, returnTo){
   const printHtml = exam.printStatus==="confirmed" ? `<span class="flag-ok">프린트 확인</span>` : `<span class="flag-bad">프린트 미확인</span>`;
 
   const tbook = textbookOf(exam.school, exam.grade);
+  const mathHtml = exam.mathDate
+    ? `<span class="meta-math">수학 ${fmtWithDow(exam.mathDate)}</span>`
+    : `수학일 <span class="flag-bad">미입력</span>`;
   document.getElementById("detailMeta").innerHTML =
-    `시험기간 ${period}<span class="dot">·</span>${makeupHtml}<span class="dot">·</span>${printHtml}` +
+    `시험기간 ${period}<span class="dot">·</span>${mathHtml}<span class="dot">·</span>${makeupHtml}<span class="dot">·</span>${printHtml}` +
     (tbook ? `<span class="dot">·</span><span class="meta-tb">교과서 ${escapeHtml(tbook)}</span>` : "");
 
   /* 시험 범위 · 안내 — 창 안에서 바로 쓰고 저장 */
