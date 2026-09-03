@@ -265,6 +265,18 @@
   .math-lb{color:var(--rust) !important; font-weight:800 !important;}
   input.math-date{border-color:#e8c9bd;}
   .math-warn{margin:4px 0 0; font-size:11.5px; font-weight:700; color:var(--rust);}
+  /* 단원 칩 */
+  .unit-chips{display:flex; flex-wrap:wrap; gap:5px; margin:2px 0 7px;}
+  .unit-chip{border:1.5px solid #e2dbc7; background:#fff; color:#8a8375; border-radius:20px;
+    padding:4px 10px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit;}
+  .unit-chip:hover{border-color:var(--mustard); color:#8a5a13;}
+  .unit-chip.on{background:#fdf3dd; border-color:var(--mustard); color:#8a5a13;}
+  body.view-mode .unit-chips{display:none;}
+  .unit-tags{display:flex; flex-wrap:wrap; gap:5px; margin:4px 0 6px;}
+  .unit-tags .utag{background:#fdf3dd; border:1px solid #eed69a; color:#7a5518;
+    border-radius:20px; padding:2px 9px; font-size:11px; font-weight:700;}
+  .imp-x{color:var(--rust);} .imp-m{color:#a8452c;}
+  .imp-note-t{color:#8a8375; font-weight:600;}
   .cal-cell.past{background:#f8f6f0;}
   .cal-cell.past .num{color:#c9c2ac;}
 
@@ -1017,6 +1029,8 @@
       <div class="exam-summary" id="examSummary"></div>
       <div class="exam-actions">
         <span class="dirty-count" id="examDirtyCount"></span>
+        <button class="btn secondary" id="schedImportBtn" title="학교별 일정 엑셀에서 시험기간·수학시험일·교과서·특이사항을 읽어옵니다">📅 학교별 일정 가져오기</button>
+        <input type="file" id="schedImportInput" accept=".xlsx,.xls" style="display:none;">
         <button class="btn" id="saveAllExamBtn">이 학교 전체 저장</button>
       </div>
     </div>
@@ -1349,6 +1363,28 @@
   </div>
 </div>
 
+<div class="overlay" id="schedImportModal">
+  <div class="modal" style="max-width:760px;">
+    <button class="close-x" id="closeSchedImport">&times;</button>
+    <h3>학교별 일정 가져오기</h3>
+    <p class="modal-meta" id="schedImportMeta"></p>
+    <div class="imp-target">
+      <span class="lbl">이 표는</span>
+      <select id="schedImpGrade" style="width:auto;"></select>
+      <select id="schedImpExam" style="width:auto;">
+        <option value="중간고사">중간고사</option>
+        <option value="기말고사">기말고사</option>
+      </select>
+      <span class="hint">시험 카드가 없으면 새로 만듭니다.</span>
+    </div>
+    <div id="schedImportBody"></div>
+    <div class="btn-row" style="display:flex; gap:8px; margin-top:16px;">
+      <button class="btn" id="schedImportApply">적용하기</button>
+      <button class="btn secondary" id="schedImportCancel">취소</button>
+    </div>
+  </div>
+</div>
+
 <!-- 학교 회고 이력 모달 -->
 <div class="overlay" id="retroHistModal">
   <div class="modal">
@@ -1573,9 +1609,12 @@ async function updateStudentDoc(id, payload){
     onDataChange();
   }
 }
+let localSeq = 0;
 async function addExam(e){
-  if(isConfigured){ await addDoc(collection(db,"exams"), e); }
-  else{ exams.push({id:"x"+Date.now(), ...e}); saveLocal("kladi_exams", exams); onDataChange(); }
+  if(isConfigured){ const ref = await addDoc(collection(db,"exams"), e); return ref && ref.id; }
+  const id = "x" + Date.now() + "_" + (++localSeq);
+  exams.push({ id, ...e }); saveLocal("kladi_exams", exams); onDataChange();
+  return id;
 }
 async function updateExamDoc(id, payload){
   if(isConfigured){ await updateDoc(doc(db,"exams",id), payload); }
@@ -1809,6 +1848,329 @@ let stuClassField = "regularClass"; // regularClass | examClass
 let stuF = {cho:"", school:"", grade:"", teacher:null, regularClass:null, examClass:null};
 let selectedStudents = new Set();
 let lastStuRow = null;
+
+/* ================= 학교별 일정 가져오기 ================= */
+
+/* ---------- 단원 (2학기 중간 기준) ----------
+   학교별 일정표의 줄임말과 앱에서 쓰는 이름을 맞춰둡니다. */
+const UNIT_LIST = [
+  {ab:"좌/그", name:"좌표평면과 그래프"},
+  {ab:"정/반", name:"정비례와 반비례"},
+  {ab:"기/도", name:"기본 도형과 작도"},
+  {ab:"작/합", name:"작도와 합동"},
+  {ab:"평/성", name:"평면도형의 성질"},
+  {ab:"입체",  name:"입체도형"},
+  {ab:"통계",  name:"통계"},
+];
+const UNIT_BY_AB = {};
+UNIT_LIST.forEach(u=>{ UNIT_BY_AB[normLabel(u.ab)] = u.name; UNIT_BY_AB[normLabel(u.name)] = u.name; });
+function unitsOf(e){ return Array.isArray(e && e.units) ? e.units : []; }
+/* 단원 칩만 골라둬도 "범위 입력됨"으로 봅니다 */
+function hasScope(e){ return !!((e && e.examScope) || unitsOf(e).length); }
+function unitChipsHtml(existing){
+  const on = unitsOf(existing);
+  return `<div class="unit-chips">${UNIT_LIST.map(u=>
+    `<button type="button" class="unit-chip ${on.includes(u.name)?"on":""}" data-u="${escapeHtml(u.name)}" title="${escapeHtml(u.ab)}">${escapeHtml(u.name)}</button>`).join("")}</div>`;
+}
+function unitTagsHtml(e){
+  const on = unitsOf(e);
+  if(!on.length) return "";
+  return `<div class="unit-tags">${on.map(u=>`<span class="utag">${escapeHtml(u)}</span>`).join("")}</div>`;
+}
+
+/* ---------- 엑셀 날짜 → 2026-09-21 ---------- */
+function excelDate(v){
+  if(v === "" || v === null || v === undefined) return "";
+  if(v instanceof Date && !isNaN(v)) return dateKey(v.getFullYear(), v.getMonth(), v.getDate());
+  if(typeof v === "string"){
+    const m = v.match(/(\d{4})\s*[-.\/년]\s*(\d{1,2})\s*[-.\/월]\s*(\d{1,2})/);
+    if(m) return `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;
+    if(!/^\d+(\.\d+)?$/.test(v.trim())) return "";
+    v = Number(v);
+  }
+  const n = Number(v);
+  if(!isFinite(n) || n <= 0) return "";
+  const d = new Date(Date.UTC(1899, 11, 30) + Math.round(n) * 86400000);
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`;
+}
+/* 특이사항 안의 "수학시험: 9/10", "수학: 9/15(화)" 같은 표기 */
+function mathDateFromNote(note, yearHint){
+  if(!note) return "";
+  const m = String(note).match(/수학[^0-9]{0,8}(\d{1,2})\s*[\/월.-]\s*(\d{1,2})/);
+  if(!m) return "";
+  const y = yearHint || new Date().getFullYear();
+  return `${y}-${pad(+m[1])}-${pad(+m[2])}`;
+}
+const NO_EXAM_RE = /(중간고사|기말고사|시험)\s*(없음|미실시|안\s*봄)|미실시/;
+
+/* ---------- 학교별 일정표 파서 ---------- */
+function parseSchedSheet(grid){
+  let hr = -1, cSchool = -1, cBook = -1;
+  for(let r=0; r<Math.min(grid.length, 20); r++){
+    const row = (grid[r] || []).map(normLabel);
+    const a = row.indexOf("학교"), b = row.indexOf("교과서");
+    if(a >= 0 && b >= 0){ hr = r; cSchool = a; cBook = b; break; }
+  }
+  if(hr < 0) return null;
+
+  const row = (grid[hr] || []).map(normLabel);
+  const find = (...names)=>{
+    for(const n of names){ const i = row.indexOf(normLabel(n)); if(i >= 0) return i; }
+    return -1;
+  };
+  const cNote  = find("특이사항","비고");
+  const cStart = find("시험시작일","시작일");
+  const cEnd   = find("시험종료일","종료일");
+  const cMath  = find("수학시험일","수학일");
+  const cScope = find("시험범위","범위");
+
+  /* 헤더 바로 아랫줄의 단원 줄임말 */
+  const unitCols = [];
+  const rightEdge = cNote >= 0 ? cNote : cBook + 10;
+  for(let c = cBook + 1; c < rightEdge; c++){
+    const t = normLabel(cellStr(grid, hr + 1, c));
+    if(t && UNIT_BY_AB[t]) unitCols.push({ c, name: UNIT_BY_AB[t] });
+  }
+
+  /* 제목에서 학년·시험명 추정 */
+  let grade = "", examName = "";
+  for(let r=0; r<Math.min(grid.length, 4); r++){
+    for(const cell of (grid[r] || [])){
+      const t = String(cell || "");
+      const g = t.match(/(\d)\s*학년/);
+      if(g && !grade) grade = "중" + g[1];
+      if(!examName && /기말/.test(t)) examName = "기말고사";
+      else if(!examName && /중간/.test(t)) examName = "중간고사";
+    }
+  }
+
+  const rows = [];
+  for(let r = hr + 1; r < grid.length; r++){
+    const school = cellStr(grid, r, cSchool);
+    if(!school || normLabel(school) === "학교" || /^총/.test(school)) continue;
+    if(/^\d+(\.\d+)?$/.test(school)) continue;
+    const note  = cNote  >= 0 ? cellStr(grid, r, cNote)  : "";
+    const start = cStart >= 0 ? excelDate(cellRaw(grid, r, cStart)) : "";
+    const end   = cEnd   >= 0 ? excelDate(cellRaw(grid, r, cEnd))   : "";
+    let   math  = cMath  >= 0 ? excelDate(cellRaw(grid, r, cMath))  : "";
+    if(!math && note) math = mathDateFromNote(note, start ? +start.slice(0,4) : 0);
+    const units = unitCols.filter(u=> cellStr(grid, r, u.c)).map(u=> u.name);
+    const book  = cBook  >= 0 ? cellStr(grid, r, cBook)  : "";
+    const scope = cScope >= 0 ? cellStr(grid, r, cScope) : "";
+    if(!start && !end && !note && !book && !scope && !units.length) continue;
+    rows.push({ school, book, note, start, end, math, units, scope });
+  }
+  return { grade, examName, rows };
+}
+
+/* ---------- 가져오기 화면 ---------- */
+let schedRows = null, schedFile = "";
+function schedPlan(){
+  const grade = document.getElementById("schedImpGrade").value;
+  const examName = document.getElementById("schedImpExam").value;
+  const updates = [], adds = [], same = [], skipped = [], books = {};
+  (schedRows || []).forEach(r=>{
+    const school = matchSchoolName(r.school);
+    if(r.book) books[tbKey(school, grade)] = r.book;
+    const noExam = NO_EXAM_RE.test(r.note || "");
+    /* 일정이 없어도 범위(단원)만 적혀 있으면 그것만 채웁니다 */
+    if(!r.start && !noExam && !r.units.length && !r.scope){ skipped.push({...r, school}); return; }
+    const existing = findExam(school, grade, examName);
+    const want = {};
+    if(noExam){
+      want.notConducted = true;
+      want.notConductedReason = r.note || "이 시험 미실시";
+      want.mathDate = "";
+    } else if(r.start){
+      want.startDate = r.start;
+      want.endDate   = r.end || r.start;
+      /* 표에 수학시험일이 없으면 이미 넣어둔 값을 지우지 않습니다 */
+      want.mathDate  = r.math || existing?.mathDate || "";
+      want.notConducted = false;
+      if(r.note) want.schoolNotice = r.note;
+    } else if(r.note){
+      want.schoolNotice = r.note;
+    }
+    if(r.units.length) want.units = r.units;
+    if(r.scope) want.examScope = r.scope;      /* 비어 있으면 기존 범위를 지우지 않습니다 */
+    if(!existing){ adds.push({ school, grade, examName, ...want }); return; }
+    const payload = {};
+    Object.keys(want).forEach(k=>{
+      const cur = k === "units" ? unitsOf(existing).join("|") : (existing[k] || (k==="notConducted" ? false : ""));
+      const nv  = k === "units" ? want.units.join("|") : want[k];
+      if(String(cur) !== String(nv)) payload[k] = want[k];
+    });
+    if(Object.keys(payload).length === 0){ same.push({ school, ...r }); return; }
+    updates.push({ id: existing.id, school, before: existing, payload, note: r.note });
+  });
+  /* 교과서는 지금 값과 다를 때만 */
+  const bookChanges = Object.keys(books)
+    .filter(k=> (textbooks[k] || "") !== books[k])
+    .map(k=> ({ key:k, school:k.split("|")[0], from: textbooks[k] || "", to: books[k] }));
+  return { updates, adds, same, skipped, books, bookChanges, grade, examName };
+}
+
+function cellRaw(grid, r, c){
+  const row = grid[r];
+  return row ? row[c] : "";
+}
+/* "거원중" → 학생 명단에 있는 "거원중학교" 로 맞춥니다 (없으면 원래 이름 그대로) */
+function matchSchoolName(name){
+  const raw = (name || "").replace(/\s+/g, "");
+  if(!raw) return name;
+  const known = uniq(students.map(s=> (s.school||"").trim()).filter(Boolean))
+    .concat(uniq(exams.map(e=> (e.school||"").trim()).filter(Boolean)));
+  const hit = known.find(k=> shortSchool(k.replace(/\s+/g,"")) === shortSchool(raw));
+  return hit || name;
+}
+
+function renderSchedPlan(){
+  const plan = schedPlan();
+  const total = plan.updates.length + plan.adds.length + plan.same.length + plan.skipped.length;
+  document.getElementById("schedImportMeta").textContent =
+    `${schedFile} · 표에서 학교 ${total}곳을 읽었어요`;
+
+  const per = (r)=>{
+    const d = r.payload || r;
+    const bits = [];
+    if(d.notConducted) bits.push(`<b class="imp-x">미실시</b>`);
+    if(d.startDate) bits.push(`시험 ${fmtWithDow(d.startDate)}${d.endDate && d.endDate!==d.startDate ? " ~ "+fmtWithDow(d.endDate) : ""}`);
+    if(d.mathDate) bits.push(`<b class="imp-m">수학 ${fmtWithDow(d.mathDate)}</b>`);
+    if(d.units && d.units.length) bits.push(escapeHtml(d.units.join(", ")));
+    if(d.examScope) bits.push(`범위 ${escapeHtml(d.examScope)}`);
+    const nt = d.schoolNotice || d.notConductedReason || r.note;
+    if(nt) bits.push(`<span class="imp-note-t">${escapeHtml(nt)}</span>`);
+    return bits.join(" · ") || "일정은 그대로, 안내 글만 정리";
+  };
+
+  let html = `<div class="imp-sum">
+    <div class="imp-card upd"><div class="n">${plan.updates.length}</div><div class="l">일정 바뀜</div></div>
+    <div class="imp-card new"><div class="n">${plan.adds.length}</div><div class="l">새로 만듦</div></div>
+    <div class="imp-card same"><div class="n">${plan.same.length}</div><div class="l">이미 같음</div></div>
+    <div class="imp-card warn"><div class="n">${plan.skipped.length}</div><div class="l">아직 미공지</div></div>
+  </div>`;
+
+  const list = (arr, render) => `<div class="imp-list">${arr.map(render).join("")}</div>`;
+  if(plan.updates.length){
+    html += `<div class="imp-sec"><h5>일정이 바뀌는 학교 ${plan.updates.length}곳</h5>` +
+      list(plan.updates, u=>`<div class="imp-row"><span class="who">${escapeHtml(shortSchool(u.school))}</span>
+        <span class="chg">${per(u)}</span></div>`) + `</div>`;
+  }
+  if(plan.adds.length){
+    html += `<div class="imp-sec"><h5>시험 카드를 새로 만드는 학교 ${plan.adds.length}곳</h5>` +
+      list(plan.adds, a=>`<div class="imp-row"><span class="who">${escapeHtml(shortSchool(a.school))}</span>
+        <span class="chg">${per(a)}</span></div>`) + `</div>`;
+  }
+  if(plan.bookChanges.length){
+    html += `<div class="imp-sec"><h5>교과서가 바뀌는 학교 ${plan.bookChanges.length}곳</h5>` +
+      list(plan.bookChanges, b=>`<div class="imp-row"><span class="who">${escapeHtml(shortSchool(b.school))}</span>
+        <span class="chg">교과서 <del>${escapeHtml(b.from||"없음")}</del><ins>${escapeHtml(b.to)}</ins></span></div>`) + `</div>`;
+  }
+  if(plan.skipped.length){
+    html += `<div class="imp-sec"><h5>아직 시험 일정이 없는 학교 ${plan.skipped.length}곳 — 건너뜁니다</h5>` +
+      `<p class="imp-note">${plan.skipped.map(r=> escapeHtml(shortSchool(r.school))).join(" · ")}</p></div>`;
+  }
+  html += `<p class="imp-note">${escapeHtml(plan.grade)} ${escapeHtml(plan.examName)} 카드에 씁니다. 시험 범위 글과 회고, 프린트 여부는 건드리지 않습니다.</p>`;
+
+  document.getElementById("schedImportBody").innerHTML = html;
+  document.getElementById("schedImportApply").disabled =
+    (plan.updates.length + plan.adds.length + plan.bookChanges.length) === 0;
+  return plan;
+}
+
+document.getElementById("schedImportBtn").addEventListener("click", ()=>{
+  if(!guardEdit()) return;
+  document.getElementById("schedImportInput").click();
+});
+document.getElementById("schedImportInput").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(typeof XLSX === "undefined"){
+    showToast("엑셀을 읽는 기능을 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해주세요.", {type:"bad"});
+    e.target.value = ""; return;
+  }
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const wb = XLSX.read(new Uint8Array(ev.target.result), {type:"array"});
+      let found = null;
+      for(const nm of wb.SheetNames){
+        const grid = XLSX.utils.sheet_to_json(wb.Sheets[nm], {header:1, defval:""});
+        const r = parseSchedSheet(grid);
+        if(r && r.rows.length){ found = r; break; }
+      }
+      if(!found){
+        showToast("표를 읽지 못했어요. '학교'와 '교과서' 제목이 한 줄에 같이 있는 시트인지 확인해주세요.", {type:"bad", duration:7000});
+        e.target.value = ""; return;
+      }
+      schedRows = found.rows;
+      schedFile = file.name;
+      const gsel = document.getElementById("schedImpGrade");
+      const gopts = sortGrades(uniq(students.map(s=>s.grade).filter(Boolean)));
+      if(found.grade && !gopts.includes(found.grade)) gopts.unshift(found.grade);
+      gsel.innerHTML = (gopts.length ? gopts : ["중1","중2","중3"])
+        .map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
+      if(found.grade) gsel.value = found.grade;
+      if(found.examName) document.getElementById("schedImpExam").value = found.examName;
+      renderSchedPlan();
+      document.getElementById("schedImportModal").classList.add("active");
+    }catch(err){
+      console.error(err);
+      showToast("엑셀을 읽는 중 문제가 생겼어요: " + (err.message || err), {type:"bad", duration:7000});
+    }finally{ e.target.value = ""; }
+  };
+  reader.readAsArrayBuffer(file);
+});
+["schedImpGrade","schedImpExam"].forEach(id=>
+  document.getElementById(id).addEventListener("change", ()=>{ if(schedRows) renderSchedPlan(); }));
+document.getElementById("closeSchedImport").addEventListener("click", ()=>
+  document.getElementById("schedImportModal").classList.remove("active"));
+document.getElementById("schedImportCancel").addEventListener("click", ()=>
+  document.getElementById("schedImportModal").classList.remove("active"));
+
+document.getElementById("schedImportApply").addEventListener("click", async (ev)=>{
+  if(!guardEdit()) return;
+  const btn = ev.currentTarget;
+  const plan = schedPlan();
+  btn.disabled = true; btn.textContent = "적용 중...";
+  const undoUpdates = plan.updates.map(u=>{
+    const before = {};
+    Object.keys(u.payload).forEach(k=> before[k] = k === "units" ? unitsOf(u.before) : (u.before[k] ?? ""));
+    return { id: u.id, before };
+  });
+  const beforeBooks = { ...textbooks };
+  try{
+    for(const u of plan.updates) await updateExamDoc(u.id, u.payload);
+    const addedIds = [];
+    for(const a of plan.adds){
+      /* 기본값을 먼저 깔고 표에서 읽은 값으로 덮습니다 (순서가 바뀌면 범위가 지워집니다) */
+      const id = await addExam({ printStatus:"unconfirmed", makeupDate:"", examScope:"", units:[],
+                                 ...a, savedAt: new Date().toISOString().slice(0,10) });
+      if(id) addedIds.push(id);
+    }
+    if(plan.bookChanges.length){
+      const next = { ...textbooks };
+      plan.bookChanges.forEach(b=> next[b.key] = b.to);
+      textbooks = next;
+      await saveSetting("textbooks", next);
+    }
+    document.getElementById("schedImportModal").classList.remove("active");
+    showToast(`일정 ${plan.updates.length}곳 변경, ${plan.adds.length}곳 추가, 교과서 ${plan.bookChanges.length}곳 반영했어요.`, {
+      type:"ok", duration:9000, actionLabel:"되돌리기",
+      onAction: async ()=>{
+        for(const u of undoUpdates) await updateExamDoc(u.id, u.before);
+        for(const id of addedIds) await removeExam(id);
+        textbooks = beforeBooks;
+        await saveSetting("textbooks", beforeBooks);
+        showToast("되돌렸어요.", {type:"ok"});
+      }
+    });
+  }catch(err){
+    console.error(err);
+    showToast("적용 중 문제가 생겼어요: " + (err.message || err), {type:"bad", duration:7000});
+  }finally{ btn.disabled = false; btn.textContent = "적용하기"; }
+});
+
 
 /* ---------- 학생 표 정렬 ----------
    머리글을 누르면 오름차순 → 내림차순 → 원래 순서로 돌아갑니다. */
@@ -3210,6 +3572,7 @@ function examCardHtml(school, grade, examName){
           <span>시험 범위</span>
           <button type="button" class="copy-prev-btn">지난 시험에서 가져오기</button>
         </label>
+        ${unitChipsHtml(existing)}
         <textarea data-field="examScope" placeholder="예: 수학(상) 2단원 전체 ~ 3-1, 교과서 유인물 포함">${escapeHtml(existing?.examScope||"")}</textarea>
       </div>
       <div>
@@ -3284,6 +3647,7 @@ function collectCardData(cardEl){
     inputTeacher: get("inputTeacher").value.trim(),
     examScope: get("examScope").value.trim(),
     schoolNotice: get("schoolNotice").value.trim(),
+    units: [...cardEl.querySelectorAll(".unit-chip.on")].map(b=> b.dataset.u),
   };
   const existing = findExam(data.school, data.grade, data.examName);
   const retros = collectRetros(cardEl, existing);
@@ -3324,6 +3688,10 @@ document.getElementById("examCardsGrid").addEventListener("click", (e)=>{
   }
   if(!editMode) return;
 
+  /* 단원 칩 */
+  if(e.target.classList.contains("unit-chip")){
+    e.target.classList.toggle("on"); markDirty(e.target); return;
+  }
   /* 회고 태그 / 기출 도움 정도 */
   if(e.target.classList.contains("retro-chip")){
     e.target.classList.toggle("on"); markDirty(e.target); return;
@@ -3681,7 +4049,8 @@ function renderCalListView(){
       <div class="cl-body">
         ${list.map(e=>{
           const count = studentsForExam(e).length;
-          const scope = e.examScope ? escapeHtml(e.examScope.split("\n")[0]).slice(0,34) : "시험 범위 미입력";
+          const scope = e.examScope ? escapeHtml(e.examScope.split("\n")[0]).slice(0,34)
+                      : (unitsOf(e).length ? escapeHtml(unitsOf(e).join(" · ")).slice(0,40) : "시험 범위 미입력");
           const isMath = !!e.mathDate && e.mathDate === key;
           return `<button class="cl-item ${gradeColor(e.grade)} ${isMath?"math":""}" data-exam="${e.id}">
             <span>${escapeHtml(shortSchool(e.school))} ${escapeHtml(e.grade||"")}${isMath?` <span class="mbadge">수학</span>`:""}
@@ -3906,12 +4275,12 @@ function openDayModal(key, keepFilters){
 
   let list = all;
   if(dayGradeFilter) list = list.filter(e=> e.grade===dayGradeFilter);
-  if(dayOnlyMissing) list = list.filter(e=> !e.examScope);
+  if(dayOnlyMissing) list = list.filter(e=> !hasScope(e));
   document.getElementById("dayMeta").textContent = `총 ${all.length}건 · 표시 ${list.length}건`;
 
   /* 학년 필터 + 범위 미입력만 보기 */
   const grades = sortGrades(uniq(all.map(e=>e.grade)));
-  const missingCount = all.filter(e=> !e.examScope).length;
+  const missingCount = all.filter(e=> !hasScope(e)).length;
   const fbox = document.getElementById("dayFilters");
   fbox.innerHTML = `<span class="fl">학년</span>` +
     `<button class="fbtn ${dayGradeFilter===""?"active":""}" data-g="">전체</button>` +
@@ -3931,7 +4300,7 @@ function openDayModal(key, keepFilters){
         const count = studentsForExam(e).length;
         const period = (e.startDate===e.endDate) ? fmtWithDow(e.startDate) : `${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)}`;
         const print = e.printStatus==="confirmed" ? "프린트 확인" : "프린트 미확인";
-        return `<button class="cmp-row ${e.examScope?"":"missing"}" data-exam="${e.id}">
+        return `<button class="cmp-row ${hasScope(e)?"":"missing"}" data-exam="${e.id}">
           <span class="cmp-school">
             <span class="sname">${escapeHtml(shortSchool(e.school))}</span>
             <span class="smeta">
@@ -3940,7 +4309,8 @@ function openDayModal(key, keepFilters){
             </span>
           </span>
           <span class="cmp-scope">
-            ${e.examScope ? escapeHtml(e.examScope).replace(/\n/g,"<br>") : `<span class="none">시험 범위 미입력</span>`}
+            ${unitTagsHtml(e)}${e.examScope ? escapeHtml(e.examScope).replace(/\n/g,"<br>")
+              : (unitsOf(e).length ? "" : `<span class="none">시험 범위 미입력</span>`)}
             ${e.schoolNotice ? `<span class="nt">📌 ${escapeHtml(e.schoolNotice)}</span>` : ""}
             <span class="period">${escapeHtml(period)} · ${print} · ${escapeHtml(e.examName||"")}</span>
           </span>
@@ -4049,7 +4419,7 @@ function renderSummary(){
   }
 
   /* 2) 시험 범위 미입력 */
-  const noScope = up.filter(e=> !e.examScope);
+  const noScope = up.filter(e=> !hasScope(e));
   const card2 = `<button class="stat-card ${noScope.length?"alert":"done"}" data-go="scope-missing">
     <span class="sl">시험 범위 미입력</span>
     <span class="sv">${noScope.length}<span class="su">건</span></span>
@@ -4078,7 +4448,7 @@ function renderSummary(){
       goToMonth(d.getFullYear(), d.getMonth());
       document.getElementById("calGrid").scrollIntoView({behavior:"smooth", block:"center"});
     } else if(go==="scope-missing"){
-      const list = upcomingExams().filter(e=>!e.examScope);
+      const list = upcomingExams().filter(e=> !hasScope(e));
       if(list.length===0){ showToast("시험 범위가 모두 입력되어 있어요.", {type:"ok"}); return; }
       scopeSeason = seasonKeyOf(list[0]);
       scopeGrade = "";
@@ -4171,7 +4541,7 @@ function renderScheduleTab(){
   });
   const schools = uniq(list.map(e=>e.school))
     .sort((a,b)=> firstDateOf[a].localeCompare(firstDateOf[b]) || a.localeCompare(b));
-  const noScope = list.filter(e=> !e.examScope).length;
+  const noScope = list.filter(e=> !hasScope(e)).length;
   document.getElementById("schedSummary").innerHTML =
     `${schools.length}개교 · 시험 ${list.length}건` +
     (noScope ? ` · <span style="color:var(--rust);">범위 미입력 ${noScope}건</span>` : "");
@@ -4246,14 +4616,15 @@ function renderScheduleTab(){
       const past = e.endDate < tk;
       const title = `${e.school} ${e.grade} ${e.examName}\n${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)} · ${count}명` +
                     (e.mathDate ? `\n수학 ${fmtWithDow(e.mathDate)}` : "") +
-                    (e.examScope ? "" : "\n※ 시험 범위 미입력");
+                    (unitsOf(e).length ? "\n범위 " + unitsOf(e).join(" · ") : "") +
+                    (hasScope(e) ? "" : "\n※ 시험 범위 미입력");
       /* 수학 시험일 표시 */
       let mathMark = "";
       if(e.mathDate){
         const mi = dayIndex(from, e.mathDate);
         if(mi >= 0 && mi < days) mathMark = `<i class="mday" style="left:${dayLeft[mi]-x}px; width:${dayWid[mi]}px;"></i>`;
       }
-      return `<div class="bar ${gradeColor(e.grade)} ${past?"past":""} ${e.examScope?"":"noscope"}"
+      return `<div class="bar ${gradeColor(e.grade)} ${past?"past":""} ${hasScope(e)?"":"noscope"}"
         style="left:${x}px; top:${li*28+4}px; width:${w}px;"
         data-exam="${e.id}" title="${escapeHtml(title)}">${mathMark}<span class="btx">${escapeHtml(barLabel(e, sc))} ${count}명</span></div>`;
     }).join("")).join("");
@@ -4396,7 +4767,7 @@ function renderScopeTab(){
   // 학년 필터
   const grades = sortGrades(uniq(rows.map(e=>e.grade)));
   if(scopeGrade && !grades.includes(scopeGrade)) scopeGrade = "";
-  const missingCount = rows.filter(e=> !e.examScope && !e.notConducted).length;
+  const missingCount = rows.filter(e=> !hasScope(e) && !e.notConducted).length;
   document.getElementById("scopeGradeFilters").innerHTML =
     `<span class="fl">학년</span>` +
     `<button class="fbtn ${scopeGrade===""?"active":""}" data-g="">전체</button>` +
@@ -4409,7 +4780,7 @@ function renderScopeTab(){
 
   if(schoolSel.value) rows = rows.filter(e=> e.school===schoolSel.value);
   if(scopeGrade) rows = rows.filter(e=> e.grade===scopeGrade);
-  if(scopeOnlyMissing) rows = rows.filter(e=> !e.examScope && !e.notConducted);
+  if(scopeOnlyMissing) rows = rows.filter(e=> !hasScope(e) && !e.notConducted);
   rows.sort((a,b)=> (a.school||"").localeCompare(b.school||"") || gradeSortIndex(a.grade)-gradeSortIndex(b.grade));
 
   const emptyBox = document.getElementById("scopeEmptyState");
@@ -4430,11 +4801,13 @@ function renderScopeTab(){
         : (e.startDate===e.endDate ? fmtWithDow(e.startDate) : `${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)}`);
       const scopeCell = e.notConducted
         ? `<span class="muted">미실시${e.notConductedReason? " — "+escapeHtml(e.notConductedReason):""}</span>`
-        : (e.examScope ? escapeHtml(e.examScope).replace(/\n/g,"<br>") : `<span class="none">미입력</span>`);
+        : (unitTagsHtml(e) +
+           (e.examScope ? escapeHtml(e.examScope).replace(/\n/g,"<br>")
+                        : (unitsOf(e).length ? "" : `<span class="none">미입력</span>`)));
       const print = e.printStatus==="confirmed"
-        ? `<span style="color:var(--green); font-weight:700;">확인</span>`
-        : `<span style="color:var(--rust); font-weight:700;">미확인</span>`;
-      return `<tr class="${(!e.examScope && !e.notConducted)?"missing":""}" data-exam-id="${e.id}">
+        ? `<span style="color:var(--green); font-weight:700; white-space:nowrap;">확인</span>`
+        : `<span style="color:var(--rust); font-weight:700; white-space:nowrap;">미확인</span>`;
+      return `<tr class="${(!hasScope(e) && !e.notConducted)?"missing":""}" data-exam-id="${e.id}">
         <td class="school">${escapeHtml(shortSchool(e.school))}</td>
         <td>${escapeHtml(e.grade||"")}</td>
         <td>${count}명</td>
@@ -5065,8 +5438,8 @@ function openDetailModal(examId, returnTo){
       driveFilesHtml(exam, 3) +
       (dAll.length ? `<div class="section-label">시험 회고</div>` + lastRetroBoxHtml(dAll) : "") +
       `<div class="section-label">시험 범위 · 안내</div>` +
-      (exam.examScope
-        ? `<div class="scope-box"><div class="st">시험 범위</div><div class="sv">${escapeHtml(exam.examScope)}</div></div>`
+      ((exam.examScope || unitsOf(exam).length)
+        ? `<div class="scope-box"><div class="st">시험 범위</div><div class="sv">${unitTagsHtml(exam)}${escapeHtml(exam.examScope||"")}</div></div>`
         : `<div class="scope-box missing"><div class="st">시험 범위</div><div class="sv">아직 입력되지 않았어요</div></div>`) +
       (exam.schoolNotice
         ? `<div class="scope-box notice"><div class="st">학교 안내 사항</div><div class="sv">${escapeHtml(exam.schoolNotice)}</div></div>`
@@ -5077,7 +5450,8 @@ function openDetailModal(examId, returnTo){
     (dPast.length ? `<div class="section-label">지난 회고</div>` + lastRetroBoxHtml(dPast) : "") +
     `<div class="section-label">시험 범위 · 안내</div>
     <div class="scope-edit ${exam.examScope?"":"empty"}">
-      <span class="st">시험 범위${exam.examScope?"":" — 아직 입력되지 않았어요"}</span>
+      <span class="st">시험 범위${(exam.examScope||unitsOf(exam).length)?"":" — 아직 입력되지 않았어요"}</span>
+      ${unitTagsHtml(exam)}
       <textarea id="detailScopeInput" placeholder="예: 수학(상) 2단원 전체 ~ 3-1, 교과서 유인물 포함">${escapeHtml(exam.examScope||"")}</textarea>
       <span class="st" style="margin-top:9px;">학교 안내 사항</span>
       <textarea id="detailNoticeInput" placeholder="예: 서술형 30%, 프린트 3종 배부">${escapeHtml(exam.schoolNotice||"")}</textarea>
