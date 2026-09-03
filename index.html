@@ -1029,7 +1029,7 @@
       <div class="exam-summary" id="examSummary"></div>
       <div class="exam-actions">
         <span class="dirty-count" id="examDirtyCount"></span>
-        <button class="btn secondary" id="schedImportBtn" title="학교별 일정 엑셀에서 시험기간·수학시험일·교과서·특이사항을 읽어옵니다">📅 학교별 일정 가져오기</button>
+        <button class="btn secondary" id="schedImportBtn" title="학교별 일정표 엑셀을 그대로 올리면 됩니다 — 시험기간·수학시험일·교과서·특이사항과 파란색으로 칠한 단원까지 읽습니다">📅 학교별 일정 가져오기</button>
         <input type="file" id="schedImportInput" accept=".xlsx,.xls" style="display:none;">
         <button class="btn" id="saveAllExamBtn">이 학교 전체 저장</button>
       </div>
@@ -1375,7 +1375,7 @@
         <option value="중간고사">중간고사</option>
         <option value="기말고사">기말고사</option>
       </select>
-      <span class="hint">시험 카드가 없으면 새로 만듭니다.</span>
+      <span class="hint">시험 카드가 없으면 새로 만듭니다. 단원은 표에서 색칠된 칸을 읽습니다.</span>
     </div>
     <div id="schedImportBody"></div>
     <div class="btn-row" style="display:flex; gap:8px; margin-top:16px;">
@@ -1849,6 +1849,147 @@ let stuF = {cho:"", school:"", grade:"", teacher:null, regularClass:null, examCl
 let selectedStudents = new Set();
 let lastStuRow = null;
 
+
+/* ================= 엑셀 파일 직접 읽기 =================
+   시험범위가 "파란 셀 색"으로만 적혀 있어서, 값뿐 아니라 칸 색까지 읽어야 합니다.
+   xlsx 파일은 zip 이라 브라우저의 압축 해제 기능으로 풀어서 안을 직접 봅니다. */
+
+async function inflateRaw(bytes){
+  const ds = new DecompressionStream("deflate-raw");
+  const buf = await new Response(new Blob([bytes]).stream().pipeThrough(ds)).arrayBuffer();
+  return new Uint8Array(buf);
+}
+async function unzip(arrayBuffer){
+  const u8 = new Uint8Array(arrayBuffer);
+  const dv = new DataView(arrayBuffer);
+  /* 끝에서 중앙 디렉터리 위치 찾기 */
+  let eocd = -1;
+  for(let i = u8.length - 22; i >= Math.max(0, u8.length - 66000); i--){
+    if(dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+  }
+  if(eocd < 0) throw new Error("zip 형식이 아닙니다");
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  const files = {};
+  const dec = new TextDecoder("utf-8");
+  for(let n = 0; n < count; n++){
+    if(dv.getUint32(p, true) !== 0x02014b50) break;
+    const method  = dv.getUint16(p + 10, true);
+    const csize   = dv.getUint32(p + 20, true);
+    const nameLen = dv.getUint16(p + 28, true);
+    const extLen  = dv.getUint16(p + 30, true);
+    const cmtLen  = dv.getUint16(p + 32, true);
+    const lho     = dv.getUint32(p + 42, true);
+    const name    = dec.decode(u8.subarray(p + 46, p + 46 + nameLen));
+    p += 46 + nameLen + extLen + cmtLen;
+    if(!/^xl\/|^\[Content/.test(name)) continue;
+    const lNameLen = dv.getUint16(lho + 26, true);
+    const lExtLen  = dv.getUint16(lho + 28, true);
+    const start = lho + 30 + lNameLen + lExtLen;
+    files[name] = { method, bytes: u8.subarray(start, start + csize) };
+  }
+  const out = {};
+  for(const [name, f] of Object.entries(files)){
+    try{
+      const raw = f.method === 0 ? f.bytes : await inflateRaw(f.bytes);
+      out[name] = dec.decode(raw);
+    }catch(e){ /* 못 푸는 항목은 건너뜁니다 */ }
+  }
+  return out;
+}
+
+/* 이름공간(x: 같은 접두어)이 붙어 있어도 읽히도록 지역 이름으로 찾습니다 */
+function xdoc(text){ return new DOMParser().parseFromString(text, "application/xml"); }
+function xkids(el, name){
+  const out = [];
+  for(const c of el.children) if(c.localName === name) out.push(c);
+  return out;
+}
+function xfind(el, name){ return xkids(el, name)[0] || null; }
+function xall(root, name){ return [...root.getElementsByTagNameNS("*", name)]; }
+
+function colRow(ref){
+  const m = /^([A-Z]+)(\d+)$/.exec(ref || "");
+  if(!m) return null;
+  let c = 0;
+  for(const ch of m[1]) c = c * 26 + (ch.charCodeAt(0) - 64);
+  return { c: c - 1, r: +m[2] - 1 };
+}
+
+async function readXlsxRaw(arrayBuffer){
+  const files = await unzip(arrayBuffer);
+  if(!files["xl/workbook.xml"]) throw new Error("엑셀 파일이 아닙니다");
+
+  /* 공유 문자열 */
+  const shared = [];
+  if(files["xl/sharedStrings.xml"]){
+    for(const si of xall(xdoc(files["xl/sharedStrings.xml"]), "si"))
+      shared.push(xall(si, "t").map(t=> t.textContent).join(""));
+  }
+  /* 칸 색: cellXfs 순번 → 채우기 색 */
+  const xfFill = [];
+  if(files["xl/styles.xml"]){
+    const sd = xdoc(files["xl/styles.xml"]);
+    const fills = [];
+    const fillsEl = xall(sd, "fills")[0];
+    if(fillsEl) for(const fl of xkids(fillsEl, "fill")){
+      const pf = xfind(fl, "patternFill");
+      const fg = pf ? xfind(pf, "fgColor") : null;
+      const type = pf ? pf.getAttribute("patternType") : null;
+      fills.push((type === "solid" && fg) ? (fg.getAttribute("rgb") || ("theme" + fg.getAttribute("theme"))) : "");
+    }
+    const xfs = xall(sd, "cellXfs")[0];
+    if(xfs) for(const xf of xkids(xfs, "xf")){
+      const i = +(xf.getAttribute("fillId") || 0);
+      xfFill.push(fills[i] || "");
+    }
+  }
+  /* 시트 이름 ↔ 파일 */
+  const wbDoc = xdoc(files["xl/workbook.xml"]);
+  const rels = {};
+  if(files["xl/_rels/workbook.xml.rels"]){
+    for(const r of xall(xdoc(files["xl/_rels/workbook.xml.rels"]), "Relationship"))
+      rels[r.getAttribute("Id")] = r.getAttribute("Target").replace(/^\/?xl\//, "").replace(/^\//, "");
+  }
+  const sheets = [];
+  let idx = 0;
+  for(const sh of xall(wbDoc, "sheet")){
+    idx++;
+    const name = sh.getAttribute("name");
+    const rid  = sh.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "id")
+              || sh.getAttribute("r:id");
+    let path = rels[rid] ? "xl/" + rels[rid] : `xl/worksheets/sheet${idx}.xml`;
+    if(!files[path]) path = `xl/worksheets/sheet${idx}.xml`;
+    if(!files[path]) continue;
+
+    const grid = [], fillGrid = [];
+    for(const c of xall(xdoc(files[path]), "c")){
+      const rc = colRow(c.getAttribute("r"));
+      if(!rc) continue;
+      const t = c.getAttribute("t");
+      let v = "";
+      const vEl = xfind(c, "v"), isEl = xfind(c, "is");
+      if(isEl) v = xall(isEl, "t").map(x=> x.textContent).join("");
+      else if(vEl){
+        v = vEl.textContent;
+        if(t === "s"){ const i = +v; v = (i >= 0 && i < shared.length) ? shared[i] : ""; }
+        else if(t !== "str" && t !== "e" && v !== "" && isFinite(Number(v))) v = Number(v);
+      }
+      while(grid.length <= rc.r){ grid.push([]); fillGrid.push([]); }
+      const row = grid[rc.r], frow = fillGrid[rc.r];
+      while(row.length < rc.c){ row.push(""); frow.push(""); }
+      row[rc.c] = v;
+      frow[rc.c] = xfFill[+(c.getAttribute("s") || 0)] || "";
+    }
+    grid.forEach((row, i)=>{
+      const w = Math.max(row.length, fillGrid[i].length);
+      for(let k = 0; k < w; k++){ if(row[k] === undefined) row[k] = ""; if(fillGrid[i][k] === undefined) fillGrid[i][k] = ""; }
+    });
+    sheets.push({ name, grid, fills: fillGrid });
+  }
+  return sheets;
+}
+
 /* ================= 학교별 일정 가져오기 ================= */
 
 /* ---------- 단원 (2학기 중간 기준) ----------
@@ -1904,7 +2045,29 @@ function mathDateFromNote(note, yearHint){
 const NO_EXAM_RE = /(중간고사|기말고사|시험)\s*(없음|미실시|안\s*봄)|미실시/;
 
 /* ---------- 학교별 일정표 파서 ---------- */
-function parseSchedSheet(grid){
+/* 단원 칸 표시 찾기 — 글자(○)가 있으면 글자로, 없으면 "다른 색으로 칠해진 칸"으로 봅니다.
+   가장 많이 쓰인 색을 '안 칠한 색'으로 보기 때문에, 파란색이 다른 색으로 바뀌어도 읽힙니다. */
+function unitMarker(grid, fills, hr, cols){
+  const anyText = cols.some(u=>{
+    for(let r = hr + 2; r < grid.length; r++) if(cellStr(grid, r, u.c)) return true;
+    return false;
+  });
+  if(anyText || !fills) return (r, c)=> !!cellStr(grid, r, c);
+
+  const count = {};
+  for(let r = hr + 2; r < grid.length; r++)
+    for(const u of cols){
+      const f = ((fills[r] || [])[u.c] || "").toUpperCase();
+      count[f] = (count[f] || 0) + 1;
+    }
+  let base = "", best = -1;
+  for(const k in count) if(count[k] > best){ best = count[k]; base = k; }
+  const marked = new Set(Object.keys(count).filter(k=> k !== base && count[k] > 0));
+  if(marked.size === 0) return ()=> false;
+  return (r, c)=> marked.has((((fills[r] || [])[c]) || "").toUpperCase());
+}
+
+function parseSchedSheet(grid, fills){
   let hr = -1, cSchool = -1, cBook = -1;
   for(let r=0; r<Math.min(grid.length, 20); r++){
     const row = (grid[r] || []).map(normLabel);
@@ -1931,6 +2094,7 @@ function parseSchedSheet(grid){
     const t = normLabel(cellStr(grid, hr + 1, c));
     if(t && UNIT_BY_AB[t]) unitCols.push({ c, name: UNIT_BY_AB[t] });
   }
+  const isMarked = unitMarker(grid, fills, hr, unitCols);
 
   /* 제목에서 학년·시험명 추정 */
   let grade = "", examName = "";
@@ -1954,7 +2118,7 @@ function parseSchedSheet(grid){
     const end   = cEnd   >= 0 ? excelDate(cellRaw(grid, r, cEnd))   : "";
     let   math  = cMath  >= 0 ? excelDate(cellRaw(grid, r, cMath))  : "";
     if(!math && note) math = mathDateFromNote(note, start ? +start.slice(0,4) : 0);
-    const units = unitCols.filter(u=> cellStr(grid, r, u.c)).map(u=> u.name);
+    const units = unitCols.filter(u=> isMarked(r, u.c)).map(u=> u.name);
     const book  = cBook  >= 0 ? cellStr(grid, r, cBook)  : "";
     const scope = cScope >= 0 ? cellStr(grid, r, cScope) : "";
     if(!start && !end && !note && !book && !scope && !units.length) continue;
@@ -2085,19 +2249,26 @@ document.getElementById("schedImportBtn").addEventListener("click", ()=>{
 document.getElementById("schedImportInput").addEventListener("change", (e)=>{
   const file = e.target.files[0];
   if(!file) return;
-  if(typeof XLSX === "undefined"){
-    showToast("엑셀을 읽는 기능을 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해주세요.", {type:"bad"});
-    e.target.value = ""; return;
-  }
   const reader = new FileReader();
-  reader.onload = (ev)=>{
+  reader.onload = async (ev)=>{
     try{
-      const wb = XLSX.read(new Uint8Array(ev.target.result), {type:"array"});
       let found = null;
-      for(const nm of wb.SheetNames){
-        const grid = XLSX.utils.sheet_to_json(wb.Sheets[nm], {header:1, defval:""});
-        const r = parseSchedSheet(grid);
-        if(r && r.rows.length){ found = r; break; }
+      /* 1순위 — 파일을 직접 열어서 칸 색까지 읽습니다 (원본 그대로 올려도 되도록) */
+      try{
+        const sheets = await readXlsxRaw(ev.target.result);
+        for(const sh of sheets){
+          const r = parseSchedSheet(sh.grid, sh.fills);
+          if(r && r.rows.length){ found = r; break; }
+        }
+      }catch(err){ console.warn("직접 읽기 실패, 엑셀 라이브러리로 다시 시도합니다", err); }
+      /* 2순위 — 브라우저가 압축 해제를 못 하면 기존 방식 (색은 못 읽고 글자만) */
+      if(!found && typeof XLSX !== "undefined"){
+        const wb = XLSX.read(new Uint8Array(ev.target.result), {type:"array"});
+        for(const nm of wb.SheetNames){
+          const grid = XLSX.utils.sheet_to_json(wb.Sheets[nm], {header:1, defval:""});
+          const r = parseSchedSheet(grid, null);
+          if(r && r.rows.length){ found = r; break; }
+        }
       }
       if(!found){
         showToast("표를 읽지 못했어요. '학교'와 '교과서' 제목이 한 줄에 같이 있는 시트인지 확인해주세요.", {type:"bad", duration:7000});
