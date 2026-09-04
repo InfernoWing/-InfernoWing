@@ -606,6 +606,15 @@
   .pw-note{font-size:11.5px; color:#8a8375; line-height:1.65; margin-top:10px;}
   .pw-ask{font-size:12.5px; font-weight:700; color:#8a5a13; background:#fdf3dd;
     border:1.5px solid #eed69a; border-radius:9px; padding:9px 11px; margin:2px 0 10px;}
+  /* 끌어다 놓기 */
+  .dropzone{position:fixed; inset:0; z-index:900; display:none; align-items:center; justify-content:center;
+    background:#1b271acc; backdrop-filter:blur(2px);}
+  .dropzone.on{display:flex;}
+  .dropzone .dz-box{background:#fffdf8; border:3px dashed var(--mustard); border-radius:18px;
+    padding:38px 52px; text-align:center; box-shadow:0 18px 48px #0006; pointer-events:none;}
+  .dropzone .dz-ico{font-size:40px; line-height:1; margin-bottom:12px;}
+  .dropzone .dz-t{font-size:19px; font-weight:800; color:var(--ink);}
+  .dropzone .dz-s{font-size:12.5px; color:#8a8375; margin-top:7px;}
 
   /* 캘린더 학교 검색 */
   .school-search{position:relative; display:flex; align-items:center;}
@@ -1366,6 +1375,14 @@
       <button class="btn" id="classImportApply">적용하기</button>
       <button class="btn secondary" id="classImportCancel">취소</button>
     </div>
+  </div>
+</div>
+
+<div class="dropzone" id="dropZone">
+  <div class="dz-box">
+    <div class="dz-ico">📄</div>
+    <div class="dz-t">여기에 엑셀을 놓으세요</div>
+    <div class="dz-s">학교별 일정표 · 반별 현황표 — 표 모양을 보고 알아서 골라 엽니다</div>
   </div>
 </div>
 
@@ -2270,52 +2287,104 @@ document.getElementById("schedImportBtn").addEventListener("click", ()=>{
   if(editMode){ pick(); return; }
   requestEdit("일정을 가져오려면 수정 모드가 필요해요. 비밀번호를 넣어주세요.", pick);
 });
-document.getElementById("schedImportInput").addEventListener("change", (e)=>{
+/* 엑셀 한 개를 시트 목록으로 — 색까지 읽는 직접 읽기가 1순위, 안 되면 라이브러리 */
+async function gridsOf(arrayBuffer){
+  try{
+    const sheets = await readXlsxRaw(arrayBuffer);
+    if(sheets && sheets.length) return sheets;
+  }catch(err){ console.warn("직접 읽기 실패, 엑셀 라이브러리로 다시 시도합니다", err); }
+  if(typeof XLSX !== "undefined"){
+    const wb = XLSX.read(new Uint8Array(arrayBuffer), {type:"array"});
+    return wb.SheetNames.map(nm=> ({ name: nm, fills: null,
+      grid: XLSX.utils.sheet_to_json(wb.Sheets[nm], {header:1, defval:""}) }));
+  }
+  return null;
+}
+
+/* 학교별 일정표 읽기 — 못 읽으면 false */
+function openSchedImport(sheets, fileName, quiet){
+  let found = null;
+  for(const sh of sheets){
+    const r = parseSchedSheet(sh.grid, sh.fills);
+    if(r && r.rows.length){ found = r; break; }
+  }
+  if(!found){
+    if(!quiet) showToast("표를 읽지 못했어요. '학교'와 '교과서' 제목이 한 줄에 같이 있는 시트인지 확인해주세요.",
+      {type:"bad", duration:7000});
+    return false;
+  }
+  schedRows = found.rows;
+  schedFile = fileName;
+  const gsel = document.getElementById("schedImpGrade");
+  const gopts = sortGrades(uniq(students.map(s=>s.grade).filter(Boolean)));
+  if(found.grade && !gopts.includes(found.grade)) gopts.unshift(found.grade);
+  gsel.innerHTML = (gopts.length ? gopts : ["중1","중2","중3"])
+    .map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
+  if(found.grade) gsel.value = found.grade;
+  if(found.examName) document.getElementById("schedImpExam").value = found.examName;
+  renderSchedPlan();
+  document.getElementById("schedImportModal").classList.add("active");
+  return true;
+}
+
+document.getElementById("schedImportInput").addEventListener("change", async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
-  const reader = new FileReader();
-  reader.onload = async (ev)=>{
-    try{
-      let found = null;
-      /* 1순위 — 파일을 직접 열어서 칸 색까지 읽습니다 (원본 그대로 올려도 되도록) */
-      try{
-        const sheets = await readXlsxRaw(ev.target.result);
-        for(const sh of sheets){
-          const r = parseSchedSheet(sh.grid, sh.fills);
-          if(r && r.rows.length){ found = r; break; }
-        }
-      }catch(err){ console.warn("직접 읽기 실패, 엑셀 라이브러리로 다시 시도합니다", err); }
-      /* 2순위 — 브라우저가 압축 해제를 못 하면 기존 방식 (색은 못 읽고 글자만) */
-      if(!found && typeof XLSX !== "undefined"){
-        const wb = XLSX.read(new Uint8Array(ev.target.result), {type:"array"});
-        for(const nm of wb.SheetNames){
-          const grid = XLSX.utils.sheet_to_json(wb.Sheets[nm], {header:1, defval:""});
-          const r = parseSchedSheet(grid, null);
-          if(r && r.rows.length){ found = r; break; }
-        }
-      }
-      if(!found){
-        showToast("표를 읽지 못했어요. '학교'와 '교과서' 제목이 한 줄에 같이 있는 시트인지 확인해주세요.", {type:"bad", duration:7000});
-        e.target.value = ""; return;
-      }
-      schedRows = found.rows;
-      schedFile = file.name;
-      const gsel = document.getElementById("schedImpGrade");
-      const gopts = sortGrades(uniq(students.map(s=>s.grade).filter(Boolean)));
-      if(found.grade && !gopts.includes(found.grade)) gopts.unshift(found.grade);
-      gsel.innerHTML = (gopts.length ? gopts : ["중1","중2","중3"])
-        .map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join("");
-      if(found.grade) gsel.value = found.grade;
-      if(found.examName) document.getElementById("schedImpExam").value = found.examName;
-      renderSchedPlan();
-      document.getElementById("schedImportModal").classList.add("active");
-    }catch(err){
-      console.error(err);
-      showToast("엑셀을 읽는 중 문제가 생겼어요: " + (err.message || err), {type:"bad", duration:7000});
-    }finally{ e.target.value = ""; }
-  };
-  reader.readAsArrayBuffer(file);
+  try{
+    const sheets = await gridsOf(await file.arrayBuffer());
+    if(!sheets) showToast("엑셀을 읽지 못했어요. 파일이 .xlsx 인지 확인해주세요.", {type:"bad"});
+    else openSchedImport(sheets, file.name);
+  }catch(err){
+    console.error(err);
+    showToast("엑셀을 읽는 중 문제가 생겼어요: " + (err.message || err), {type:"bad", duration:7000});
+  }finally{ e.target.value = ""; }
 });
+
+/* ---------- 끌어다 놓기 ----------
+   화면 아무 데나 엑셀을 떨어뜨리면, 표 모양을 보고 알아서 골라 엽니다. */
+async function handleDroppedFile(file){
+  if(!/\.(xlsx|xlsm|xls)$/i.test(file.name)){
+    showToast("엑셀 파일(.xlsx)만 넣을 수 있어요.", {type:"warn"});
+    return;
+  }
+  if(!editMode){
+    requestEdit(`“${file.name}” 을 넣으려면 수정 모드가 필요해요. 비밀번호를 넣어주세요.`,
+      ()=> handleDroppedFile(file));
+    return;
+  }
+  showToast(`${file.name} 읽는 중...`, {type:"ok", duration:1500});
+  let sheets;
+  try{ sheets = await gridsOf(await file.arrayBuffer()); }
+  catch(err){ console.error(err); showToast("파일을 읽는 중 문제가 생겼어요.", {type:"bad"}); return; }
+  if(!sheets){ showToast("엑셀을 읽지 못했어요. 파일이 .xlsx 인지 확인해주세요.", {type:"bad"}); return; }
+
+  if(openSchedImport(sheets, file.name, true)) return;                 // 학교별 일정표
+  if(openClassImport(sheets.map(s=> s.grid), file.name, true)) return; // 반 배정표
+  showToast("이 표가 무엇인지 알아보지 못했어요. 학교별 일정표(학교·교과서 제목줄)나 반별 현황표를 넣어주세요.",
+    {type:"warn", duration:10000});
+}
+
+(function(){
+  const zone = document.getElementById("dropZone");
+  let depth = 0;
+  const hasFile = (e)=> [...(e.dataTransfer?.types || [])].includes("Files");
+  window.addEventListener("dragenter", (e)=>{
+    if(!hasFile(e)) return;
+    e.preventDefault(); depth++; zone.classList.add("on");
+  });
+  window.addEventListener("dragover", (e)=>{ if(hasFile(e)) e.preventDefault(); });
+  window.addEventListener("dragleave", (e)=>{
+    if(!hasFile(e)) return;
+    depth = Math.max(0, depth - 1);
+    if(depth === 0) zone.classList.remove("on");
+  });
+  window.addEventListener("drop", (e)=>{
+    if(!hasFile(e)) return;
+    e.preventDefault(); depth = 0; zone.classList.remove("on");
+    const f = e.dataTransfer.files[0];
+    if(f) handleDroppedFile(f);
+  });
+})();
 ["schedImpGrade","schedImpExam"].forEach(id=>
   document.getElementById(id).addEventListener("change", ()=>{ if(schedRows) renderSchedPlan(); }));
 document.getElementById("closeSchedImport").addEventListener("click", ()=>
@@ -3250,46 +3319,38 @@ document.getElementById("classImportBtn").addEventListener("click", ()=>{
   if(!guardEdit()) return;
   document.getElementById("classImportInput").click();
 });
-document.getElementById("classImportInput").addEventListener("change", (e)=>{
+/* 반 배정 표 읽기 — 시트 목록을 받아 미리보기까지 띄웁니다. 못 읽으면 false */
+function openClassImport(grids, fileName, quiet){
+  let rows = [];
+  grids.forEach(g=>{ rows = rows.concat(parseClassSheet(g)); });
+  if(rows.length === 0) grids.forEach(g=>{ rows = rows.concat(parseFlatSheet(g)); });
+  if(rows.length === 0){
+    if(!quiet) showToast(`표에서 학생을 찾지 못했어요. 반별 현황표이거나, 이름·학교 제목줄이 있는 표여야 합니다.`,
+      {type:"warn", duration:10000});
+    return false;
+  }
+  classImportRows = rows;
+  /* 파일 이름으로 어느 반인지 먼저 추측해둡니다 (바꿀 수 있어요) */
+  const fn = (fileName || "").replace(/\s+/g, "");
+  if(/정규|분기/.test(fn) && !/내신|시험대비/.test(fn)) classImportField = "regularClass";
+  else classImportField = "examClass";
+  syncImpTarget();
+  classImportPlan = buildClassImportPlan(rows, classImportField);
+  renderClassImportPlan(classImportPlan, fileName);
+  return true;
+}
+
+document.getElementById("classImportInput").addEventListener("change", async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
-  if(typeof XLSX === "undefined"){
-    showToast("엑셀을 읽는 기능을 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해주세요.", {type:"bad"});
-    e.target.value = ""; return;
-  }
-  const reader = new FileReader();
-  reader.onload = (ev)=>{
-    try{
-      const wb = XLSX.read(new Uint8Array(ev.target.result), {type:"array"});
-      let rows = [];
-      const grids = wb.SheetNames.map(nm=> XLSX.utils.sheet_to_json(wb.Sheets[nm], {header:1, defval:""}));
-      grids.forEach(g=>{ rows = rows.concat(parseClassSheet(g)); });
-      if(rows.length === 0){
-        /* 블록형이 아니면 평범한 표로 한 번 더 시도 */
-        grids.forEach(g=>{ rows = rows.concat(parseFlatSheet(g)); });
-      }
-      if(rows.length === 0){
-        const shape = grids.map((g,i)=> `${wb.SheetNames[i]} ${g.length}행`).join(", ");
-        showToast(`표에서 학생을 찾지 못했어요 (${shape}). 반별 현황표이거나, 이름·학교 제목줄이 있는 표여야 합니다.`,
-          {type:"warn", duration:12000});
-        return;
-      }
-      classImportRows = rows;
-      /* 파일 이름으로 어느 반인지 먼저 추측해둡니다 (바꿀 수 있어요) */
-      const fn = file.name.replace(/\s+/g, "");
-      if(/정규|분기/.test(fn) && !/내신|시험대비/.test(fn)) classImportField = "regularClass";
-      else classImportField = "examClass";
-      syncImpTarget();
-      classImportPlan = buildClassImportPlan(rows, classImportField);
-      renderClassImportPlan(classImportPlan, file.name);
-    }catch(err){
-      console.error(err);
-      showToast("파일을 읽는 중 문제가 생겼어요.", {type:"bad"});
-    }finally{
-      e.target.value = "";
-    }
-  };
-  reader.readAsArrayBuffer(file);
+  try{
+    const grids = await gridsOf(await file.arrayBuffer());
+    if(!grids) showToast("엑셀을 읽지 못했어요. 파일이 .xlsx 인지 확인해주세요.", {type:"bad"});
+    else openClassImport(grids.map(g=> g.grid), file.name);
+  }catch(err){
+    console.error(err);
+    showToast("파일을 읽는 중 문제가 생겼어요.", {type:"bad"});
+  }finally{ e.target.value = ""; }
 });
 
 function syncImpTarget(){
