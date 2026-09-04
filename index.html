@@ -1947,6 +1947,25 @@ function xkids(el, name){
 }
 function xfind(el, name){ return xkids(el, name)[0] || null; }
 function xall(root, name){ return [...root.getElementsByTagNameNS("*", name)]; }
+/* 한셀(한글오피스)로 저장한 xlsx 는 <xf> 를 <mc:AlternateContent><mc:Choice>…</mc:Choice>
+   <mc:Fallback>…</mc:Fallback></mc:AlternateContent> 로 감싸둡니다.
+   그냥 자식만 보면 감싸진 것들이 통째로 빠지고, 반대로 전부 훑으면 Choice·Fallback 이
+   두 번씩 잡혀서 순번이 밀립니다. 감싼 것은 하나만 골라 순번을 그대로 지킵니다. */
+function xkidsAlt(el, name){
+  const out = [];
+  for(const c of el.children){
+    if(c.localName === name){ out.push(c); continue; }
+    if(c.localName !== "AlternateContent") continue;
+    let pick = null;
+    for(const br of c.children){
+      if(br.localName !== "Choice" && br.localName !== "Fallback") continue;
+      const hit = xkids(br, name)[0];
+      if(hit && (!pick || br.localName === "Choice")) pick = hit;
+    }
+    if(pick) out.push(pick);
+  }
+  return out;
+}
 
 function colRow(ref){
   const m = /^([A-Z]+)(\d+)$/.exec(ref || "");
@@ -1972,14 +1991,14 @@ async function readXlsxRaw(arrayBuffer){
     const sd = xdoc(files["xl/styles.xml"]);
     const fills = [];
     const fillsEl = xall(sd, "fills")[0];
-    if(fillsEl) for(const fl of xkids(fillsEl, "fill")){
+    if(fillsEl) for(const fl of xkidsAlt(fillsEl, "fill")){
       const pf = xfind(fl, "patternFill");
       const fg = pf ? xfind(pf, "fgColor") : null;
       const type = pf ? pf.getAttribute("patternType") : null;
       fills.push((type === "solid" && fg) ? (fg.getAttribute("rgb") || ("theme" + fg.getAttribute("theme"))) : "");
     }
     const xfs = xall(sd, "cellXfs")[0];
-    if(xfs) for(const xf of xkids(xfs, "xf")){
+    if(xfs) for(const xf of xkidsAlt(xfs, "xf")){
       const i = +(xf.getAttribute("fillId") || 0);
       xfFill.push(fills[i] || "");
     }
