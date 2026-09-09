@@ -225,6 +225,18 @@
   .cal-cell.today .num{color:var(--rust);}
   .cal-cell.sat .num{color:var(--blue);}
   .cal-cell.sun .num{color:var(--rust);}
+  /* 공휴일 */
+  .cal-cell.holi{background:#fdf4f1; border-color:#f0d6cc;}
+  .cal-cell.holi .num{color:var(--rust);}
+  .cal-cell.holi.today{background:#fdf1ea; border-color:var(--mustard);}
+  .cal-cell .num .hol{margin-left:5px; font-size:9.5px; font-weight:800; color:var(--rust);
+    letter-spacing:-.02em; white-space:nowrap;}
+  .cl-day.holi{border-color:#f0d6cc;}
+  .cl-day.holi .cl-head{background:#fdf4f1;}
+  .hol-tag{font-size:10.5px; font-weight:800; color:var(--rust); background:#fbe4dc;
+    border-radius:6px; padding:1px 6px; margin-left:5px;}
+  .tl-daycell.holi{background:#fbeeea;}
+  .tl-dnum.holi{color:var(--rust);} .tl-dnum.holi .dw{color:var(--rust); opacity:.75;}
   .cal-cell .pills{display:flex; flex-direction:column; gap:3px; margin-top:3px;}
 
   /* 학년별 알약 색상 */
@@ -1947,25 +1959,6 @@ function xkids(el, name){
 }
 function xfind(el, name){ return xkids(el, name)[0] || null; }
 function xall(root, name){ return [...root.getElementsByTagNameNS("*", name)]; }
-/* 한셀(한글오피스)로 저장한 xlsx 는 <xf> 를 <mc:AlternateContent><mc:Choice>…</mc:Choice>
-   <mc:Fallback>…</mc:Fallback></mc:AlternateContent> 로 감싸둡니다.
-   그냥 자식만 보면 감싸진 것들이 통째로 빠지고, 반대로 전부 훑으면 Choice·Fallback 이
-   두 번씩 잡혀서 순번이 밀립니다. 감싼 것은 하나만 골라 순번을 그대로 지킵니다. */
-function xkidsAlt(el, name){
-  const out = [];
-  for(const c of el.children){
-    if(c.localName === name){ out.push(c); continue; }
-    if(c.localName !== "AlternateContent") continue;
-    let pick = null;
-    for(const br of c.children){
-      if(br.localName !== "Choice" && br.localName !== "Fallback") continue;
-      const hit = xkids(br, name)[0];
-      if(hit && (!pick || br.localName === "Choice")) pick = hit;
-    }
-    if(pick) out.push(pick);
-  }
-  return out;
-}
 
 function colRow(ref){
   const m = /^([A-Z]+)(\d+)$/.exec(ref || "");
@@ -1991,14 +1984,14 @@ async function readXlsxRaw(arrayBuffer){
     const sd = xdoc(files["xl/styles.xml"]);
     const fills = [];
     const fillsEl = xall(sd, "fills")[0];
-    if(fillsEl) for(const fl of xkidsAlt(fillsEl, "fill")){
+    if(fillsEl) for(const fl of xkids(fillsEl, "fill")){
       const pf = xfind(fl, "patternFill");
       const fg = pf ? xfind(pf, "fgColor") : null;
       const type = pf ? pf.getAttribute("patternType") : null;
       fills.push((type === "solid" && fg) ? (fg.getAttribute("rgb") || ("theme" + fg.getAttribute("theme"))) : "");
     }
     const xfs = xall(sd, "cellXfs")[0];
-    if(xfs) for(const xf of xkidsAlt(xfs, "xf")){
+    if(xfs) for(const xf of xkids(xfs, "xf")){
       const i = +(xf.getAttribute("fillId") || 0);
       xfFill.push(fills[i] || "");
     }
@@ -4142,6 +4135,59 @@ function studentsForExam(exam){
   /* 퇴원한 학생은 시험 대상에서 빼요 */
   return students.filter(s=> s.school===exam.school && s.grade===exam.grade && statusOf(s)!=="퇴원");
 }
+
+/* ---------- 공휴일 ----------
+   음력 명절(설날·추석·부처님오신날)과 대체공휴일은 계산이 아니라 표로 갖고 있습니다.
+   2029년 이후는 아래 표에 줄만 더 넣으면 됩니다. */
+const HOLIDAYS = {
+  /* 2025 */
+  "2025-01-01":"신정",
+  "2025-01-28":"설날 연휴", "2025-01-29":"설날", "2025-01-30":"설날 연휴",
+  "2025-03-01":"삼일절", "2025-03-03":"대체공휴일",
+  "2025-05-05":"어린이날·부처님오신날", "2025-05-06":"대체공휴일",
+  "2025-06-06":"현충일", "2025-08-15":"광복절",
+  "2025-10-03":"개천절",
+  "2025-10-05":"추석 연휴", "2025-10-06":"추석", "2025-10-07":"추석 연휴", "2025-10-08":"대체공휴일",
+  "2025-10-09":"한글날", "2025-12-25":"성탄절",
+  /* 2026 */
+  "2026-01-01":"신정",
+  "2026-02-16":"설날 연휴", "2026-02-17":"설날", "2026-02-18":"설날 연휴",
+  "2026-03-01":"삼일절", "2026-03-02":"대체공휴일",
+  "2026-05-05":"어린이날",
+  "2026-05-24":"부처님오신날", "2026-05-25":"대체공휴일",
+  "2026-06-03":"지방선거", "2026-06-06":"현충일",
+  "2026-08-15":"광복절", "2026-08-17":"대체공휴일",
+  "2026-09-24":"추석 연휴", "2026-09-25":"추석", "2026-09-26":"추석 연휴",
+  "2026-10-03":"개천절", "2026-10-05":"대체공휴일",
+  "2026-10-09":"한글날", "2026-12-25":"성탄절",
+  /* 2027 */
+  "2027-01-01":"신정",
+  "2027-02-06":"설날 연휴", "2027-02-07":"설날", "2027-02-08":"설날 연휴", "2027-02-09":"대체공휴일",
+  "2027-03-01":"삼일절",
+  "2027-05-05":"어린이날", "2027-05-13":"부처님오신날",
+  "2027-06-06":"현충일",
+  "2027-08-15":"광복절", "2027-08-16":"대체공휴일",
+  "2027-09-14":"추석 연휴", "2027-09-15":"추석", "2027-09-16":"추석 연휴",
+  "2027-10-03":"개천절", "2027-10-04":"대체공휴일",
+  "2027-10-09":"한글날", "2027-10-11":"대체공휴일",
+  "2027-12-25":"성탄절", "2027-12-27":"대체공휴일",
+  /* 2028 */
+  "2028-01-01":"신정",
+  "2028-01-26":"설날 연휴", "2028-01-27":"설날", "2028-01-28":"설날 연휴",
+  "2028-03-01":"삼일절",
+  "2028-05-02":"부처님오신날", "2028-05-05":"어린이날",
+  "2028-06-06":"현충일", "2028-08-15":"광복절",
+  "2028-10-02":"추석 연휴", "2028-10-03":"추석·개천절", "2028-10-04":"추석 연휴", "2028-10-05":"대체공휴일",
+  "2028-10-09":"한글날", "2028-12-25":"성탄절",
+};
+function holidayOf(key){ return HOLIDAYS[key] || ""; }
+/* 공휴일이거나 일요일이면 쉬는 날 */
+function isRedDay(key){
+  if(HOLIDAYS[key]) return true;
+  const d = toDate(key);
+  return d.getDay() === 0;
+}
+
 /* ---------- 캘린더 학교 검색 ----------
    "가락", "가락중", "ㄱㄹ" 처럼 이름 일부나 초성으로 찾을 수 있어요. */
 let calSchoolQ = "";
@@ -4316,9 +4362,10 @@ function renderCalListView(){
     const dow = weekdayShort(dt);
     const dowCls = dow==="토" ? "sat" : dow==="일" ? "sun" : "";
     const isToday = key===tk, isPast = key < tk;
-    html += `<div class="cl-day ${isToday?"today":""} ${isPast?"past":""}">
+    const holi = holidayOf(key);
+    html += `<div class="cl-day ${isToday?"today":""} ${isPast?"past":""} ${holi?"holi":""}">
       <div class="cl-head">
-        <span class="d">${viewMonth+1}월 ${d}일<span class="dow ${dowCls}">(${dow})</span>${isToday?' <span class="dday-sm now">오늘</span>':''}</span>
+        <span class="d">${viewMonth+1}월 ${d}일<span class="dow ${dowCls}">(${dow})</span>${holi?` <span class="hol-tag">${escapeHtml(holi)}</span>`:""}${isToday?' <span class="dday-sm now">오늘</span>':''}</span>
         <span class="n">${list.length}건</span>
       </div>
       <div class="cl-body">
@@ -4366,6 +4413,7 @@ function renderCalendar(){
     const isToday = key === dateKey(today.getFullYear(), today.getMonth(), today.getDate());
     const dowIdx = (firstDow + d - 1) % 7; // 0=월 ... 5=토, 6=일
     const dowClass = dowIdx===5 ? "sat" : dowIdx===6 ? "sun" : "";
+    const holi = holidayOf(key);
 
     const shown = dayExams.slice(0, MAX_PILLS);
     const restCount = dayExams.length - shown.length;
@@ -4385,8 +4433,8 @@ function renderCalendar(){
       : "";
 
     const isPast = key < dateKey(today.getFullYear(), today.getMonth(), today.getDate());
-    html += `<div class="cal-cell ${isToday?"today":""} ${isPast?"past":""} ${dowClass}" data-date="${key}">
-      <div class="num">${d}</div>
+    html += `<div class="cal-cell ${isToday?"today":""} ${isPast?"past":""} ${dowClass} ${holi?"holi":""}" data-date="${key}"${holi?` title="${escapeHtml(holi)}"`:""}>
+      <div class="num">${d}${holi?`<span class="hol">${escapeHtml(holi)}</span>`:""}</div>
       <div class="pills">${pillsHtml}${moreHtml}</div>
     </div>`;
   }
@@ -4546,7 +4594,9 @@ function openDayModal(key, keepFilters){
   currentDayKey = key;
   const all = visibleExamsForDate(key);
   const d = toDate(key);
-  document.getElementById("dayTitle").textContent = `${d.getMonth()+1}월 ${d.getDate()}일 (${weekdayShort(d)}) 시험`;
+  const dayHoli = holidayOf(key);
+  document.getElementById("dayTitle").textContent =
+    `${d.getMonth()+1}월 ${d.getDate()}일 (${weekdayShort(d)})${dayHoli ? " · " + dayHoli : ""} 시험`;
 
   let list = all;
   if(dayGradeFilter) list = list.filter(e=> e.grade===dayGradeFilter);
@@ -4854,13 +4904,14 @@ function renderScheduleTab(){
     const isWknd = (dow===0 || dow===6);
     const isMstart = d.getDate()===1;
     const isWstart = dow===1;                       // 월요일마다 주 구분선
-    const cls = dow===0 ? "sun" : dow===6 ? "wk" : "";
+    const holi = holidayOf(k);
+    const cls = holi ? "holi" : dow===0 ? "sun" : dow===6 ? "wk" : "";
     cells += `<div class="tl-daycell ${cls} ${isWstart?"wstart":""} ${isMstart?"mstart":""}"
-      style="left:${dayLeft[i]}px; width:${dayWid[i]}px;"></div>`;
+      style="left:${dayLeft[i]}px; width:${dayWid[i]}px;"${holi?` title="${escapeHtml(holi)}"`:""}></div>`;
     if(isMstart || i===0)
       labels += `<div class="tl-monthlabel" style="left:${dayLeft[i]}px;">${d.getMonth()+1}월</div>`;
-    const dcls = (k===tk) ? "tday" : dow===6 ? "sat" : dow===0 ? "sun" : "";
-    labels += `<div class="tl-dnum ${dcls} ${isWknd?"nar":""}" style="left:${dayLeft[i]}px; width:${dayWid[i]}px;">${d.getDate()}<span class="dw">${DOW_KO[dow]}</span></div>`;
+    const dcls = (k===tk) ? "tday" : holi ? "holi" : dow===6 ? "sat" : dow===0 ? "sun" : "";
+    labels += `<div class="tl-dnum ${dcls} ${isWknd?"nar":""}" style="left:${dayLeft[i]}px; width:${dayWid[i]}px;"${holi?` title="${escapeHtml(holi)}"`:""}>${d.getDate()}<span class="dw">${DOW_KO[dow]}</span></div>`;
   }
   const todayIdx = dayIndex(from, tk);
   const inRange = todayIdx >= 0 && todayIdx < days;
