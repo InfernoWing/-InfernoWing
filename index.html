@@ -550,6 +550,9 @@
   .badge-info{font-size:11.5px; font-weight:700; background:var(--violet-dim); color:var(--violet);
     padding:5px 11px; border-radius:20px; cursor:pointer; white-space:nowrap; border:none;}
   .badge-info.active{background:var(--violet); color:#fff;}
+  /* 합칠 후보 — 눈에 띄게 */
+  .badge-info.warn{background:var(--mustard-dim); color:#8a5a10;}
+  .badge-info.warn.active{background:var(--mustard); color:#3a2a08;}
 
   /* 시험 요약 복사 */
   .copy-area{width:100%; min-height:230px; font-family:'Noto Sans KR',sans-serif; font-size:13px;
@@ -1198,6 +1201,7 @@
       <button class="btn secondary small" id="clearFilterBtn">조건 모두 해제</button>
       <button class="badge-warn" id="incompleteBadge">정규반 미배정 0명</button>
       <button class="badge-info" id="sameNameBadge" style="display:none;">동명이인 0명</button>
+      <button class="badge-info warn" id="mergeBadge" style="display:none;" title="같은 학교에 이름 뒤 숫자만 다른 학생이 있어요. 한 명이 둘로 갈라진 것일 수 있습니다.">합칠 후보 0명</button>
     </div>
 
     <div class="filter-line" id="stuStatusFilters"></div>
@@ -1871,6 +1875,7 @@ function fillSelect(id, values, placeholder){
 /* ---------- 학생 관리 ---------- */
 let showIncompleteOnly = false;   // 정규반 미배정만 보기
 let showSameNameOnly = false;    // 이름이 겹치는 학생만 보기
+let showMergeOnly = false;       // 이름 뒤 숫자만 다른 "합칠 후보"만 보기
 let stuStatusOn = new Set(["재원","휴원"]);   // 기본은 퇴원생 숨김
 let stuView = (window.innerWidth <= 820) ? "card" : "table";   // 좁은 화면은 카드로 시작
 document.querySelectorAll("#stuViewToggle button").forEach(b=> b.addEventListener("click", ()=>{
@@ -2513,6 +2518,7 @@ function filteredStudents(){
     if(stuF.examClass!==null && (s.examClass||"")!==stuF.examClass) return false;
     if(showIncompleteOnly && s.regularClass) return false;
     if(showSameNameOnly && (sameNameCounts()[(s.name||"").trim()]||0) < 2) return false;
+    if(showMergeOnly && !mergeSuspects().some(x=> x.id === s.id)) return false;
     if(searchTerm){
       const hay = `${s.name||""} ${s.school||""} ${s.teacher||""} ${s.studentNumber||""}`.toLowerCase();
       /* ㄱㅈㅁ 처럼 초성만 쳐도 이름이 찾아지도록 */
@@ -2530,7 +2536,7 @@ function filteredStudents(){
 function stuHasFilter(){
   const statusChanged = !(stuStatusOn.size===2 && stuStatusOn.has("재원") && stuStatusOn.has("휴원"));
   return !!(statusChanged || stuF.cho || stuF.school || stuF.grade || stuF.teacher!==null ||
-    stuF.regularClass!==null || stuF.examClass!==null || showIncompleteOnly || showSameNameOnly ||
+    stuF.regularClass!==null || stuF.examClass!==null || showIncompleteOnly || showSameNameOnly || showMergeOnly ||
     document.getElementById("studentSearch").value.trim());
 }
 
@@ -2627,6 +2633,7 @@ function renderCrumbs(){
   if(stuF.examClass!==null) items.push({label: stuF.examClass? `시험대비 ${stuF.examClass}` : "시험대비 미배정", k:"examClass"});
   if(showIncompleteOnly) items.push({label:"정규반 미배정", k:"incomplete"});
   if(showSameNameOnly) items.push({label:"동명이인만", k:"samename"});
+  if(showMergeOnly) items.push({label:"합칠 후보만", k:"merge"});
   const stDefault = stuStatusOn.size===2 && stuStatusOn.has("재원") && stuStatusOn.has("휴원");
   if(!stDefault) items.push({label:`상태 ${[...stuStatusOn].join("·")}`, k:"status"});
   if(searchTerm) items.push({label:`검색 "${searchTerm}"`, k:"query"});
@@ -2641,6 +2648,7 @@ function renderCrumbs(){
     else if(k==="grade") stuF.grade="";
     else if(k==="incomplete") showIncompleteOnly=false;
     else if(k==="samename") showSameNameOnly=false;
+    else if(k==="merge") showMergeOnly=false;
     else if(k==="status") stuStatusOn = new Set(["재원","휴원"]);
     else if(k==="query") document.getElementById("studentSearch").value="";
     else stuF[k]=null;
@@ -2677,6 +2685,13 @@ function renderStudents(){
   dupBadge.style.display = dupPeople ? "" : "none";
   dupBadge.textContent = `동명이인 ${dupPeople}명`;
   dupBadge.classList.toggle("active", showSameNameOnly);
+
+  /* 합칠 후보 배지 */
+  const mg = mergeSuspects();
+  const mgBadge = document.getElementById("mergeBadge");
+  mgBadge.style.display = mg.length ? "" : "none";
+  mgBadge.textContent = `합칠 후보 ${mg.length}명`;
+  mgBadge.classList.toggle("active", showMergeOnly);
 
   renderChoBar(); renderStatusFilters(); renderGradeFilters(); renderIdxPanel(); renderCrumbs();
   renderSortHeaders();
@@ -2970,6 +2985,12 @@ document.getElementById("incompleteBadge").addEventListener("click", ()=>{
   showIncompleteOnly = !showIncompleteOnly;
   renderStudents();
 });
+document.getElementById("mergeBadge").addEventListener("click", ()=>{
+  showMergeOnly = !showMergeOnly;
+  if(showMergeOnly){ showSameNameOnly = false; showIncompleteOnly = false; }
+  renderStudents();
+});
+
 document.getElementById("sameNameBadge").addEventListener("click", ()=>{
   showSameNameOnly = !showSameNameOnly;
   renderStudents();
@@ -2979,6 +3000,7 @@ document.getElementById("clearFilterBtn").addEventListener("click", ()=>{
   document.getElementById("studentSearch").value = "";
   showIncompleteOnly = false;
   showSameNameOnly = false;
+  showMergeOnly = false;
   stuStatusOn = new Set(["재원","휴원"]);
   renderStudents();
 });
@@ -3214,6 +3236,12 @@ function gradeFromClassName(cls){
   return "중" + n[1];
 }
 /* 표는 "감일중", 앱은 "감일중학교" 처럼 다를 수 있어 짧은 이름으로 맞춥니다 */
+/* 이름 뒤에 붙은 구분용 숫자를 뗍니다 — "김현서2" → "김현서"
+   (반별 현황표에서 동명이인을 구분하려고 붙이는 번호라, 같은 학생으로 이어주기 위한 것) */
+function baseName(n){
+  return (n || "").replace(/\s+/g, "").replace(/\d+$/, "");
+}
+
 function sameSchool(a, b){
   const norm = x => shortSchool((x || "").replace(/\s+/g, ""));
   return norm(a) === norm(b) && norm(a) !== "";
@@ -3225,18 +3253,34 @@ let classImportField = "examClass";   // examClass | regularClass
 function buildClassImportPlan(rows, field){
   const FIELD = field || classImportField;
   const updates = [], adds = [], same = [], ambiguous = [];
+  const claimed = new Set();          /* 한 번 짝지은 학생은 다른 줄이 다시 못 씁니다 */
   rows.forEach(r=>{
     const grade = gradeFromClassName(r.cls);
     const examClass = r.time ? `${r.cls} (${r.time})` : r.cls;
-    const matched = students.filter(s=>
-      s.name === r.name && sameSchool(s.school, r.school) && statusOf(s) !== "퇴원"
-    );
+    const alive = s=> sameSchool(s.school, r.school) && statusOf(s) !== "퇴원" && !claimed.has(s.id);
+
+    /* ① 이름이 완전히 같은 학생 먼저 */
+    let matched = students.filter(s=> s.name === r.name && alive(s));
+    let viaBase = false;
+
+    /* ② 없으면 이름 뒤 숫자를 떼고 다시 찾습니다 (표의 "김현서2" = 앱의 "김현서") */
+    if(matched.length === 0 && baseName(r.name) !== r.name.trim()){
+      matched = students.filter(s=> baseName(s.name) === baseName(r.name) && alive(s));
+      viaBase = matched.length > 0;
+    }
+    /* ③ 표에는 숫자가 없는데 앱에만 숫자가 붙어 있는 경우도 이어줍니다 */
+    if(matched.length === 0){
+      matched = students.filter(s=> baseName(s.name) === baseName(r.name) && s.name !== r.name && alive(s));
+      viaBase = matched.length > 0;
+    }
+
     if(matched.length > 1){
       ambiguous.push({ ...r, examClass, grade, count: matched.length });
       return;
     }
     if(matched.length === 1){
       const s = matched[0];
+      claimed.add(s.id);
       const payload = {};
       const TFIELD = FIELD === "examClass" ? "examTeacher" : "regularTeacher";
       const AFIELD = FIELD === "examClass" ? "examAssistant" : "regularAssistant";
@@ -3247,9 +3291,9 @@ function buildClassImportPlan(rows, field){
       }
       if(r.assistant && (s[AFIELD] || "") !== r.assistant) payload[AFIELD] = r.assistant;   // 부담임(선행)
       if(grade && (s.grade || "") !== grade) payload.grade = grade;
-      if(Object.keys(payload).length === 0){ same.push({ ...r, examClass }); return; }
+      if(Object.keys(payload).length === 0){ same.push({ ...r, examClass, viaBase, storedName: s.name }); return; }
       updates.push({
-        id: s.id, name: s.name, school: s.school,
+        id: s.id, name: s.name, school: s.school, viaBase, sheetName: r.name,
         before: { examClass: s.examClass || "", teacher: s.teacher || "", grade: s.grade || "" },
         payload
       });
@@ -3290,6 +3334,17 @@ function renderClassImportPlan(plan, fileName){
     <div class="imp-card same"><div class="n">${plan.same.length}</div><div class="l">이미 같음</div></div>
     ${plan.ambiguous.length ? `<div class="imp-card warn"><div class="n">${plan.ambiguous.length}</div><div class="l">동명이인 — 건너뜀</div></div>` : ""}
   </div>`;
+
+  const viaBaseList = plan.updates.filter(u=>u.viaBase).concat(plan.same.filter(x=>x.viaBase));
+  if(viaBaseList.length){
+    html += `<div class="imp-sec"><h5>이름 뒤 숫자를 떼고 이어붙인 학생 ${viaBaseList.length}명</h5>
+      <p class="imp-note">표에는 번호가 붙어 있지만 같은 학교에 그 이름이 한 명뿐이라, 새로 만들지 않고 기존 학생에 넣었습니다. 다른 학생이라면 적용하지 마시고 알려주세요.</p>
+      <div class="imp-list">${viaBaseList.slice(0,60).map(u=>`<div class="imp-row">
+        <span class="who">${escapeHtml(u.sheetName || u.name)}</span>
+        <span class="sch">${escapeHtml(shortSchool(u.school))}</span>
+        <span class="chg">→ 기존 학생 <b>${escapeHtml(u.name || u.storedName || "")}</b> 에 반영</span></div>`).join("")}</div>
+      ${viaBaseList.length > 60 ? `<p class="imp-note">외 ${viaBaseList.length - 60}명</p>` : ""}</div>`;
+  }
 
   const listOf = (arr, render, limit=60) =>
     `<div class="imp-list">${arr.slice(0, limit).map(render).join("")}</div>` +
@@ -5400,6 +5455,23 @@ function findSchoolVariants(){
       names: groups[k].sort((a,b)=> (counts[b].students+counts[b].exams) - (counts[a].students+counts[a].exams) || b.length-a.length),
       counts
     }));
+}
+
+/* 같은 학교에 이름 뒤 숫자만 다른 학생이 있으면 "합쳐야 할 후보"로 봅니다.
+   예: 한산중 김현서 / 한산중 김현서2 — 가져오기 과정에서 한 명이 둘로 갈라진 경우 */
+function mergeSuspects(){
+  const m = {};
+  students.forEach(s=>{
+    if(statusOf(s) === "퇴원") return;
+    const k = baseName(s.name) + "|" + shortSchool((s.school||"").replace(/\s+/g,""));
+    if(!baseName(s.name)) return;
+    (m[k] = m[k] || []).push(s);
+  });
+  const out = [];
+  Object.values(m).forEach(list=>{
+    if(list.length > 1 && new Set(list.map(x=>x.name)).size > 1) out.push(...list);
+  });
+  return out;
 }
 
 /* 같은 이름을 쓰는 학생 세기 (동명이인 — 삭제하지 않고 표시만 합니다) */
