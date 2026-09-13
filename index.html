@@ -975,6 +975,63 @@
   .merge-chg{margin-top:7px; font-size:11.5px; color:var(--c120); background:var(--c111); padding:6px 9px; border-radius:8px;}
   .merge-chg.none{color:var(--c2); background:var(--c55);}
 
+  /* B-2 오늘 수업 브리핑 */
+  .brief-bar{display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin:12px 0 14px;}
+  .brief-bar select{min-width:130px;}
+  .brief-grp{margin-bottom:16px;}
+  .brief-grp h5{margin:0 0 7px; font-size:12.5px; font-weight:900; display:flex; align-items:center; gap:7px;}
+  .brief-grp h5 .cnt{font-weight:700; font-size:11px; color:var(--c8);}
+  .brief-row{display:flex; align-items:center; gap:9px; padding:6px 9px; border-radius:9px; font-size:12.5px;}
+  .brief-row:nth-child(odd){background:var(--c2);}
+  .brief-row .nm{font-weight:800; min-width:66px;}
+  .brief-row .sch{font-size:11.5px; color:var(--c8); min-width:62px;}
+  .brief-row .cls{font-size:11px; color:var(--c8);}
+  .brief-row .rest{margin-left:auto; display:flex; align-items:center; gap:7px;}
+  .brief-row .scope{font-size:11px; color:var(--c8); max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .brief-row .noscope{color:var(--rust); font-weight:700;}
+
+  /* B-1 시험정보 입력 — 학교 목록 옆에 두기 */
+  .exam-layout{display:grid; grid-template-columns:210px 1fr; gap:16px; align-items:start;}
+  .exam-side{position:sticky; top:12px; background:var(--c2); border:1px solid var(--c14);
+    border-radius:12px; overflow:hidden; max-height:72vh; display:flex; flex-direction:column;}
+  .es-head{display:flex; align-items:center; gap:6px; padding:9px 11px; border-bottom:1px solid var(--c14);
+    font-size:11.5px; font-weight:800; color:var(--c8);}
+  .es-filter{margin-left:auto; font-size:10.5px; font-weight:800; padding:3px 8px; border-radius:999px;
+    border:1px solid var(--c14); background:transparent; color:var(--c8); cursor:pointer;}
+  .es-filter.on{background:var(--mustard); border-color:var(--mustard); color:var(--c27);}
+  .es-list{overflow-y:auto; padding:5px;}
+  .es-item{display:flex; align-items:center; gap:7px; width:100%; text-align:left; cursor:pointer;
+    padding:7px 9px; border:none; background:transparent; border-radius:8px; font-size:12.5px; font-weight:700;
+    color:var(--ink);}
+  .es-item:hover{background:var(--c14);}
+  .es-item.on{background:var(--board); color:var(--chalk);}
+  .es-item .dot{width:7px; height:7px; border-radius:50%; flex:0 0 auto; background:var(--c14);}
+  .es-item .dot.ok{background:var(--green);}
+  .es-item .dot.todo{background:var(--rust);}
+  .es-item .dot.none{background:var(--c14);}
+  .es-item .n{margin-left:auto; font-size:10.5px; font-weight:700; opacity:.7;}
+  @media (max-width:860px){
+    .exam-layout{grid-template-columns:1fr;}
+    .exam-side{position:static; max-height:none;}
+    .es-list{display:flex; flex-wrap:wrap; gap:4px; max-height:150px;}
+    .es-item{width:auto;}
+  }
+
+  /* 퇴원 후보 줄 */
+  .leave-row{display:flex; align-items:center; gap:9px; cursor:pointer;}
+  .leave-row input{margin:0; flex:0 0 auto;}
+  .leave-tag{background:var(--rust); color:#fff; font-size:10px; font-weight:800; padding:1px 6px; border-radius:999px; margin-right:5px;}
+
+  /* 변경 이력 */
+  .auto-bak h4{display:flex; align-items:center; gap:6px;}
+  .hist-row{display:flex; align-items:baseline; gap:9px; padding:5px 0; border-top:1px dashed var(--c13); font-size:12px;}
+  .hist-row:first-child{border-top:none;}
+  .hist-row .t{color:var(--c8); font-size:11px; min-width:64px;}
+  .hist-row .w{font-weight:800; min-width:96px;}
+  .hist-row .d{color:var(--c8); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .hist-row .n{font-size:10.5px; font-weight:800; color:var(--mustard);}
+  #histList{max-height:230px; overflow-y:auto;}
+
   /* 자동 백업 */
   .auto-bak{margin-top:16px; padding:14px 16px; background:var(--c33); border:1px solid var(--c42); border-radius:12px;}
   .auto-bak h4{margin:0 0 10px; font-size:13px; font-weight:900;}
@@ -1209,12 +1266,38 @@
   @keyframes toastIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
 
   @media print{
-    header.app-head, nav.tabs, #setupBanner, .filter-line, .print-hide{display:none !important;}
-    section.panel{border:none; padding:0;}
-    body{background:var(--c1);}
+    @page{size:A4; margin:12mm 10mm;}
+    header.app-head, nav.tabs, #setupBanner, .filter-line, .print-hide,
+    .students-toolbar, .stu-idx, .bulkbar, .data-tools, .drive-box, .auto-bak,
+    .exam-side, .es-head, #recentSearch, .badge-info, .badge-warn,
+    .panel-desc, .close-x, .brief-bar, .seg, .view-toggle{display:none !important;}
+    section.panel{border:none; padding:0; box-shadow:none;}
+    body{background:#fff; color:#000;}
     .scope-table{min-width:0; font-size:11px;}
     .scope-table tr.missing{background:var(--c118);}
+
+    /* 인쇄할 때만 나오는 제목 */
+    .print-title{display:block !important; font-size:15px; font-weight:800; margin:0 0 10px;}
+    .print-title .sub{font-weight:600; font-size:11.5px; color:#555; margin-left:8px;}
+
+    /* 줄이 페이지 사이에서 잘리지 않게 */
+    tr, .brief-row, .stu-card, .tl-row, .brief-grp{break-inside:avoid; page-break-inside:avoid;}
+    .brief-grp h5{break-after:avoid;}
+
+    /* 학생 표: 인쇄에 필요한 칸만 */
+    #studentTableWrap{overflow:visible !important; max-height:none !important;}
+    .student-table{width:100%; font-size:11px; border-collapse:collapse;}
+    .student-table th, .student-table td{border-bottom:1px solid #ddd; padding:4px 5px;}
+    .student-table td.chk, .student-table th.chk,
+    .student-table td.act, .student-table th.act{display:none !important;}
+
+    /* 창이 떠 있으면 그 창만 인쇄 */
+    body:has(.overlay.active) > *:not(.overlay){display:none !important;}
+    .overlay.active{position:static; display:block !important; background:none; padding:0;}
+    .overlay.active .modal{max-width:none; max-height:none; box-shadow:none; padding:0; overflow:visible;}
+    .overlay:not(.active){display:none !important;}
   }
+  .print-title{display:none;}
 
   /* ---------- Overlay / Modal ---------- */
   .overlay{ display:none; position:fixed; inset:0; background:var(--c69); align-items:center; justify-content:center; z-index:50; padding:20px; }
@@ -1430,6 +1513,7 @@
         <h2 class="panel-title">캘린더</h2>
         <p class="panel-desc">시험 기간 동안 매일 알약이 표시돼요. 알약을 누르면 상세 정보가 열립니다.</p>
       </div>
+      <button class="btn" id="todayBriefBtn">📋 오늘 수업</button>
     </div>
 
     <div class="summary-row" id="summaryRow"></div>
@@ -1498,11 +1582,22 @@
       <div class="exam-summary" id="examSummary"></div>
       <div class="exam-actions">
         <span class="dirty-count" id="examDirtyCount"></span>
+        <button class="btn secondary small" id="examPrevSchool" title="이전 학교">‹ 이전</button>
+        <button class="btn secondary small" id="examNextSchool" title="다음 학교">다음 ›</button>
         <button class="btn" id="saveAllExamBtn">이 학교 전체 저장</button>
       </div>
     </div>
 
-    <div class="exam-grid" id="examCardsGrid"></div>
+    <div class="exam-layout">
+      <aside class="exam-side">
+        <div class="es-head">
+          <span id="examSideCount">학교 0곳</span>
+          <button class="es-filter" id="examOnlyTodo" title="범위가 아직 안 들어간 학교만 봅니다">남은 곳만</button>
+        </div>
+        <div class="es-list" id="examSchoolList"></div>
+      </aside>
+      <div class="exam-grid" id="examCardsGrid"></div>
+    </div>
   </section>
 
   <!-- 학교별 일정 (타임라인) -->
@@ -1669,7 +1764,8 @@
         <div class="idx-list" id="stuIdxList"></div>
       </div>
 
-      <div class="table-wrap">
+      <div class="print-title" id="stuPrintTitle"></div>
+    <div class="table-wrap">
         <div class="stu-cards" id="studentCards" style="display:none;"></div>
         <div class="table-scroll" id="studentTableWrap">
           <table class="student-table">
@@ -1719,11 +1815,18 @@
       <span class="dt-label">데이터 관리</span>
       <button class="btn secondary small edit-only" id="promoteBtn">🎓 학년 올리기</button>
       <button class="btn secondary small edit-only" id="cleanupBtn">🧹 데이터 정리</button>
+      <button class="btn secondary small print-hide" id="stuPrintBtn">🖨 명단 인쇄</button>
       <button class="btn secondary small" id="backupBtn">💾 전체 백업</button>
       <button class="btn secondary small edit-only" id="restoreBtn">↩ 백업 복원</button>
       <input type="file" id="restoreFileInput" accept=".json" style="display:none;">
       <button class="btn secondary small edit-only" id="pwChangeBtn">🔑 비밀번호 바꾸기</button>
       <span id="backupStatus" style="font-size:11.5px; color:var(--c2);"></span>
+    </div>
+
+    <div class="auto-bak" id="histBox">
+      <h4>변경 이력 <span class="hint">이 브라우저에 최근 200건이 남습니다</span>
+        <button class="btn secondary small print-hide" id="histClear" style="margin-left:auto;">기록 지우기</button></h4>
+      <div id="histList"></div>
     </div>
 
     <div class="auto-bak" id="autoBakBox">
@@ -1812,6 +1915,24 @@
       <button class="btn" id="promoteRun">학년 올리기 실행</button>
       <button class="btn secondary" id="promoteCancel">취소</button>
     </div>
+  </div>
+</div>
+
+<!-- 오늘 수업 브리핑 -->
+<div class="overlay" id="briefModal">
+  <div class="modal" style="max-width:680px;">
+    <button class="close-x" id="closeBriefModal">&times;</button>
+    <h3>오늘 수업</h3>
+    <p class="modal-meta" id="briefMeta"></p>
+    <div class="brief-bar">
+      <div class="seg" id="briefDaySeg">
+        <button class="seg-btn" data-d="월수금">월수금</button>
+        <button class="seg-btn" data-d="화목토">화목토</button>
+      </div>
+      <select id="briefTeacher"></select>
+      <button class="btn secondary small" id="briefPrint">🖨 인쇄</button>
+    </div>
+    <div id="briefBody"></div>
   </div>
 </div>
 
@@ -2043,6 +2164,7 @@ function onDataChange(){
     if(lb) lb.style.display = "none";
   }
   saveAutoBackup();
+  renderHistory();
   renderStudents();
   populateDropdowns();
   renderCalendar();
@@ -2056,10 +2178,12 @@ function onDataChange(){
 }
 
 async function addStudent(s){
+  logChange("학생 추가", `${s.name || ""} ${shortSchool(s.school || "")}`.trim(), 1);
   if(isConfigured){ await addDoc(collection(db,"students"), s); }
   else{ students.push({id:"s"+Date.now(), ...s}); saveLocal("kladi_students", students); onDataChange(); }
 }
 async function addStudentsBulk(list){
+  logChange("학생 일괄 추가", list.slice(0,3).map(x=>x.name).join(", ") + (list.length>3 ? " 외" : ""), list.length);
   const newIds = [];
   if(isConfigured){
     for(const s of list){ const ref = await addDoc(collection(db,"students"), s); newIds.push(ref.id); }
@@ -2075,6 +2199,7 @@ async function addStudentsBulk(list){
   return newIds;
 }
 async function removeStudent(id){
+  { const s = students.find(x=>x.id===id); if(s) logChange("학생 삭제", `${s.name} ${shortSchool(s.school||"")}`, 1); }
   if(isConfigured){ await deleteDoc(doc(db,"students",id)); }
   else{ students = students.filter(s=>s.id!==id); saveLocal("kladi_students", students); onDataChange(); }
 }
@@ -2098,6 +2223,7 @@ async function updateStudentsBulk(ids, payload){
   }
 }
 async function removeStudentsBulk(ids){
+  logChange("학생 일괄 삭제", ids.map(i=>(students.find(x=>x.id===i)||{}).name).filter(Boolean).slice(0,3).join(", ") + (ids.length>3?" 외":""), ids.length);
   if(isConfigured){
     for(const id of ids){ await deleteDoc(doc(db,"students",id)); }
   } else {
@@ -2106,6 +2232,8 @@ async function removeStudentsBulk(ids){
   }
 }
 async function updateStudentDoc(id, payload){
+  { const s = students.find(x=>x.id===id);
+    logChange("학생 수정", `${s ? s.name : ""} — ${Object.keys(payload).map(k=> MERGE_LABEL[k] || k).join(", ")}`, 1); }
   if(isConfigured){ await updateDoc(doc(db,"students",id), payload); }
   else{
     const s = students.find(st=>st.id===id);
@@ -2131,6 +2259,7 @@ async function updateExamDoc(id, payload){
   }
 }
 async function removeExam(id){
+  { const e = exams.find(x=>x.id===id); if(e) logChange("시험 삭제", `${shortSchool(e.school)} ${e.grade} ${e.examName}`, 1); }
   if(isConfigured){ await deleteDoc(doc(db,"exams",id)); }
   else{ exams = exams.filter(e=>e.id!==id); saveLocal("kladi_exams", exams); onDataChange(); }
 }
@@ -2171,6 +2300,8 @@ async function restoreExamDoc(exam){
   else { exams.push({...exam}); saveLocal("kladi_exams", exams); onDataChange(); }
 }
 async function restoreStudentFields(snapshot){
+  logChange("여러 학생 값 바꿈",
+    (snapshot[0] ? Object.keys(snapshot[0].payload || {}).map(k=> MERGE_LABEL[k] || k).join(", ") : ""), snapshot.length);
   // snapshot: [{id, payload}]
   if(isConfigured){
     for(const it of snapshot){ await updateDoc(doc(db,"students",it.id), it.payload); }
@@ -3680,6 +3811,13 @@ document.getElementById("excelFileInput").addEventListener("change", (e)=>{
 });
 
 /* ---------- 시험정보 입력 탭 ---------- */
+document.getElementById("examPrevSchool").addEventListener("click", ()=> stepExamSchool(-1));
+document.getElementById("examNextSchool").addEventListener("click", ()=> stepExamSchool(1));
+document.getElementById("examOnlyTodo").addEventListener("click", ()=>{
+  examOnlyTodo = !examOnlyTodo;
+  renderExamSchoolList();
+});
+
 document.getElementById("examSchoolSelect").addEventListener("change", async (e)=>{
   const dirty = document.querySelectorAll("#examCardsGrid .exam-card.dirty").length;
   if(dirty && !await askConfirm(`저장하지 않은 카드가 ${dirty}개 있어요. 학교를 바꾸면 사라집니다. 계속할까요?`)){
@@ -3860,6 +3998,8 @@ function sameSchool(a, b){
 
 let classImportRows = null;
 let classImportField = "examClass";   // examClass | regularClass
+let classImportLeavers = [];          // 퇴원생 시트에서 읽은 명단
+let leavePick = new Set();            // 퇴원 처리할 학생 id
 
 function buildClassImportPlan(rows, field){
   const FIELD = field || classImportField;
@@ -3919,7 +4059,26 @@ function buildClassImportPlan(rows, field){
     add[FIELD === "examClass" ? "examAssistant" : "regularAssistant"] = r.assistant || "";
     adds.push(add);
   });
-  return { updates, adds, same, ambiguous };
+  /* 명부에 없는데 아직 재원으로 남아 있는 학생 — 퇴원 후보 */
+  const grades = new Set(rows.map(r=> gradeFromClassName(r.cls)).filter(Boolean));
+  const inSheet = new Set();
+  rows.forEach(r=>{
+    students.forEach(s=>{
+      if(sameSchool(s.school, r.school) &&
+         (s.name === r.name || baseName(s.name) === baseName(r.name))) inSheet.add(s.id);
+    });
+  });
+  const leaveNames = new Map(classImportLeavers.map(l=> [baseName(l.name), l]));
+  const missing = students
+    .filter(s=> statusOf(s) === "재원" && !inSheet.has(s.id) && (grades.size === 0 || grades.has(s.grade)))
+    .map(s=>{
+      const hit = leaveNames.get(baseName(s.name));
+      return { id: s.id, name: s.name, school: s.school,
+               examClass: s.examClass || "", regularClass: s.regularClass || "",
+               listed: !!hit, date: hit ? excelDate(hit.date) : "", reason: hit ? hit.reason : "" };
+    });
+
+  return { updates, adds, same, ambiguous, missing };
 }
 
 function changeText(before, payload){
@@ -3985,11 +4144,36 @@ function renderClassImportPlan(plan, fileName){
         <span class="sch">${escapeHtml(shortSchool(a.school))}</span>
         <span class="chg">같은 학교에 동명이인 ${a.count}명 — 학생 관리에서 직접 지정해주세요</span></div>`) + `</div>`;
   }
+  const missing = plan.missing || [];
+  if(missing.length){
+    const listed = missing.filter(m=>m.listed), unlisted = missing.filter(m=>!m.listed);
+    html += `<div class="imp-sec"><h5>이 명부에 없는 재원 학생 ${missing.length}명</h5>
+      <p class="imp-note">체크한 학생만 <b>퇴원</b>으로 바꿉니다. 삭제가 아니라 상태만 바뀌고, 되돌릴 수 있어요.
+      ${listed.length ? `퇴원생 표에 적힌 ${listed.length}명은 미리 체크해 뒀습니다.` : ""}</p>
+      <div class="imp-list">` +
+      [...listed, ...unlisted].map(m=>`<label class="imp-row leave-row">
+        <input type="checkbox" class="leave-chk" data-id="${escapeHtml(m.id)}" ${m.listed ? "checked" : ""}>
+        <span class="who">${escapeHtml(m.name)}</span>
+        <span class="sch">${escapeHtml(shortSchool(m.school))}</span>
+        <span class="chg">${m.listed
+          ? `<b class="leave-tag">퇴원 명부</b> ${escapeHtml(m.date)} ${escapeHtml(m.reason)}`
+          : `${escapeHtml(m.examClass || "내신반 없음")} · ${escapeHtml(m.regularClass || "정규반 없음")}`}</span>
+      </label>`).join("") + `</div></div>`;
+  }
+
   const other = classImportField === "examClass" ? "정규반" : "시험대비 반";
   html += `<p class="imp-note">학번과 ${other} 등 다른 값은 건드리지 않습니다. 적용 뒤 “되돌리기”로 한 번에 취소할 수 있어요.</p>`;
 
   document.getElementById("classImportBody").innerHTML = html;
-  document.getElementById("classImportApply").disabled = (plan.updates.length + plan.adds.length) === 0;
+  leavePick = new Set(missing.filter(m=>m.listed).map(m=>m.id));
+  document.getElementById("classImportBody").querySelectorAll(".leave-chk").forEach(cb=>
+    cb.addEventListener("change", ()=>{
+      cb.checked ? leavePick.add(cb.dataset.id) : leavePick.delete(cb.dataset.id);
+      document.getElementById("classImportApply").disabled =
+        (plan.updates.length + plan.adds.length + leavePick.size) === 0;
+    }));
+  document.getElementById("classImportApply").disabled =
+    (plan.updates.length + plan.adds.length + leavePick.size) === 0;
   document.getElementById("classImportModal").classList.add("active");
 }
 
@@ -3998,6 +4182,36 @@ document.getElementById("classImportBtn").addEventListener("click", ()=>{
   document.getElementById("classImportInput").click();
 });
 /* 반 배정 표 읽기 — 시트 목록을 받아 미리보기까지 띄웁니다. 못 읽으면 false */
+/* "분기 퇴원생 현황" 표를 읽습니다. 없으면 빈 배열 */
+function parseLeaveSheet(grid){
+  const out = [];
+  for(let r = 0; r < grid.length; r++){
+    const row = grid[r] || [];
+    for(let c = 0; c < row.length; c++){
+      if(!/퇴원생/.test(cellStr(grid, r, c))) continue;
+      /* 바로 아래 줄이 제목줄입니다 — 학생명 / 퇴원일 / 퇴원사유 위치를 찾습니다 */
+      const hr = r + 1, col = {};
+      for(let cc = c; cc < c + 10; cc++){
+        const lab = normLabel(cellStr(grid, hr, cc));
+        if(lab && !(lab in col)) col[lab] = cc;
+      }
+      if(col["학생명"] === undefined) continue;
+      for(let rr = hr + 1; rr < grid.length; rr++){
+        const nm = cellStr(grid, rr, col["학생명"]);
+        if(!nm || /^\d+(\.\d+)?$/.test(nm)) continue;
+        out.push({
+          name: nm,
+          cls:    col["수강반"]   !== undefined ? cellStr(grid, rr, col["수강반"])   : "",
+          date:   col["퇴원일"]   !== undefined ? cellStr(grid, rr, col["퇴원일"])   : "",
+          reason: col["퇴원사유"] !== undefined ? cellStr(grid, rr, col["퇴원사유"]) : ""
+        });
+      }
+      return out;
+    }
+  }
+  return out;
+}
+
 function openClassImport(grids, fileName, quiet){
   let rows = [];
   grids.forEach(g=>{ rows = rows.concat(parseClassSheet(g)); });
@@ -4008,6 +4222,8 @@ function openClassImport(grids, fileName, quiet){
     return false;
   }
   classImportRows = rows;
+  classImportLeavers = [];
+  grids.forEach(g=>{ classImportLeavers = classImportLeavers.concat(parseLeaveSheet(g)); });
   /* 파일 이름으로 어느 반인지 먼저 추측해둡니다 (바꿀 수 있어요) */
   const fn = (fileName || "").replace(/\s+/g, "");
   if(/정규|분기/.test(fn) && !/내신|시험대비/.test(fn)) classImportField = "regularClass";
@@ -4067,12 +4283,22 @@ document.getElementById("classImportApply").addEventListener("click", async (ev)
   if(plan.updates.length) await restoreStudentFields(plan.updates.map(u=>({id:u.id, payload:u.payload})));
   const addedIds = plan.adds.length ? await addStudentsBulk(plan.adds) : [];
 
+  /* 명부에 없어 체크한 학생은 퇴원으로 */
+  const leaveIds = [...leavePick];
+  const leaveBefore = leaveIds.map(id=>{
+    const s = students.find(x=> x.id === id);
+    return { id, payload: { status: statusOf(s) } };
+  });
+  if(leaveIds.length) await restoreStudentFields(leaveIds.map(id=>({ id, payload:{ status:"퇴원" } })));
+
   btn.disabled = false; btn.textContent = "적용하기";
   closeClassImport();
 
-  showToast(`반 배정 ${plan.updates.length}명 변경, ${addedIds.length}명 추가했어요.`, {
+  showToast(`반 배정 ${plan.updates.length}명 변경, ${addedIds.length}명 추가` +
+            (leaveIds.length ? `, ${leaveIds.length}명 퇴원 처리` : "") + `했어요.`, {
     type:"ok", actionLabel:"되돌리기",
     onAction: async ()=>{
+      if(leaveBefore.length) await restoreStudentFields(leaveBefore);
       if(undoFields.length) await restoreStudentFields(undoFields);
       if(addedIds.length) await removeStudentsBulk(addedIds);
       showToast("가져오기를 되돌렸어요.", {type:"warn"});
@@ -4533,7 +4759,224 @@ function examCardHtml(school, grade, examName){
   `;
 }
 
+/* ---------- 변경 이력 (이 브라우저에 최근 200건) ---------- */
+const HIST_KEY = "kladi_history";
+const HIST_KEEP = 200;
+
+function readHistory(){
+  try{ return JSON.parse(localStorage.getItem(HIST_KEY) || "[]"); }catch(e){ return []; }
+}
+function logChange(what, detail, count){
+  const list = readHistory();
+  list.unshift({ at: new Date().toISOString(), what, detail: detail || "", count: count || 0 });
+  try{ localStorage.setItem(HIST_KEY, JSON.stringify(list.slice(0, HIST_KEEP))); }catch(e){}
+  renderHistory();
+}
+function histTime(iso){
+  const d = new Date(iso);
+  const sameDay = d.toDateString() === today.toDateString();
+  const hm = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  return sameDay ? `오늘 ${hm}` : `${d.getMonth()+1}/${d.getDate()} ${hm}`;
+}
+function renderHistory(){
+  const box = document.getElementById("histList");
+  if(!box) return;
+  const list = readHistory();
+  box.innerHTML = list.length === 0
+    ? `<p class="imp-note">아직 기록이 없어요.</p>`
+    : list.slice(0, 40).map(h=>`<div class="hist-row">
+        <span class="t">${escapeHtml(histTime(h.at))}</span>
+        <span class="w">${escapeHtml(h.what)}</span>
+        <span class="d">${escapeHtml(h.detail)}</span>
+        ${h.count ? `<span class="n">${h.count}건</span>` : ""}
+      </div>`).join("") + (list.length > 40 ? `<p class="imp-note">외 ${list.length-40}건 더 있어요.</p>` : "");
+}
+document.getElementById("histClear")?.addEventListener("click", async ()=>{
+  if(!await askConfirm("기록을 모두 지울까요?\n데이터는 그대로이고 기록만 없어집니다.", {title:"변경 이력 지우기", yes:"지우기"})) return;
+  try{ localStorage.removeItem(HIST_KEY); }catch(e){}
+  renderHistory();
+});
+
+/* ---------- 인쇄 ---------- */
+/* 지금 걸어둔 조건을 제목에 적어 종이만 봐도 무슨 명단인지 알 수 있게 합니다 */
+function printFilterText(){
+  const bits = [];
+  if(stuF.school) bits.push(shortSchool(stuF.school));
+  if(stuF.grade) bits.push(stuF.grade);
+  if(stuF.teacher) bits.push(stuF.teacher + " 선생님");
+  if(stuF.regularClass) bits.push("정규 " + stuF.regularClass);
+  if(stuF.examClass) bits.push("내신 " + stuF.examClass);
+  if(showIncompleteOnly) bits.push("정규반 미배정");
+  if(showExamIncompleteOnly) bits.push("내신반 미배정");
+  if(showMergeOnly) bits.push("합칠 후보");
+  const q = document.getElementById("studentSearch").value.trim();
+  if(q) bits.push(`검색 "${q}"`);
+  return bits.join(" · ");
+}
+
+document.getElementById("stuPrintBtn").addEventListener("click", ()=>{
+  const n = filteredStudents().length;
+  const cond = printFilterText();
+  const d = `${today.getFullYear()}. ${today.getMonth()+1}. ${today.getDate()}`;
+  document.getElementById("stuPrintTitle").innerHTML =
+    `학생 명단 <span class="sub">${escapeHtml(cond || "전체")} · ${n}명 · ${d} 기준</span>`;
+  window.print();
+});
+
+/* ---------- 오늘 수업 브리핑 ---------- */
+const DAY_GROUPS = { 월:"월수금", 수:"월수금", 금:"월수금", 화:"화목토", 목:"화목토", 토:"화목토" };
+let briefDay = "", briefTeacherPick = "";
+
+/* 반 이름에 적힌 요일로 이 학생이 오는 날을 봅니다 — "1T2A (화목토 1부)" → 화목토 */
+function dayGroupOf(s){
+  const txt = `${s.regularClass || ""} ${s.examClass || ""}`;
+  if(/월수금/.test(txt)) return "월수금";
+  if(/화목토/.test(txt)) return "화목토";
+  return "";
+}
+
+/* 이 학생의 가장 가까운(아직 안 끝난) 시험 */
+function nextExamOf(s){
+  const tk = todayKey();
+  const mine = exams.filter(e=> sameSchool(e.school, s.school) && e.grade === s.grade && !e.notConducted && e.startDate);
+  const ahead = mine.filter(e=> e.endDate >= tk).sort((a,b)=> a.startDate.localeCompare(b.startDate));
+  return ahead[0] || null;
+}
+
+function openBriefModal(){
+  const dow = "일월화수목금토"[today.getDay()];
+  briefDay = DAY_GROUPS[dow] || "월수금";
+  briefTeacherPick = "";
+  renderBrief();
+  document.getElementById("briefModal").classList.add("active");
+}
+
+function renderBrief(){
+  document.getElementById("briefDaySeg").querySelectorAll(".seg-btn")
+    .forEach(b=> b.classList.toggle("active", b.dataset.d === briefDay));
+
+  const all = students.filter(s=> statusOf(s) === "재원" && dayGroupOf(s) === briefDay);
+  const teachers = uniq(all.map(s=> examTeacherOf(s)).filter(Boolean)).sort((a,b)=> a.localeCompare(b,"ko"));
+  const sel = document.getElementById("briefTeacher");
+  sel.innerHTML = `<option value="">전체 선생님</option>` +
+    teachers.map(t=> `<option value="${escapeHtml(t)}" ${t===briefTeacherPick?"selected":""}>${escapeHtml(t)}</option>`).join("");
+
+  const list = briefTeacherPick ? all.filter(s=> examTeacherOf(s) === briefTeacherPick) : all;
+  const withExam = list.map(s=>{
+    const e = nextExamOf(s);
+    const tk = todayKey();
+    return { s, e, d: e ? (e.startDate <= tk ? 0 : daysBetween(tk, e.startDate)) : 9999 };
+  }).sort((a,b)=> a.d - b.d || (a.s.name||"").localeCompare(b.s.name||"","ko"));
+
+  const dateTxt = `${today.getMonth()+1}월 ${today.getDate()}일(${"일월화수목금토"[today.getDay()]})`;
+  document.getElementById("briefMeta").textContent =
+    `${dateTxt} · ${briefDay} · ${list.length}명` + (briefTeacherPick ? ` · ${briefTeacherPick} 선생님` : "");
+
+  /* 시험이 코앞인 순서로 묶어서 보여줍니다 */
+  const buckets = [
+    { key:"now",  label:"시험 중",        f: x=> x.e && x.d === 0 },
+    { key:"soon", label:"일주일 안",      f: x=> x.e && x.d > 0 && x.d <= 7 },
+    { key:"two",  label:"2주 안",         f: x=> x.e && x.d > 7 && x.d <= 14 },
+    { key:"far",  label:"그 뒤",          f: x=> x.e && x.d > 14 },
+    { key:"none", label:"예정된 시험 없음", f: x=> !x.e },
+  ];
+  let html = "";
+  buckets.forEach(b=>{
+    const rows = withExam.filter(b.f);
+    if(!rows.length) return;
+    html += `<div class="brief-grp"><h5>${b.label} <span class="cnt">${rows.length}명</span></h5>` +
+      rows.map(({s,e,d})=>`<div class="brief-row">
+        <span class="nm">${escapeHtml(s.name)}</span>
+        <span class="sch">${escapeHtml(shortSchool(s.school))}</span>
+        <span class="cls">${escapeHtml(splitCls(s.examClass || s.regularClass)[0] || "")}</span>
+        <span class="rest">
+          ${e ? `<span class="scope ${hasScope(e)?"":"noscope"}">${
+                  hasScope(e) ? escapeHtml((e.examScope || unitsOf(e).join(" · ")).slice(0,40)) : "범위 미입력"}</span>
+                ${ddayBadge(e)}` : ``}
+        </span></div>`).join("") + `</div>`;
+  });
+  document.getElementById("briefModal").querySelector(".modal-meta").dataset.print = "1";
+  document.getElementById("briefBody").innerHTML = html ||
+    `<div class="empty-state">오늘 오는 학생이 없어요. 위에서 요일을 바꿔보세요.</div>`;
+}
+
+document.getElementById("todayBriefBtn").addEventListener("click", openBriefModal);
+document.getElementById("closeBriefModal").addEventListener("click", ()=>
+  document.getElementById("briefModal").classList.remove("active"));
+document.getElementById("briefModal").addEventListener("click", (e)=>{
+  if(e.target.id === "briefModal") e.currentTarget.classList.remove("active");
+});
+document.getElementById("briefDaySeg").addEventListener("click", (e)=>{
+  const b = e.target.closest(".seg-btn"); if(!b) return;
+  briefDay = b.dataset.d; renderBrief();
+});
+document.getElementById("briefTeacher").addEventListener("change", (e)=>{
+  briefTeacherPick = e.target.value; renderBrief();
+});
+document.getElementById("briefPrint").addEventListener("click", ()=> window.print());
+
+/* 학교별 상태: 범위가 다 들어갔는지 / 남았는지 */
+function examSchoolState(school){
+  const ss = students.filter(s=> s.school === school && statusOf(s) !== "퇴원");
+  const grades = sortGrades(uniq(ss.map(s=> s.grade))).filter(Boolean);
+  let total = 0, filled = 0;
+  grades.forEach(g=> EXAM_TYPES.forEach(n=>{
+    const e = findExam(school, g, n);
+    if(!e) return;
+    if(e.notConducted) return;            /* 미실시는 셈에서 빼요 */
+    total++;
+    if(hasScope(e)) filled++;
+  }));
+  return { count: ss.length, total, filled,
+           state: total === 0 ? "none" : (filled >= total ? "ok" : "todo") };
+}
+
+let examOnlyTodo = false;
+
+function renderExamSchoolList(){
+  const box = document.getElementById("examSchoolList");
+  if(!box) return;
+  const schools = uniq(students.filter(s=> statusOf(s) !== "퇴원").map(s=> s.school).filter(Boolean)).sort((a,b)=> a.localeCompare(b,"ko"));
+  const rows = schools.map(sc=> ({ sc, ...examSchoolState(sc) }));
+  const shown = examOnlyTodo ? rows.filter(r=> r.state !== "ok") : rows;
+  const todoN = rows.filter(r=> r.state === "todo").length;
+  document.getElementById("examSideCount").textContent =
+    `학교 ${rows.length}곳` + (todoN ? ` · 남은 곳 ${todoN}` : " · 모두 입력됨");
+  document.getElementById("examOnlyTodo").classList.toggle("on", examOnlyTodo);
+  box.innerHTML = shown.length === 0
+    ? `<p class="imp-note" style="padding:8px 10px;">해당하는 학교가 없어요.</p>`
+    : shown.map(r=>`<button class="es-item ${r.sc===currentExamSchool?"on":""}" data-sc="${escapeHtml(r.sc)}">
+        <span class="dot ${r.state}"></span>${escapeHtml(shortSchool(r.sc))}
+        <span class="n">${r.total ? r.filled + "/" + r.total : r.count + "명"}</span></button>`).join("");
+  box.querySelectorAll(".es-item").forEach(b=> b.addEventListener("click", ()=> goExamSchool(b.dataset.sc)));
+}
+
+/* 학교 바꾸기 — 저장 안 한 카드가 있으면 먼저 물어봅니다 */
+async function goExamSchool(school){
+  if(school === currentExamSchool) return;
+  const dirty = document.querySelectorAll("#examCardsGrid .exam-card.dirty").length;
+  if(dirty && !await askConfirm(`저장하지 않은 카드가 ${dirty}개 있어요. 학교를 바꾸면 사라집니다. 계속할까요?`,
+      {title:"학교 바꾸기", yes:"바꾸기"})) return;
+  document.querySelectorAll("#examCardsGrid .exam-card.dirty").forEach(c=> c.classList.remove("dirty"));
+  currentExamSchool = school;
+  const sel = document.getElementById("examSchoolSelect");
+  if(sel) sel.value = school;
+  document.getElementById("examCardsGrid").dataset.school = "";
+  renderExamTab();
+  updateDirtyCount();
+}
+
+/* 목록에서 이전·다음 학교로 (남은 곳만 보기가 켜져 있으면 그 안에서 이동) */
+function stepExamSchool(dir){
+  const items = [...document.querySelectorAll("#examSchoolList .es-item")].map(b=> b.dataset.sc);
+  if(items.length === 0) return;
+  const i = items.indexOf(currentExamSchool);
+  const next = items[(i < 0 ? 0 : i + dir + items.length) % items.length];
+  goExamSchool(next);
+}
+
 function renderExamTab(){
+  renderExamSchoolList();
   const summaryEl = document.getElementById("examSummary");
   const gridEl = document.getElementById("examCardsGrid");
 
@@ -6130,7 +6573,7 @@ function filledCount(s){ return MERGE_FIELDS.filter(f=> (s[f]||"").toString().tr
 
 const MERGE_LABEL = {studentNumber:"학번", teacher:"담임", examTeacher:"내신 담임", examClass:"내신반",
   examAssistant:"내신 부담임", regularTeacher:"정규 담임", regularAssistant:"정규 부담임",
-  regularClass:"정규반", grade:"학년"};
+  regularClass:"정규반", grade:"학년", status:"재원 상태", name:"이름", school:"학교"};
 
 /* keep 에 비어 있는 칸을 drop 쪽 값으로 채웁니다 */
 function mergePayload(keep, drops){
