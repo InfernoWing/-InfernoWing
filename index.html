@@ -379,7 +379,8 @@
     #studentTableWrap tbody td[data-c="studentNumber"]{display:none;}
     #studentTableWrap tbody td[data-c="school"],
     #studentTableWrap tbody td[data-c="grade"],
-    #studentTableWrap tbody td[data-c="teacher"],
+    #studentTableWrap tbody td[data-c="examTeacher"],
+    #studentTableWrap tbody td[data-c="regularTeacher"],
     #studentTableWrap tbody td[data-c="regularClass"],
     #studentTableWrap tbody td[data-c="examClass"],
     #studentTableWrap tbody td[data-c="status"]{grid-column:2; display:inline-block; margin-right:6px;}
@@ -416,6 +417,23 @@
   html[data-theme="dark"] .seg .seg-btn.active .n{background:#2c2a22; color:#f3e7c9;}
 
   html{color-scheme:light;}
+  /* 어두운 화면에서 학생 카드의 작은 글씨가 묻히지 않게 밝기를 올립니다 */
+  html[data-theme="dark"] .assign-chip .cl.rg{color:#8ab4d8;}
+  html[data-theme="dark"] .assign-chip .cl.rg i{color:#9fc6e2;}
+  html[data-theme="dark"] .assign-chip .cl.tg{color:#8ab4d8;}
+  html[data-theme="dark"] .assign-chip .cl.tg i{color:#9fc6e2;}
+  html[data-theme="dark"] .assign-chip .cl.tv{color:#9ccb86;}
+  html[data-theme="dark"] .assign-chip .cl.tv i{color:#a9d495;}
+  html[data-theme="dark"] .assign-chip .cl.tea{color:#e79a83;}
+  html[data-theme="dark"] .assign-chip .cl.tea i{color:#eda791;}
+  html[data-theme="dark"] .assign-chip .cl.ex{color:#bda9e0;}
+  html[data-theme="dark"] .assign-chip .cl.ex i{color:#c6b4e6;}
+  html[data-theme="dark"] .assign-chip .cl em{color:#c9c2b2;}
+  html[data-theme="dark"] .tag.rteacher{background:#2c3a46; color:#9fc6e2;}
+  html[data-theme="dark"] .tag.school{background:#2c3a46; color:#9fc6e2;}
+  html[data-theme="dark"] .sub-toggle button.active{color:#2c2208;}
+  html[data-theme="dark"] .idx-item.active .c{color:#2c2208;}
+  html[data-theme="dark"] .att-mark{color:#16281d;}
   html[data-theme="dark"]{color-scheme:dark;}
   .theme-btn{margin-left:8px; background:transparent; border:1.5px solid rgba(255,255,255,.35); color:#fff;
     width:34px; height:34px; border-radius:50%; font-size:15px; cursor:pointer; line-height:1;}
@@ -526,6 +544,7 @@
   .tag{ display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px; margin-right:5px; }
   .tag.school{background:var(--blue-dim); color:var(--blue);}
   .tag.teacher{background:var(--mustard-dim); color:var(--c9);}
+  .tag.rteacher{background:var(--c88); color:var(--c56);}
   .tag.grade{background:var(--violet-dim); color:var(--violet);}
   .tag.clickable{cursor:pointer;}
   .tag.clickable:hover{filter:brightness(0.93);}
@@ -1323,6 +1342,31 @@
   .teacher-group.missing .tname{color:var(--rust);}
   .teacher-group.missing.rg{border-left-color:var(--c95); background:var(--c124);}
   .teacher-group.missing.rg .tname{color:var(--c36);}
+  /* 직전보충 · 점수 */
+  .makeup-bar{display:flex; flex-wrap:wrap; align-items:center; gap:10px; justify-content:space-between;
+    background:var(--c33); border:1px solid var(--c42); border-radius:11px; padding:9px 12px; margin:14px 0 6px;}
+  .mb-left{display:flex; align-items:center; gap:7px; flex-wrap:wrap;}
+  .mb-lbl{font-size:12px; font-weight:900; color:var(--ink);}
+  .makeup-bar input[type=date]{font-size:12.5px; padding:4px 7px;}
+  .makeup-bar input[type=text]{font-size:12.5px; padding:4px 8px; width:120px;}
+  .mb-right{display:flex; align-items:center; gap:10px; margin-left:auto;}
+  .mb-stat{font-size:11.5px; font-weight:700; color:var(--c2);}
+  .mb-stat b{font-size:13px; color:var(--green);}
+  .mb-save{font-size:11px; font-weight:700; color:var(--green); min-width:46px;}
+  .mb-hint{font-size:11.5px; color:var(--c2); margin:0 0 10px;}
+  .chip-top{display:flex; align-items:center; gap:6px; width:100%; margin-bottom:3px;}
+  .chip-top .sname{margin-bottom:0 !important;}
+  .att-mark{display:none; font-size:11px; font-weight:900; color:#fff; background:var(--green);
+    border-radius:999px; width:16px; height:16px; line-height:16px; text-align:center; flex:0 0 auto;}
+  .assign-chip.att .att-mark{display:inline-block;}
+  .assign-chip.att{border-color:var(--green); background:var(--c112); box-shadow:inset 0 0 0 1px var(--green);}
+  .score-in{margin-left:auto; width:52px; font-size:12px; font-weight:800; padding:2px 5px;
+    text-align:center; border:1px solid var(--c42); border-radius:6px; background:var(--paper-card); color:var(--ink);}
+  .score-in::-webkit-outer-spin-button, .score-in::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
+  .score-in[type=number]{-moz-appearance:textfield;}
+  .assign-chip{cursor:pointer;}
+  .assign-chip .score-in{cursor:text;}
+
   .assign-row{display:flex; flex-wrap:wrap; gap:8px;}
   .assign-chip{ display:inline-flex; flex-direction:column; align-items:flex-start; gap:2px;
     border:1.5px solid var(--c5); border-radius:9px; padding:6px 11px; font-size:13px; background:var(--c4); }
@@ -1761,6 +1805,10 @@
           <button data-cf="regularClass" class="active">정규반</button>
           <button data-cf="examClass">시험대비</button>
         </div>
+        <div class="sub-toggle" id="stuTeaToggle" style="display:none;">
+          <button data-tk="exam" class="active">내신 담임</button>
+          <button data-tk="regular">정규 담임</button>
+        </div>
         <div class="idx-list" id="stuIdxList"></div>
       </div>
 
@@ -1776,7 +1824,8 @@
                 <th class="sortable" data-sort="name">이름</th>
                 <th class="sortable" data-sort="school">학교</th>
                 <th class="sortable" data-sort="grade">학년</th>
-                <th class="sortable" data-sort="teacher">담임</th>
+                <th class="sortable" data-sort="examTeacher">내신 담임</th>
+                <th class="sortable" data-sort="regularTeacher">정규 담임</th>
                 <th class="sortable" data-sort="regularClass">정규반</th>
                 <th class="sortable" data-sort="examClass">시험대비 반</th>
                 <th class="sortable" data-sort="status">상태</th>
@@ -2174,7 +2223,8 @@ function onDataChange(){
   renderSummary();
   if(currentDayKey && document.getElementById("dayModal").classList.contains("active")) openDayModal(currentDayKey, true);
   if(currentStudentId && document.getElementById("studentModal").classList.contains("active")) openStudentModal(currentStudentId);
-  if(currentDetailExamId) openDetailModal(currentDetailExamId);
+  /* 점수·참석을 손대는 중이면 창을 다시 그리지 않습니다 (입력하던 게 날아가지 않도록) */
+  if(currentDetailExamId && !detailBusy) openDetailModal(currentDetailExamId);
 }
 
 async function addStudent(s){
@@ -2442,7 +2492,9 @@ function sortGrades(arr){ return [...arr].sort((a,b)=> gradeSortIndex(a)-gradeSo
 /* ---------- 드롭다운/데이터리스트 채우기 ---------- */
 function populateDropdowns(){
   const schools = uniq(students.map(s=>s.school)).sort();
-  const teachers = uniq(students.map(s=>s.teacher)).sort();
+  const teachers = uniq([].concat(
+    students.map(s=> examTeacherOf(s)), students.map(s=> regularTeacherOf(s))
+  )).filter(Boolean).sort();
   const grades = uniq(students.map(s=>s.grade));
 
   document.getElementById("schoolList").innerHTML = schools.map(s=>`<option value="${escapeHtml(s)}">`).join("");
@@ -2501,6 +2553,17 @@ let stuIdxTab = "school";           // school | teacher | class
 let stuClassField = "regularClass"; // regularClass | examClass
 // null = 조건 미적용, "" = 미배정/미지정만 보기
 let stuF = {cho:"", school:"", grade:"", teacher:null, regularClass:null, examClass:null};
+/* 학생 관리에서 '담임'을 볼 때의 기준 — 내신 담임과 정규 담임은 서로 다른 칸입니다 */
+let stuTeacherKind = "exam";                       // exam | regular
+try{ stuTeacherKind = localStorage.getItem("kladi_stutkind") || "exam"; }catch(e){}
+function setStuTeacherKind(v){
+  stuTeacherKind = (v === "regular") ? "regular" : "exam";
+  try{ localStorage.setItem("kladi_stutkind", stuTeacherKind); }catch(e){}
+}
+function stuTeacherOf(s){
+  return stuTeacherKind === "regular" ? regularTeacherOf(s) : examTeacherOf(s);
+}
+function stuTeacherLabel(){ return stuTeacherKind === "regular" ? "정규 담임" : "내신 담임"; }
 let selectedStudents = new Set();
 let lastStuRow = null;
 
@@ -3062,11 +3125,15 @@ try{
 function sortKeyOf(s, key){
   if(key === "grade")  return gradeSortIndex(s.grade || "");
   if(key === "status") return STATUS_LIST.indexOf(statusOf(s));
+  if(key === "examTeacher")    return examTeacherOf(s);
+  if(key === "regularTeacher") return regularTeacherOf(s);
   return (s[key] || "").trim();
 }
 function isEmptyKey(s, key){
   if(key === "status") return false;
   if(key === "grade")  return !(s.grade || "").trim();
+  if(key === "examTeacher")    return !examTeacherOf(s);
+  if(key === "regularTeacher") return !regularTeacherOf(s);
   return !((s[key] || "").trim());
 }
 function compareStudents(a, b, key){
@@ -3111,7 +3178,7 @@ function filteredStudents(){
     if(stuF.cho && chosungOf(s.name)!==stuF.cho) return false;
     if(stuF.school && s.school!==stuF.school) return false;
     if(stuF.grade && s.grade!==stuF.grade) return false;
-    if(stuF.teacher!==null && (s.teacher||"")!==stuF.teacher) return false;
+    if(stuF.teacher!==null && stuTeacherOf(s)!==stuF.teacher) return false;
     if(stuF.regularClass!==null && (s.regularClass||"")!==stuF.regularClass) return false;
     if(stuF.examClass!==null && (s.examClass||"")!==stuF.examClass) return false;
     if(showIncompleteOnly && s.regularClass) return false;
@@ -3119,12 +3186,13 @@ function filteredStudents(){
     if(showSameNameOnly && (sameNameCounts()[(s.name||"").trim()]||0) < 2) return false;
     if(showMergeOnly && !mergeSuspects().some(x=> x.id === s.id)) return false;
     if(searchTerm){
-      const hay = `${s.name||""} ${s.school||""} ${s.teacher||""} ${s.studentNumber||""}`.toLowerCase();
+      const hay = `${s.name||""} ${s.school||""} ${examTeacherOf(s)} ${regularTeacherOf(s)} ${s.studentNumber||""}`.toLowerCase();
       /* ㄱㅈㅁ 처럼 초성만 쳐도 이름이 찾아지도록 */
       const isChosungQuery = /^[ㄱ-ㅎ]+$/.test(searchTerm);
       const hit = isChosungQuery
         ? (nameChosung(s.name).startsWith(searchTerm) ||
-           (searchTerm.length >= 2 && nameChosung(s.teacher).startsWith(searchTerm)))
+           (searchTerm.length >= 2 && (nameChosung(examTeacherOf(s)).startsWith(searchTerm) ||
+                                       nameChosung(regularTeacherOf(s)).startsWith(searchTerm))))
         : (hay.includes(searchTerm) || fuzzyHit(hay, searchTerm));
       if(!hit) return false;
     }
@@ -3246,8 +3314,10 @@ function renderGradeFilters(){
 
 function renderIdxPanel(){
   document.getElementById("stuSubToggle").style.display = stuIdxTab==="class" ? "flex" : "none";
+  document.getElementById("stuTeaToggle").style.display = stuIdxTab==="teacher" ? "flex" : "none";
   document.querySelectorAll("#stuIdxTabs button").forEach(b=> b.classList.toggle("active", b.dataset.tab===stuIdxTab));
   document.querySelectorAll("#stuSubToggle button").forEach(b=> b.classList.toggle("active", b.dataset.cf===stuClassField));
+  document.querySelectorAll("#stuTeaToggle button").forEach(b=> b.classList.toggle("active", b.dataset.tk===stuTeacherKind));
 
   const box = document.getElementById("stuIdxList");
   let html = "";
@@ -3257,11 +3327,12 @@ function renderIdxPanel(){
     html = `<button class="idx-item ${stuF.school===""?"active":""}" data-k="school" data-v="__all">전체 <span class="c">${students.length}</span></button>` +
       names.map(v=>`<button class="idx-item ${stuF.school===v?"active":""}" data-k="school" data-v="${escapeHtml(v)}">${escapeHtml(shortSchool(v))} <span class="c">${counts[v]||0}</span></button>`).join("");
   } else if(stuIdxTab==="teacher"){
-    const counts = {}; students.forEach(s=> { const v=s.teacher||"__none"; counts[v]=(counts[v]||0)+1; });
-    const names = uniq(students.map(s=>s.teacher)).sort();
+    /* 내신 담임과 정규 담임은 서로 다른 칸이라, 위 토글로 고른 기준만 셉니다 */
+    const counts = {}; students.forEach(s=> { const v=stuTeacherOf(s)||"__none"; counts[v]=(counts[v]||0)+1; });
+    const names = uniq(students.map(s=> stuTeacherOf(s))).filter(Boolean).sort();
     html = `<button class="idx-item ${stuF.teacher===null?"active":""}" data-k="teacher" data-v="__all">전체 <span class="c">${students.length}</span></button>` +
       names.map(v=>`<button class="idx-item ${stuF.teacher===v?"active":""}" data-k="teacher" data-v="${escapeHtml(v)}">${escapeHtml(v)}T <span class="c">${counts[v]||0}</span></button>`).join("") +
-      (counts["__none"] ? `<button class="idx-item none-item ${stuF.teacher===""?"active":""}" data-k="teacher" data-v="__none">담임 미지정 <span class="c">${counts["__none"]}</span></button>` : "");
+      (counts["__none"] ? `<button class="idx-item none-item ${stuF.teacher===""?"active":""}" data-k="teacher" data-v="__none">${stuTeacherLabel()} 미지정 <span class="c">${counts["__none"]}</span></button>` : "");
   } else {
     const k = stuClassField;
     const counts = {}; students.forEach(s=> { const v=s[k]||"__none"; counts[v]=(counts[v]||0)+1; });
@@ -3291,7 +3362,7 @@ function renderCrumbs(){
   if(stuF.cho) items.push({label:`이름 ${stuF.cho}`, k:"cho"});
   if(stuF.school) items.push({label:`학교 ${shortSchool(stuF.school)}`, k:"school"});
   if(stuF.grade) items.push({label:`학년 ${stuF.grade}`, k:"grade"});
-  if(stuF.teacher!==null) items.push({label: stuF.teacher? `담임 ${stuF.teacher}T` : "담임 미지정", k:"teacher"});
+  if(stuF.teacher!==null) items.push({label: stuF.teacher? `${stuTeacherLabel()} ${stuF.teacher}T` : `${stuTeacherLabel()} 미지정`, k:"teacher"});
   if(stuF.regularClass!==null) items.push({label: stuF.regularClass? `정규반 ${stuF.regularClass}` : "정규반 미배정", k:"regularClass"});
   if(stuF.examClass!==null) items.push({label: stuF.examClass? `시험대비 ${stuF.examClass}` : "시험대비 미배정", k:"examClass"});
   if(showIncompleteOnly) items.push({label:"정규반 미배정", k:"incomplete"});
@@ -3388,7 +3459,8 @@ function renderStudents(){
             <td><input type="text" class="edit-field" data-field="name" value="${escapeHtml(s.name||"")}" style="width:78px;"></td>
             <td><input type="text" class="edit-field" data-field="school" value="${escapeHtml(s.school||"")}" list="schoolList" style="width:100px;"></td>
             <td><input type="text" class="edit-field" data-field="grade" value="${escapeHtml(s.grade||"")}" list="gradeList" style="width:56px;"></td>
-            <td><input type="text" class="edit-field" data-field="teacher" value="${escapeHtml(s.teacher||"")}" list="teacherList" style="width:74px;"></td>
+            <td><input type="text" class="edit-field" data-field="examTeacher" value="${escapeHtml(examTeacherOf(s))}" list="teacherList" style="width:74px;"></td>
+            <td><input type="text" class="edit-field" data-field="regularTeacher" value="${escapeHtml(regularTeacherOf(s))}" list="teacherList" style="width:74px;"></td>
             <td><input type="text" class="edit-field" data-field="regularClass" value="${escapeHtml(s.regularClass||"")}" list="regularClassList" style="width:88px;"></td>
             <td><input type="text" class="edit-field" data-field="examClass" value="${escapeHtml(s.examClass||"")}" list="examClassList" style="width:88px;"></td>
             <td><select class="edit-field" data-field="status" style="width:74px;">${
@@ -3411,9 +3483,12 @@ function renderStudents(){
         }</td>
         <td data-c="school">${s.school? `<span class="tag school clickable" data-jump="school" data-v="${escapeHtml(s.school)}">${escapeHtml(shortSchool(s.school))}</span>`:"—"}</td>
         <td data-c="grade">${s.grade? `<span class="tag grade clickable" data-jump="grade" data-v="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:"—"}</td>
-        <td data-c="teacher">${s.teacher
-              ? `<span class="tag teacher clickable" data-jump="teacher" data-v="${escapeHtml(s.teacher)}">${escapeHtml(s.teacher)}T</span>`
-              : `<span class="tag none clickable" data-jump="teacher" data-v="">미지정</span>`}</td>
+        <td data-c="examTeacher">${examTeacherOf(s)
+              ? `<span class="tag teacher clickable" data-jump="examTeacher" data-v="${escapeHtml(examTeacherOf(s))}">${escapeHtml(examTeacherOf(s))}T</span>`
+              : `<span class="tag none clickable" data-jump="examTeacher" data-v="">미지정</span>`}</td>
+        <td data-c="regularTeacher">${regularTeacherOf(s)
+              ? `<span class="tag rteacher clickable" data-jump="regularTeacher" data-v="${escapeHtml(regularTeacherOf(s))}">${escapeHtml(regularTeacherOf(s))}T</span>`
+              : `<span class="tag none clickable" data-jump="regularTeacher" data-v="">미지정</span>`}</td>
         <td data-c="regularClass"><span class="clickable" data-jump="regularClass" data-v="${escapeHtml(s.regularClass||"")}">${clsTag(s.regularClass)}</span></td>
         <td data-c="examClass"><span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span></td>
         <td data-c="status"><span class="tag st-${statusOf(s)}">${statusOf(s)}</span></td>
@@ -3446,9 +3521,12 @@ function renderStudents(){
         <div class="sc-tags">
           ${s.school? `<span class="tag school clickable" data-jump="school" data-v="${escapeHtml(s.school)}">${escapeHtml(shortSchool(s.school))}</span>`:""}
           ${s.grade? `<span class="tag grade clickable" data-jump="grade" data-v="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:""}
-          ${s.teacher
-            ? `<span class="tag teacher clickable" data-jump="teacher" data-v="${escapeHtml(s.teacher)}">${escapeHtml(s.teacher)}T</span>`
-            : `<span class="tag none clickable" data-jump="teacher" data-v="">담임 미지정</span>`}
+          ${examTeacherOf(s)
+            ? `<span class="tag teacher clickable" data-jump="examTeacher" data-v="${escapeHtml(examTeacherOf(s))}" title="내신 담임">내신 ${escapeHtml(examTeacherOf(s))}T</span>`
+            : `<span class="tag none clickable" data-jump="examTeacher" data-v="">내신 담임 미지정</span>`}
+          ${regularTeacherOf(s)
+            ? `<span class="tag rteacher clickable" data-jump="regularTeacher" data-v="${escapeHtml(regularTeacherOf(s))}" title="정규 담임">정규 ${escapeHtml(regularTeacherOf(s))}T</span>`
+            : `<span class="tag none clickable" data-jump="regularTeacher" data-v="">정규 담임 미지정</span>`}
           <span class="clickable" data-jump="regularClass" data-v="${escapeHtml(s.regularClass||"")}">${clsTag(s.regularClass)}</span>
           <span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span>
         </div>
@@ -3514,10 +3592,13 @@ function renderStudents(){
     const get = f => row.querySelector(`[data-field="${f}"]`).value.trim();
     const payload = {
       studentNumber: get("studentNumber"), name: get("name"), school: get("school"),
-      grade: get("grade"), teacher: get("teacher"),
+      grade: get("grade"),
+      examTeacher: get("examTeacher"), regularTeacher: get("regularTeacher"),
       regularClass: get("regularClass"), examClass: get("examClass"),
       status: get("status"),
     };
+    /* 예전 '담임' 칸은 내신 담임을 따라갑니다 (옛 화면과의 호환용) */
+    payload.teacher = payload.examTeacher || payload.regularTeacher || "";
     if(!payload.name){ alert("이름은 비워둘 수 없어요."); return; }
     editingStudentId = null;          // 먼저 편집 모드를 끄고 저장 (즉시 다시 그려도 편집칸이 남지 않도록)
     updateStudentDoc(b.dataset.id, payload).then(renderStudents);
@@ -3549,6 +3630,10 @@ function renderStudents(){
     if(k==="school"){ stuF.school = v; stuIdxTab = "school"; }
     else if(k==="grade"){ stuF.grade = v; }
     else if(k==="teacher"){ stuF.teacher = v; stuIdxTab = "teacher"; }
+    else if(k==="examTeacher" || k==="regularTeacher"){
+      setStuTeacherKind(k==="regularTeacher" ? "regular" : "exam");
+      stuF.teacher = v; stuIdxTab = "teacher";
+    }
     else { stuF[k] = v; stuIdxTab = "class"; stuClassField = k; }
     renderStudents();
   }));
@@ -3651,6 +3736,11 @@ document.querySelectorAll("#stuIdxTabs button").forEach(b=> b.addEventListener("
 }));
 document.querySelectorAll("#stuSubToggle button").forEach(b=> b.addEventListener("click", ()=>{
   stuClassField = b.dataset.cf; renderStudents();
+}));
+document.querySelectorAll("#stuTeaToggle button").forEach(b=> b.addEventListener("click", ()=>{
+  setStuTeacherKind(b.dataset.tk);
+  stuF.teacher = null;                 /* 기준이 바뀌면 걸려 있던 담임 조건은 풉니다 */
+  renderStudents();
 }));
 let recentTimer = null, lastTypedTerm = "";
 document.getElementById("studentSearch").addEventListener("input", ()=>{
@@ -4038,14 +4128,29 @@ function buildClassImportPlan(rows, field){
       if((s[FIELD] || "") !== examClass) payload[FIELD] = examClass;
       if(r.teacher){
         if((s[TFIELD] || "") !== r.teacher) payload[TFIELD] = r.teacher;   // 반 종류별 담임
-        if((s.teacher || "") !== r.teacher) payload.teacher = r.teacher;   // 기존 담임 칸도 최신값으로
+        /* 예전 '담임' 칸은 비어 있을 때만 채웁니다.
+           내신 명부와 정규 명부가 이 칸을 서로 덮어써서
+           변동이 1~2건인데도 수백 명이 바뀐 것처럼 보이던 문제를 막습니다. */
+        if(!(s.teacher || "").trim()) payload.teacher = r.teacher;
       }
       if(r.assistant && (s[AFIELD] || "") !== r.assistant) payload[AFIELD] = r.assistant;   // 부담임(선행)
       if(grade && (s.grade || "") !== grade) payload.grade = grade;
       if(Object.keys(payload).length === 0){ same.push({ ...r, examClass, viaBase, storedName: s.name }); return; }
+      /* 실제로 값이 달라지는 것과, 빈 칸을 채우기만 하는 것을 갈라 둡니다.
+         (지금까지 쓰던 담임과 같은 값이면 '칸 정리'일 뿐 변동이 아닙니다) */
+      const curTeacher = FIELD === "examClass" ? examTeacherOf(s) : regularTeacherOf(s);
+      const realKeys = Object.keys(payload).filter(k=>{
+        if(k === "teacher") return false;
+        if(k === TFIELD)    return curTeacher !== r.teacher;
+        return true;
+      });
+      const fillOnly = realKeys.length === 0;
       updates.push({
-        id: s.id, name: s.name, school: s.school, viaBase, sheetName: r.name,
-        before: { examClass: s.examClass || "", teacher: s.teacher || "", grade: s.grade || "" },
+        id: s.id, name: s.name, school: s.school, viaBase, sheetName: r.name, fillOnly,
+        before: { examClass: s.examClass || "", regularClass: s.regularClass || "",
+                  teacher: s.teacher || "", examTeacher: s.examTeacher || "",
+                  regularTeacher: s.regularTeacher || "", examAssistant: s.examAssistant || "",
+                  regularAssistant: s.regularAssistant || "", grade: s.grade || "" },
         payload
       });
       return;
@@ -4099,7 +4204,8 @@ function renderClassImportPlan(plan, fileName){
     `${escapeHtml(fileName)} · 표에서 학생 ${total}명을 읽었어요`;
 
   let html = `<div class="imp-sum">
-    <div class="imp-card upd"><div class="n">${plan.updates.length}</div><div class="l">반·담임 바뀜</div></div>
+    <div class="imp-card upd"><div class="n">${plan.updates.filter(u=>!u.fillOnly).length}</div><div class="l">반·담임 바뀜</div></div>
+    ${plan.updates.some(u=>u.fillOnly) ? `<div class="imp-card same"><div class="n">${plan.updates.filter(u=>u.fillOnly).length}</div><div class="l">칸 정리(값 그대로)</div></div>` : ""}
     <div class="imp-card new"><div class="n">${plan.adds.length}</div><div class="l">새로 추가</div></div>
     <div class="imp-card same"><div class="n">${plan.same.length}</div><div class="l">이미 같음</div></div>
     ${plan.ambiguous.length ? `<div class="imp-card warn"><div class="n">${plan.ambiguous.length}</div><div class="l">동명이인 — 건너뜀</div></div>` : ""}
@@ -4120,12 +4226,22 @@ function renderClassImportPlan(plan, fileName){
     `<div class="imp-list">${arr.slice(0, limit).map(render).join("")}</div>` +
     (arr.length > limit ? `<p class="imp-note">외 ${arr.length - limit}명</p>` : "");
 
-  if(plan.updates.length){
-    html += `<div class="imp-sec"><h5>바뀌는 학생 ${plan.updates.length}명</h5>` +
-      listOf(plan.updates, u=>`<div class="imp-row">
+  const realUpd = plan.updates.filter(u=>!u.fillOnly);
+  const fillUpd = plan.updates.filter(u=> u.fillOnly);
+  if(realUpd.length){
+    html += `<div class="imp-sec"><h5>바뀌는 학생 ${realUpd.length}명</h5>` +
+      listOf(realUpd, u=>`<div class="imp-row">
         <span class="who">${escapeHtml(u.name)}</span>
         <span class="sch">${escapeHtml(shortSchool(u.school))}</span>
         <span class="chg">${changeText(u.before, u.payload)}</span></div>`) + `</div>`;
+  }
+  if(fillUpd.length){
+    html += `<div class="imp-sec"><h5>담임 칸만 정리되는 학생 ${fillUpd.length}명</h5>
+      <p class="imp-note">지금 쓰고 있는 담임과 <b>같은 값</b>을, 이 명부에 맞는 칸(내신 담임 / 정규 담임)에 옮겨 적는 것뿐입니다. 화면에 보이는 담임은 그대로예요. 한 번 정리해 두면 다음부터는 진짜 변동만 뜹니다.</p>` +
+      listOf(fillUpd, u=>`<div class="imp-row">
+        <span class="who">${escapeHtml(u.name)}</span>
+        <span class="sch">${escapeHtml(shortSchool(u.school))}</span>
+        <span class="chg">${changeText(u.before, u.payload)}</span></div>`, 20) + `</div>`;
   }
   if(plan.adds.length){
     html += `<div class="imp-sec"><h5>새로 추가되는 학생 ${plan.adds.length}명</h5>` +
@@ -5232,9 +5348,9 @@ const today = new Date();
 viewYear = today.getFullYear();
 viewMonth = today.getMonth();
 
-const dowNames = ["월","화","수","목","금","토","일"];
+const dowNames = ["일","월","화","수","목","금","토"];
 document.getElementById("calDow").innerHTML = dowNames
-  .map((d,i)=>`<div class="cal-dow ${i===5?"sat":i===6?"sun":""}">${d}</div>`).join("");
+  .map((d,i)=>`<div class="cal-dow ${i===6?"sat":i===0?"sun":""}">${d}</div>`).join("");
 
 function pad(n){ return String(n).padStart(2,"0"); }
 function dateKey(y,m,d){ return `${y}-${pad(m+1)}-${pad(d)}`; }
@@ -5320,7 +5436,7 @@ function visibleExams(){
     if(!e.startDate || !e.endDate || e.notConducted) return false;
     if(calSchoolQ && !schoolMatchesQuery(e.school, calSchoolQ)) return false;
     if(hideEmpty && studentsForExam(e).length === 0) return false;
-    if(teacherFilter && !studentsForExam(e).some(s=>s.teacher===teacherFilter)) return false;
+    if(teacherFilter && !studentsForExam(e).some(s=> examTeacherOf(s)===teacherFilter || regularTeacherOf(s)===teacherFilter)) return false;
     return true;
   });
 }
@@ -5512,8 +5628,8 @@ function renderCalendar(){
 
   const grid = document.getElementById("calGrid");
 
-  let firstDow = new Date(viewYear, viewMonth, 1).getDay();
-  firstDow = (firstDow===0) ? 6 : firstDow-1;
+  /* 일요일부터 시작합니다 (일 월 화 수 목 금 토) */
+  const firstDow = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
 
   let html = "";
@@ -5862,7 +5978,7 @@ function renderSummary(){
     <span class="sd">${noScope.length ? escapeHtml(uniq(noScope.map(e=>shortSchool(e.school))).slice(0,3).join(", ")) + (uniq(noScope.map(e=>e.school)).length>3?" 외":"") : "모두 입력됨"}</span></button>`;
 
   /* 4) 담임 미지정 */
-  const noTeacher = students.filter(s=> !s.teacher);
+  const noTeacher = students.filter(s=> !examTeacherOf(s) && !regularTeacherOf(s));
   const card4 = `<button class="stat-card ${noTeacher.length?"alert":"done"}" data-go="teacher-missing">
     <span class="sl">담임 미지정</span>
     <span class="sv">${noTeacher.length}<span class="su">명</span></span>
@@ -5892,7 +6008,7 @@ function renderSummary(){
       switchTab("scope");
       renderScopeTab();
     } else if(go==="teacher-missing"){
-      if(students.filter(s=>!s.teacher).length===0){ showToast("담임이 모두 지정되어 있어요.", {type:"ok"}); return; }
+      if(students.filter(s=> !examTeacherOf(s) && !regularTeacherOf(s)).length===0){ showToast("담임이 모두 지정되어 있어요.", {type:"ok"}); return; }
       stuF = {cho:"", school:"", grade:"", teacher:"", regularClass:null, examClass:null};
       stuIdxTab = "teacher"; showIncompleteOnly = false;
       switchTab("students"); renderStudents();
@@ -6867,8 +6983,9 @@ function openStudentModal(studentId){
 
   document.getElementById("stuTags").innerHTML =
     `<span class="tag st-${statusOf(s)}">${statusOf(s)}</span>` +
-    (s.teacher ? `<span class="tag teacher">${escapeHtml(s.teacher)}T</span>` : `<span class="tag none">담임 미지정</span>`) +
-    (s.regularAssistant ? `<span class="tag teacher">부 ${escapeHtml(s.regularAssistant)}T</span>` : ``) +
+    (examTeacherOf(s) ? `<span class="tag teacher">내신 ${escapeHtml(examTeacherOf(s))}T</span>` : `<span class="tag none">내신 담임 미지정</span>`) +
+    (regularTeacherOf(s) ? `<span class="tag rteacher">정규 ${escapeHtml(regularTeacherOf(s))}T</span>` : `<span class="tag none">정규 담임 미지정</span>`) +
+    (s.regularAssistant ? `<span class="tag rteacher">정규 부 ${escapeHtml(s.regularAssistant)}T</span>` : ``) +
     (s.regularClass ? `<span class="tag cls">정규반 ${escapeHtml(s.regularClass)}</span>` : `<span class="tag none">정규반 미배정</span>`) +
     (s.examClass ? `<span class="tag cls">시험대비 ${escapeHtml(s.examClass)}</span>` : `<span class="tag none">시험대비 반 미배정</span>`);
 
@@ -7011,6 +7128,48 @@ function setTeacherBasis(v){
 /* ---------- 시험 상세 모달 ---------- */
 let detailReturnTo = null;   // {type:"day", key} | {type:"student", id} | null
 
+/* ---------- 직전보충 참석 · 시험 점수 ---------- */
+let detailBusy = false;            /* 입력 중에는 창을 다시 그리지 않습니다 */
+let detailSaveTimer = null;
+let detailPending = null;          /* {examId, attend, scores} */
+
+function attendOf(exam){ return (exam && exam.makeupAttend) || {}; }
+function scoresOf(exam){ return (exam && exam.scores) || {}; }
+
+function markDetailStatus(text){
+  const el = document.getElementById("detailSaveState");
+  if(el) el.textContent = text || "";
+}
+
+/* 여러 번 눌러도 한 번에 모아서 저장합니다 */
+function queueDetailSave(examId, patch){
+  detailBusy = true;
+  detailPending = detailPending && detailPending.examId === examId
+    ? { examId, attend: {...detailPending.attend, ...(patch.attend||{})},
+                scores: {...detailPending.scores, ...(patch.scores||{})} }
+    : { examId, attend: patch.attend || {}, scores: patch.scores || {} };
+  markDetailStatus("저장 중...");
+  clearTimeout(detailSaveTimer);
+  detailSaveTimer = setTimeout(async ()=>{
+    const job = detailPending; detailPending = null;
+    if(!job) { detailBusy = false; return; }
+    const exam = exams.find(e=> e.id === job.examId);
+    if(!exam){ detailBusy = false; return; }
+    const attend = {...attendOf(exam)}, scores = {...scoresOf(exam)};
+    Object.entries(job.attend).forEach(([k,v])=>{ if(v) attend[k] = true; else delete attend[k]; });
+    Object.entries(job.scores).forEach(([k,v])=>{ if(v === "" || v === null || v === undefined) delete scores[k]; else scores[k] = v; });
+    try{
+      await updateExamDoc(job.examId, { makeupAttend: attend, scores });
+      markDetailStatus("저장됨");
+      setTimeout(()=> markDetailStatus(""), 1800);
+    }catch(err){
+      console.error(err);
+      markDetailStatus("저장 실패");
+    }
+    setTimeout(()=>{ detailBusy = false; }, 600);
+  }, 700);
+}
+
 function openDetailModal(examId, returnTo){
   const exam = exams.find(e=>e.id===examId);
   if(!exam) return;
@@ -7040,7 +7199,9 @@ function openDetailModal(examId, returnTo){
   document.getElementById("detailTitle").textContent = `${exam.school||""} ${exam.grade||""} ${exam.examName||""}`.trim();
 
   const period = exam.startDate===exam.endDate ? fmtWithDow(exam.startDate) : `${fmtWithDow(exam.startDate)} ~ ${fmtWithDow(exam.endDate)}`;
-  const makeupHtml = exam.makeupDate ? `직전보강 ${fmtWithDow(exam.makeupDate)}` : `직전보강 <span class="flag-bad">--</span>`;
+  const makeupHtml = exam.makeupDate
+    ? `직전보충 ${fmtWithDow(exam.makeupDate)}${exam.makeupNote ? " " + escapeHtml(exam.makeupNote) : ""}`
+    : `직전보충 <span class="flag-bad">--</span>`;
   const printHtml = exam.printStatus==="confirmed" ? `<span class="flag-ok">프린트 확인</span>` : `<span class="flag-bad">프린트 미확인</span>`;
 
   const tbook = textbookOf(exam.school, exam.grade);
@@ -7152,7 +7313,26 @@ function openDetailModal(examId, returnTo){
   const missingExam    = relevant.filter(s=> !examTeacherOf(s));
   const missingRegular = relevant.filter(s=> !regularTeacherOf(s));
 
-  let bodyHtml = `<div class="tbasis-row">
+  const attend = attendOf(exam), scores = scoresOf(exam);
+  const attendN = relevant.filter(s=> attend[s.id]).length;
+  const scoreN  = relevant.filter(s=> scoresOf(exam)[s.id] !== undefined && scoresOf(exam)[s.id] !== "").length;
+  const scoreLabel = `${exam.examName || "시험"} 점수`;
+
+  let bodyHtml = `<div class="makeup-bar">
+      <div class="mb-left">
+        <label class="mb-lbl" for="makeupDateIn">직전보충 일정</label>
+        <input type="date" id="makeupDateIn" value="${escapeHtml(exam.makeupDate||"")}" ${editMode?"":"disabled"}>
+        <input type="text" id="makeupNoteIn" placeholder="예: 2시 3층" value="${escapeHtml(exam.makeupNote||"")}" ${editMode?"":"disabled"}>
+        ${editMode ? `<button class="btn secondary small" id="makeupSaveBtn">일정 저장</button>` : ""}
+      </div>
+      <div class="mb-right">
+        <span class="mb-stat">참석 <b id="attendCount">${attendN}</b>/${relevant.length}</span>
+        <span class="mb-stat">${escapeHtml(scoreLabel)} <b id="scoreCount">${scoreN}</b>/${relevant.length}</span>
+        <span class="mb-save" id="detailSaveState"></span>
+      </div>
+    </div>
+    ${editMode ? `<p class="mb-hint">학생 카드를 누르면 <b>직전보충 참석</b>으로 표시됩니다. 점수는 칸에 바로 적으면 저장돼요.</p>` : ""}
+    <div class="tbasis-row">
       <span class="section-label" style="margin:0;">담당 선생님별 학생 ${relevant.length}명</span>
       <span class="tb-lbl">담임 기준</span>
       <span class="seg tb-seg" id="tbasisSeg">
@@ -7170,8 +7350,15 @@ function openDetailModal(examId, returnTo){
     `<span class="cl ${cn} ${v?"":"none"} ${active?"cur":""}"><i>${kind}</i>${v ? escapeHtml(v) : "미지정"}</span>`;
   const chipHtml = (s)=>{
     const rA = assistantOf(s);
-    return `<div class="assign-chip">
-      <span class="sname">${escapeHtml(s.name)}</span>
+    const att = !!attend[s.id];
+    const sc  = scores[s.id];
+    return `<div class="assign-chip ${att?"att":""}" data-sid="${escapeHtml(s.id)}">
+      <span class="chip-top">
+        <span class="sname">${escapeHtml(s.name)}</span>
+        <span class="att-mark" title="직전보충 참석">✓</span>
+        <input class="score-in" type="number" min="0" max="100" inputmode="numeric"
+               placeholder="점수" value="${sc===undefined||sc===null?"":escapeHtml(String(sc))}" ${editMode?"":"disabled"}>
+      </span>
       ${teaLine("내신담임", examTeacherOf(s), "tea", teacherBasis==="exam")}
       ${line("내신반", (s.examClass||"").trim(), "ex")}
       ${teaLine("정규담임", regularTeacherOf(s), "tg", teacherBasis==="regular")}
@@ -7201,6 +7388,61 @@ function openDetailModal(examId, returnTo){
   if(seg) seg.addEventListener("click", (ev)=>{
     const b = ev.target.closest("button");
     if(b) setTeacherBasis(b.dataset.b);
+  });
+
+  /* 직전보충 일정 저장 */
+  const mSave = document.getElementById("makeupSaveBtn");
+  if(mSave) mSave.addEventListener("click", async (ev)=>{
+    const d = document.getElementById("makeupDateIn").value;
+    const note = document.getElementById("makeupNoteIn").value.trim();
+    if(d === (exam.makeupDate||"") && note === (exam.makeupNote||"")){
+      showToast("바뀐 내용이 없어요.", {type:"warn"}); return;
+    }
+    const before = { makeupDate: exam.makeupDate||"", makeupNote: exam.makeupNote||"" };
+    ev.currentTarget.disabled = true;
+    detailBusy = false;                      /* 저장 뒤 머리말이 바로 갱신되도록 */
+    await updateExamDoc(examId, { makeupDate: d, makeupNote: note });
+    if(currentDetailExamId === examId) openDetailModal(examId);
+    showToast(`직전보충 일정을 저장했어요.`, {
+      type:"ok", actionLabel:"되돌리기",
+      onAction: async ()=>{ await updateExamDoc(examId, before); showToast("되돌렸어요.", {type:"warn"}); }
+    });
+  });
+
+  /* 카드를 누르면 참석 표시 */
+  tgBox.addEventListener("click", (ev)=>{
+    if(ev.target.classList.contains("score-in")) return;      /* 점수칸은 빼고 */
+    const chip = ev.target.closest(".assign-chip");
+    if(!chip || !chip.dataset.sid) return;
+    if(!guardEdit()) return;
+    const on = !chip.classList.contains("att");
+    chip.classList.toggle("att", on);
+    const cnt = document.getElementById("attendCount");
+    if(cnt) cnt.textContent = tgBox.querySelectorAll(".assign-chip.att").length;
+    queueDetailSave(examId, { attend: { [chip.dataset.sid]: on } });
+  });
+
+  /* 점수 입력 */
+  tgBox.addEventListener("input", (ev)=>{
+    const inp = ev.target;
+    if(!inp.classList.contains("score-in")) return;
+    const sid = inp.closest(".assign-chip")?.dataset.sid;
+    if(!sid) return;
+    let v = inp.value.trim();
+    if(v !== ""){
+      let n = Number(v);
+      if(isNaN(n)){ return; }
+      if(n < 0) n = 0;
+      if(n > 100) { n = 100; inp.value = "100"; }
+      v = n;
+    }
+    const cnt = document.getElementById("scoreCount");
+    if(cnt) cnt.textContent = [...tgBox.querySelectorAll(".score-in")].filter(x=> x.value.trim() !== "").length;
+    queueDetailSave(examId, { scores: { [sid]: v } });
+  });
+  tgBox.addEventListener("focusin", (ev)=>{ if(ev.target.classList.contains("score-in")) detailBusy = true; });
+  tgBox.addEventListener("focusout", (ev)=>{
+    if(ev.target.classList.contains("score-in")) setTimeout(()=>{ if(!detailPending) detailBusy = false; }, 400);
   });
 }
 document.getElementById("closeDetailModal").addEventListener("click", ()=>{
