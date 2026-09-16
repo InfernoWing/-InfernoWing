@@ -1325,6 +1325,10 @@
   #askModal{z-index:90;}
   #askModal .btn.danger{background:var(--rust); border-color:var(--rust); color:var(--c1);}
   .modal{ background:var(--paper-card); border-radius:16px; padding:24px; max-width:540px; width:100%; max-height:88vh; overflow-y:auto; }
+  /* 긴 창은 안쪽에서 따로 굴리지 않고, 내용만큼 아래로 늘어나게 둡니다 */
+  #detailModal.active, #studentModal.active, #dayModal.active, #briefModal.active{ display:block; overflow-y:auto; }
+  #detailModal .modal, #studentModal .modal, #dayModal .modal, #briefModal .modal{
+    max-height:none; overflow:visible; margin:0 auto; }
   .modal h3{font-family:'Gowun Batang',serif; margin:0 0 4px; font-size:20px;}
   .close-x{ float:right; background:none; border:none; font-size:20px; cursor:pointer; color:var(--c106); }
   .modal-meta{ color:var(--c2); font-size:12.5px; margin:0 0 16px; line-height:1.7; }
@@ -5969,7 +5973,10 @@ document.getElementById("nextMonth").addEventListener("click", ()=> shiftMonth(1
   }, {passive:false});
 })();
 document.getElementById("todayBtn").addEventListener("click", ()=> goToMonth(today.getFullYear(), today.getMonth()));
-document.getElementById("calFilterTeacher").addEventListener("change", renderCalendar);
+document.getElementById("calFilterTeacher").addEventListener("change", ()=>{
+  detailShowAll = false;            /* 선생님을 바꾸면 '전체 보기'는 다시 꺼 둡니다 */
+  renderCalendar();
+});
 document.getElementById("hideEmptyExams").addEventListener("change", renderCalendar);
 
 /* ---------- 학교 검색 입력 / 결과 안내 ---------- */
@@ -7364,6 +7371,7 @@ function setTeacherBasis(v){
 let detailReturnTo = null;   // {type:"day", key} | {type:"student", id} | null
 
 /* ---------- 직전보충 참석 · 시험 점수 ---------- */
+let detailShowAll = false;         /* 선생님별 보기를 잠깐 풀고 전체를 볼 때 */
 let detailBusy = false;            /* 입력 중에는 창을 다시 그리지 않습니다 */
 let detailSaveTimer = null;
 let detailPending = null;          /* {examId, attend, scores} */
@@ -7534,7 +7542,12 @@ function openDetailModal(examId, returnTo){
   document.getElementById("detailCopyBtn").onclick = ()=>
     openCopyModal([exam], `${exam.school||""} ${exam.grade||""}`.trim());
 
-  const relevant = studentsForExam(exam);
+  /* 캘린더에서 '선생님별 보기'를 골라 뒀으면, 학생 명단도 그 선생님 학생만 보여줍니다 */
+  const calTeacher = (document.getElementById("calFilterTeacher")?.value || "").trim();
+  const everyone = studentsForExam(exam);
+  const relevant = (calTeacher && !detailShowAll)
+    ? everyone.filter(s=> examTeacherOf(s) === calTeacher || regularTeacherOf(s) === calTeacher)
+    : everyone;
   const byTeacher = {};
   relevant.forEach(s=>{
     const teacher = teacherOf(s);
@@ -7568,7 +7581,13 @@ function openDetailModal(examId, returnTo){
     </div>
     ${editMode ? `<p class="mb-hint">학생 카드를 누르면 <b>직전보충 참석</b>으로 표시됩니다. 점수는 칸에 바로 적으면 저장돼요.</p>` : ""}
     <div class="tbasis-row">
-      <span class="section-label" style="margin:0;">담당 선생님별 학생 ${relevant.length}명</span>
+      <span class="section-label" style="margin:0;">담당 선생님별 학생 ${relevant.length}명${
+        calTeacher ? (detailShowAll
+          ? ` <span class="tb-lbl">전체</span>`
+          : ` <span class="tb-lbl">${escapeHtml(calTeacher)}T 담당 · 전체 ${everyone.length}명 중</span>`) : ""
+      }</span>
+      ${calTeacher ? `<button class="btn secondary small" id="detailScopeBtn">${
+        detailShowAll ? `${escapeHtml(calTeacher)}T 학생만` : "전체 보기"}</button>` : ""}
       <span class="tb-lbl">담임 기준</span>
       <span class="seg tb-seg" id="tbasisSeg">
         <button data-b="exam" class="${teacherBasis==="exam"?"on":""}">내신대비 반</button>
@@ -7608,7 +7627,10 @@ function openDetailModal(examId, returnTo){
     </div>`;
 
   if(relevant.length===0){
-    bodyHtml += `<div class="empty-state">이 학교·학년에 해당하는 학생이 없어요.</div>`;
+    bodyHtml += `<div class="empty-state">${
+      calTeacher && !detailShowAll && everyone.length
+        ? `${escapeHtml(calTeacher)} 선생님이 맡은 학생은 이 학교·학년에 없어요. (전체 ${everyone.length}명)`
+        : "이 학교·학년에 해당하는 학생이 없어요."}</div>`;
   } else {
     bodyHtml += teacherNames.map(t=> groupHtml(`${escapeHtml(t)}T`, byTeacher[t])).join("");
     /* 담임 기준과 상관없이 빈자리를 항상 따로 보여줍니다 */
@@ -7623,6 +7645,12 @@ function openDetailModal(examId, returnTo){
   if(seg) seg.addEventListener("click", (ev)=>{
     const b = ev.target.closest("button");
     if(b) setTeacherBasis(b.dataset.b);
+  });
+  const scopeBtn = document.getElementById("detailScopeBtn");
+  if(scopeBtn) scopeBtn.addEventListener("click", ()=>{
+    detailShowAll = !detailShowAll;
+    detailBusy = false;
+    openDetailModal(examId, returnTo);
   });
 
   /* 직전보충 일정 저장 */
