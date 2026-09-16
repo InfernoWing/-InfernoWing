@@ -1570,7 +1570,8 @@
       <div>
         <label>학교 검색</label>
         <div class="school-search">
-          <input type="text" id="calSchoolSearch" list="schoolList" placeholder="학교 이름 (초성도 됩니다)">
+          <input type="text" id="calSchoolSearch" list="schoolList" name="school-q" placeholder="학교 이름 (초성도 됩니다)"
+                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore>
           <button class="clr" id="calSchoolClear" title="지우기">&times;</button>
         </div>
         <span class="search-hit" id="calSchoolHit"></span>
@@ -1779,7 +1780,8 @@
     <div class="students-toolbar">
       <div class="search-box">
         <label>검색</label>
-        <input type="text" id="studentSearch" placeholder="이름 · 학교 · 담임 (초성도 됩니다 — 예: ㄱㅈㅁ · / 키로 바로 이동)">
+        <input type="text" id="studentSearch" name="student-q" placeholder="이름 · 학교 · 담임 (초성도 됩니다 — 예: ㄱㅈㅁ · / 키로 바로 이동)"
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore>
         <div id="recentSearch" class="recent-search"></div>
       </div>
       <div class="count-text" id="studentCountText"></div>
@@ -1932,6 +1934,9 @@
     <h3>수정 모드로 바꾸기</h3>
     <p class="pw-ask" id="pwAsk" style="display:none;"></p>
     <p class="modal-meta">비밀번호를 입력하면 내용을 고칠 수 있어요. 브라우저를 닫으면 다시 보기 모드가 됩니다.</p>
+    <!-- 브라우저 비밀번호 관리자가 '아이디 칸'을 찾을 때 엉뚱한 검색칸을 잡지 않도록 둔 받이 칸입니다 -->
+    <input type="text" id="pwUserSlot" name="username" value="늘푸른수학원" readonly tabindex="-1" aria-hidden="true"
+           autocomplete="username" style="position:absolute; opacity:0; width:1px; height:1px; padding:0; border:0; pointer-events:none;">
     <div class="pw-row">
       <div><label>비밀번호</label><input type="password" id="pwInput" placeholder="비밀번호" autocomplete="current-password"></div>
       <button class="btn" id="pwSubmit">확인</button>
@@ -5657,6 +5662,25 @@ function isRedDay(key){
 /* ---------- 캘린더 학교 검색 ----------
    "가락", "가락중", "ㄱㄹ" 처럼 이름 일부나 초성으로 찾을 수 있어요. */
 let calSchoolQ = "";
+/* 브라우저 자동완성이 검색칸에 저장된 아이디·토큰을 넣어 버리는 일이 있어,
+   화면이 뜬 뒤 잠깐 동안 '사용자가 치지 않은 값'은 지웁니다. */
+(function guardSearchAutofill(){
+  const ids = ["calSchoolSearch", "studentSearch"];
+  let typed = false;
+  ids.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener("input", ()=>{ typed = true; }, {once:true});
+  });
+  const clean = ()=>{
+    if(typed) return;
+    ids.forEach(id=>{
+      const el = document.getElementById(id);
+      if(el && el.value){ el.value = ""; el.dispatchEvent(new Event("input", {bubbles:true})); }
+    });
+  };
+  [0, 120, 400, 900, 1800].forEach(ms=> setTimeout(clean, ms));
+  window.addEventListener("load", clean);
+})();
 function normQ(t){ return (t||"").replace(/\s+/g,"").toLowerCase(); }
 function isChosungQuery(q){ return /^[\u3131-\u314e]+$/.test(q); }
 function schoolMatchesQuery(school, q){
