@@ -1383,6 +1383,14 @@
   .score-in{margin-left:auto; width:52px; font-size:12px; font-weight:800; padding:2px 5px;
     text-align:center; border:1px solid var(--c42); border-radius:6px; background:var(--paper-card); color:var(--ink);}
   .score-in::-webkit-outer-spin-button, .score-in::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
+  /* 학생별 직전보충 날짜 */
+  .chip-mdate{display:flex; align-items:center; gap:5px; width:100%; margin:1px 0 3px;}
+  .chip-mdate i{font-style:normal; font-size:9.5px; font-weight:800; letter-spacing:.02em;
+    background:var(--c29); color:var(--c9); border-radius:5px; padding:1px 5px; flex:0 0 auto;}
+  .mdate-in{flex:1; min-width:0; font-size:11px; font-weight:700; font-family:inherit;
+    padding:2px 5px; border:1px solid var(--c42); border-radius:6px;
+    background:var(--paper-card); color:var(--ink); cursor:text;}
+  .assign-chip{min-width:176px;}
   .score-in[type=number]{-moz-appearance:textfield;}
   .assign-chip{cursor:pointer;}
   .assign-chip .score-in{cursor:text;}
@@ -7473,6 +7481,7 @@ let detailSaveTimer = null;
 let detailPending = null;          /* {examId, attend, scores} */
 
 function attendOf(exam){ return (exam && exam.makeupAttend) || {}; }
+function mdatesOf(exam){ return (exam && exam.makeupDates) || {}; }   /* 학생별 직보 날짜 */
 function scoresOf(exam){ return (exam && exam.scores) || {}; }
 
 function markDetailStatus(text){
@@ -7485,8 +7494,9 @@ function queueDetailSave(examId, patch){
   detailBusy = true;
   detailPending = detailPending && detailPending.examId === examId
     ? { examId, attend: {...detailPending.attend, ...(patch.attend||{})},
-                scores: {...detailPending.scores, ...(patch.scores||{})} }
-    : { examId, attend: patch.attend || {}, scores: patch.scores || {} };
+                scores: {...detailPending.scores, ...(patch.scores||{})},
+                mdates: {...detailPending.mdates, ...(patch.mdates||{})} }
+    : { examId, attend: patch.attend || {}, scores: patch.scores || {}, mdates: patch.mdates || {} };
   markDetailStatus("저장 중...");
   clearTimeout(detailSaveTimer);
   detailSaveTimer = setTimeout(async ()=>{
@@ -7494,11 +7504,12 @@ function queueDetailSave(examId, patch){
     if(!job) { detailBusy = false; return; }
     const exam = exams.find(e=> e.id === job.examId);
     if(!exam){ detailBusy = false; return; }
-    const attend = {...attendOf(exam)}, scores = {...scoresOf(exam)};
+    const attend = {...attendOf(exam)}, scores = {...scoresOf(exam)}, mdates = {...mdatesOf(exam)};
     Object.entries(job.attend).forEach(([k,v])=>{ if(v) attend[k] = true; else delete attend[k]; });
     Object.entries(job.scores).forEach(([k,v])=>{ if(v === "" || v === null || v === undefined) delete scores[k]; else scores[k] = v; });
+    Object.entries(job.mdates).forEach(([k,v])=>{ if(!v) delete mdates[k]; else mdates[k] = v; });
     try{
-      await updateExamDoc(job.examId, { makeupAttend: attend, scores });
+      await updateExamDoc(job.examId, { makeupAttend: attend, scores, makeupDates: mdates });
       markDetailStatus("저장됨");
       setTimeout(()=> markDetailStatus(""), 1800);
     }catch(err){
@@ -7657,7 +7668,8 @@ function openDetailModal(examId, returnTo){
   const missingExam    = relevant.filter(s=> !examTeacherOf(s));
   const missingRegular = relevant.filter(s=> !regularTeacherOf(s));
 
-  const attend = attendOf(exam), scores = scoresOf(exam);
+  const attend = attendOf(exam), scores = scoresOf(exam), mdates = mdatesOf(exam);
+  const mdateN = relevant.filter(s=> (mdates[s.id]||"").trim()).length;
   const attendN = relevant.filter(s=> attend[s.id]).length;
   const scoreN  = relevant.filter(s=> scoresOf(exam)[s.id] !== undefined && scoresOf(exam)[s.id] !== "").length;
   const scoreLabel = `${exam.examName || "시험"} 점수`;
@@ -7672,6 +7684,7 @@ function openDetailModal(examId, returnTo){
       <div class="mb-right">
         <span class="mb-stat">참석 <b id="attendCount">${attendN}</b>/${relevant.length}</span>
         <span class="mb-stat">${escapeHtml(scoreLabel)} <b id="scoreCount">${scoreN}</b>/${relevant.length}</span>
+        <span class="mb-stat">직보 날짜 <b id="mdateCount">${mdateN}</b>/${relevant.length}</span>
         <span class="mb-save" id="detailSaveState"></span>
       </div>
     </div>
@@ -7708,6 +7721,11 @@ function openDetailModal(examId, returnTo){
         <span class="att-mark" title="직전보충 참석">✓</span>
         <input class="score-in" type="number" min="0" max="100" inputmode="numeric"
                placeholder="점수" value="${sc===undefined||sc===null?"":escapeHtml(String(sc))}" ${editMode?"":"disabled"}>
+      </span>
+      <span class="chip-mdate">
+        <i>직보</i>
+        <input class="mdate-in" type="date" value="${escapeHtml(mdates[s.id]||"")}"
+               title="이 학생이 직전보충 오는 날" ${editMode?"":"disabled"}>
       </span>
       ${teaLine("내신담임", examTeacherOf(s), "tea", teacherBasis==="exam")}
       ${line("내신반", (s.examClass||"").trim(), "ex")}
@@ -7771,6 +7789,7 @@ function openDetailModal(examId, returnTo){
   /* 카드를 누르면 참석 표시 */
   tgBox.addEventListener("click", (ev)=>{
     if(ev.target.classList.contains("score-in")) return;      /* 점수칸은 빼고 */
+    if(ev.target.closest(".chip-mdate")) return;              /* 직보 날짜칸도 빼고 */
     const chip = ev.target.closest(".assign-chip");
     if(!chip || !chip.dataset.sid) return;
     if(!guardEdit()) return;
@@ -7782,6 +7801,18 @@ function openDetailModal(examId, returnTo){
   });
 
   /* 점수 입력 */
+  /* 학생별 직보 날짜 */
+  tgBox.addEventListener("change", (ev)=>{
+    const inp = ev.target;
+    if(!inp.classList.contains("mdate-in")) return;
+    const sid = inp.closest(".assign-chip")?.dataset.sid;
+    if(!sid) return;
+    if(!guardEdit()){ inp.value = mdatesOf(exam)[sid] || ""; return; }
+    const cnt = document.getElementById("mdateCount");
+    if(cnt) cnt.textContent = [...tgBox.querySelectorAll(".mdate-in")].filter(x=> x.value.trim() !== "").length;
+    queueDetailSave(examId, { mdates: { [sid]: inp.value } });
+  });
+
   tgBox.addEventListener("input", (ev)=>{
     const inp = ev.target;
     if(!inp.classList.contains("score-in")) return;
@@ -7799,9 +7830,10 @@ function openDetailModal(examId, returnTo){
     if(cnt) cnt.textContent = [...tgBox.querySelectorAll(".score-in")].filter(x=> x.value.trim() !== "").length;
     queueDetailSave(examId, { scores: { [sid]: v } });
   });
-  tgBox.addEventListener("focusin", (ev)=>{ if(ev.target.classList.contains("score-in")) detailBusy = true; });
+  const isChipInput = el => el.classList.contains("score-in") || el.classList.contains("mdate-in");
+  tgBox.addEventListener("focusin", (ev)=>{ if(isChipInput(ev.target)) detailBusy = true; });
   tgBox.addEventListener("focusout", (ev)=>{
-    if(ev.target.classList.contains("score-in")) setTimeout(()=>{ if(!detailPending) detailBusy = false; }, 400);
+    if(isChipInput(ev.target)) setTimeout(()=>{ if(!detailPending) detailBusy = false; }, 400);
   });
 }
 document.getElementById("closeDetailModal").addEventListener("click", ()=>{
