@@ -1398,7 +1398,8 @@
   .assign-row{display:flex; flex-wrap:wrap; gap:8px;}
   .assign-chip{ display:inline-flex; flex-direction:column; align-items:flex-start; gap:2px;
     border:1.5px solid var(--c5); border-radius:9px; padding:6px 11px; font-size:13px; background:var(--c4); }
-  .assign-chip .sname{font-weight:700; line-height:1.3;}
+  .assign-chip .sname{font-weight:700; line-height:1.3; cursor:pointer; text-decoration:underline; text-decoration-color:transparent; text-underline-offset:2px;}
+  .assign-chip .sname:hover{text-decoration-color:currentColor;}
   .assign-chip{min-width:132px;}
   .assign-chip .sname{margin-bottom:2px;}
   .assign-chip .cl{font-size:11px; font-weight:800; line-height:1.35; display:flex; align-items:baseline; gap:5px;}
@@ -2134,6 +2135,7 @@
 <div class="overlay" id="studentModal">
   <div class="modal">
     <button class="close-x" id="closeStudentModal">&times;</button>
+    <button class="back-btn" id="stuBackBtn">← 시험 상세로</button>
     <h3 id="stuTitle">학생</h3>
     <p class="modal-meta" id="stuMeta"></p>
     <div class="stu-tags" id="stuTags"></div>
@@ -3682,7 +3684,7 @@ function renderStudents(){
   /* 이름을 누르면 학생 상세 창 */
   scope.querySelectorAll(".stu-link, .sc-name").forEach(el=> el.addEventListener("click", (ev)=>{
     ev.stopPropagation();
-    openStudentModal(el.dataset.student);
+    openStudentModal(el.dataset.student, null);
   }));
 
   /* 표 안의 알약을 누르면 그 조건으로 걸림 */
@@ -6220,7 +6222,7 @@ function openDayModal(key, keepFilters){
   /* 학생 이름을 누르면 그 학생 상세 창 */
   box.querySelectorAll(".ds-n").forEach(btn=> btn.addEventListener("click", (ev)=>{
     ev.stopPropagation();
-    openStudentModal(btn.dataset.student);
+    openStudentModal(btn.dataset.student, null);
   }));
   document.getElementById("dayModal").classList.add("active");
 }
@@ -7318,10 +7320,24 @@ function ddayBadge(exam){
   return `<span class="dday-sm ${d<=7?"soon":""}">D-${d}</span>`;
 }
 
-function openStudentModal(studentId){
+let studentReturnTo = null;   // {type:"detail", id: examId} | null
+function openStudentModal(studentId, returnTo){
   const s = students.find(x=>x.id===studentId);
   if(!s) return;
   currentStudentId = studentId;
+  if(returnTo !== undefined) studentReturnTo = returnTo;
+
+  const stuBack = document.getElementById("stuBackBtn");
+  if(studentReturnTo){
+    stuBack.classList.add("show");
+    stuBack.onclick = ()=>{
+      const ret = studentReturnTo;
+      closeStudentModal();
+      if(ret.type==="detail") openDetailModal(ret.id, null);
+    };
+  } else {
+    stuBack.classList.remove("show");
+  }
 
   document.getElementById("stuTitle").textContent = s.name || "학생";
   document.getElementById("stuMeta").textContent =
@@ -7421,6 +7437,8 @@ function openStudentModal(studentId){
 function closeStudentModal(){
   document.getElementById("studentModal").classList.remove("active");
   currentStudentId = null;
+  studentReturnTo = null;
+  document.getElementById("stuBackBtn").classList.remove("show");
 }
 document.getElementById("closeStudentModal").addEventListener("click", closeStudentModal);
 document.getElementById("studentModal").addEventListener("click", (e)=>{
@@ -7538,7 +7556,7 @@ function openDetailModal(examId, returnTo){
       detailReturnTo = null;
       backBtn.classList.remove("show");
       if(ret.type==="day") openDayModal(ret.key, true);
-      else if(ret.type==="student") openStudentModal(ret.id);
+      else if(ret.type==="student") openStudentModal(ret.id, null);
     };
   } else {
     backBtn.classList.remove("show");
@@ -7717,7 +7735,7 @@ function openDetailModal(examId, returnTo){
     const sc  = scores[s.id];
     return `<div class="assign-chip ${att?"att":""}" data-sid="${escapeHtml(s.id)}">
       <span class="chip-top">
-        <span class="sname">${escapeHtml(s.name)}</span>
+        <span class="sname" data-open-student="${escapeHtml(s.id)}" title="이름을 누르면 이 학생의 다른 시험을 날짜순으로 볼 수 있어요">${escapeHtml(s.name)}</span>
         <span class="att-mark" title="직전보충 참석">✓</span>
         <input class="score-in" type="number" min="0" max="100" inputmode="numeric"
                placeholder="점수" value="${sc===undefined||sc===null?"":escapeHtml(String(sc))}" ${editMode?"":"disabled"}>
@@ -7786,8 +7804,20 @@ function openDetailModal(examId, returnTo){
     });
   });
 
+  /* 이름을 누르면 그 학생의 시험을 날짜순으로 쭉 보여주는 학생 상세 창 */
+  tgBox.addEventListener("click", (ev)=>{
+    const nameEl = ev.target.closest("[data-open-student]");
+    if(nameEl){
+      ev.stopPropagation();
+      document.getElementById("detailModal").classList.remove("active");
+      currentDetailExamId = null;             /* 재렌더 감시가 상세 창을 도로 띄우지 않도록 */
+      openStudentModal(nameEl.dataset.openStudent, { type:"detail", id: examId });
+      return;
+    }
+  });
   /* 카드를 누르면 참석 표시 */
   tgBox.addEventListener("click", (ev)=>{
+    if(ev.target.closest("[data-open-student]")) return;      /* 이름은 위에서 따로 처리 */
     if(ev.target.classList.contains("score-in")) return;      /* 점수칸은 빼고 */
     if(ev.target.closest(".chip-mdate")) return;              /* 직보 날짜칸도 빼고 */
     const chip = ev.target.closest(".assign-chip");
