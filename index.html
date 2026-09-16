@@ -736,6 +736,8 @@
     font-family:inherit; text-align:center; width:100%;
   }
   .more-pill:hover{background:var(--c15); border-color:var(--mustard); color:var(--c10);}
+  .more-pill.open{border-style:solid; border-color:var(--mustard); color:var(--c10); background:var(--c15);}
+  .cal-cell.open{box-shadow:inset 0 0 0 1.5px var(--mustard);}
 
   /* 시험 범위 표시 블록 (상세 창) */
   .scope-box{border:1.5px solid var(--c5); border-left:4px solid var(--mustard); border-radius:9px;
@@ -1597,6 +1599,10 @@
       <div class="checkbox-row" style="align-self:center;">
         <input type="checkbox" id="hideEmptyExams" checked>
         <label style="margin:0;">학생 없는 시험 숨기기</label>
+      </div>
+      <div class="checkbox-row" style="align-self:center;">
+        <input type="checkbox" id="mathOnly">
+        <label style="margin:0;" title="수학 시험을 보는 날에만 알약이 뜹니다">수학 시험만 보기</label>
       </div>
     </div>
 
@@ -5676,6 +5682,7 @@ function isRedDay(key){
 /* ---------- 캘린더 학교 검색 ----------
    "가락", "가락중", "ㄱㄹ" 처럼 이름 일부나 초성으로 찾을 수 있어요. */
 let calSchoolQ = "";
+let expandedDays = new Set();      /* '+N개 더' 로 펼쳐 둔 날짜 */
 /* 브라우저 자동완성이 검색칸에 저장된 아이디·토큰을 넣어 버리는 일이 있어,
    화면이 뜬 뒤 잠깐 동안 '사용자가 치지 않은 값'은 지웁니다. */
 (function guardSearchAutofill(){
@@ -5706,11 +5713,14 @@ function schoolMatchesQuery(school, q){
 }
 
 /* 화면 필터(학교 검색 / 학생 없는 시험 숨기기 / 선생님별 보기)를 적용한 전체 시험 목록 */
+function mathOnlyOn(){ return !!document.getElementById("mathOnly")?.checked; }
 function visibleExams(){
   const teacherFilter = document.getElementById("calFilterTeacher").value;
   const hideEmpty = document.getElementById("hideEmptyExams").checked;
+  const mathOnly = mathOnlyOn();
   return exams.filter(e=>{
     if(!e.startDate || !e.endDate || e.notConducted) return false;
+    if(mathOnly && !e.mathDate) return false;          /* 수학 날짜가 없으면 뺍니다 */
     if(calSchoolQ && !schoolMatchesQuery(e.school, calSchoolQ)) return false;
     if(hideEmpty && studentsForExam(e).length === 0) return false;
     if(teacherFilter && !studentsForExam(e).some(s=> examTeacherOf(s)===teacherFilter || regularTeacherOf(s)===teacherFilter)) return false;
@@ -5725,7 +5735,9 @@ function sortExams(list){
   );
 }
 function visibleExamsForDate(key){
-  return sortExams(visibleExams().filter(e=> key>=e.startDate && key<=e.endDate));
+  const mathOnly = mathOnlyOn();
+  return sortExams(visibleExams().filter(e=>
+    mathOnly ? (e.mathDate === key) : (key>=e.startDate && key<=e.endDate)));
 }
 /* 그 달과 하루라도 겹치는 시험 (월 피커의 건수 표시용) */
 function examsInMonth(y,m){
@@ -5915,11 +5927,12 @@ function renderCalendar(){
     const key = dateKey(viewYear, viewMonth, d);
     const dayExams = visibleExamsForDate(key);
     const isToday = key === dateKey(today.getFullYear(), today.getMonth(), today.getDate());
-    const dowIdx = (firstDow + d - 1) % 7; // 0=월 ... 5=토, 6=일
-    const dowClass = dowIdx===5 ? "sat" : dowIdx===6 ? "sun" : "";
+    const dowIdx = (firstDow + d - 1) % 7; // 0=일 ... 6=토
+    const dowClass = dowIdx===6 ? "sat" : dowIdx===0 ? "sun" : "";
     const holi = holidayOf(key);
 
-    const shown = dayExams.slice(0, MAX_PILLS);
+    const openCell = expandedDays.has(key);
+    const shown = openCell ? dayExams : dayExams.slice(0, MAX_PILLS);
     const restCount = dayExams.length - shown.length;
     const tKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
     const pillsHtml = shown.map(e=>{
@@ -5934,10 +5947,11 @@ function renderCalendar(){
     }).join("");
     const moreHtml = restCount>0
       ? `<button class="more-pill" data-more="${key}">+${restCount}개 더</button>`
-      : "";
+      : (openCell && dayExams.length > MAX_PILLS
+          ? `<button class="more-pill open" data-more="${key}">접기</button>` : "");
 
     const isPast = key < dateKey(today.getFullYear(), today.getMonth(), today.getDate());
-    html += `<div class="cal-cell ${isToday?"today":""} ${isPast?"past":""} ${dowClass} ${holi?"holi":""}" data-date="${key}"${holi?` title="${escapeHtml(holi)}"`:""}>
+    html += `<div class="cal-cell ${isToday?"today":""} ${isPast?"past":""} ${dowClass} ${holi?"holi":""} ${openCell&&dayExams.length>MAX_PILLS?"open":""}" data-date="${key}"${holi?` title="${escapeHtml(holi)}"`:""}>
       <div class="num">${d}${holi?`<span class="hol">${escapeHtml(holi)}</span>`:""}</div>
       <div class="pills">${pillsHtml}${moreHtml}</div>
     </div>`;
@@ -5947,7 +5961,13 @@ function renderCalendar(){
     p.addEventListener("click", (ev)=>{ ev.stopPropagation(); openDetailModal(p.dataset.exam, null); });
   });
   grid.querySelectorAll(".more-pill").forEach(b=>{
-    b.addEventListener("click", (ev)=>{ ev.stopPropagation(); openDayModal(b.dataset.more); });
+    /* 새 창 대신 그 칸을 아래로 늘려 전부 보여줍니다 (다시 누르면 접힘) */
+    b.addEventListener("click", (ev)=>{
+      ev.stopPropagation();
+      const k = b.dataset.more;
+      expandedDays.has(k) ? expandedDays.delete(k) : expandedDays.add(k);
+      renderCalendar();
+    });
   });
   renderCalLegend();
 }
@@ -6013,6 +6033,11 @@ document.getElementById("nextMonth").addEventListener("click", ()=> shiftMonth(1
 document.getElementById("todayBtn").addEventListener("click", ()=> goToMonth(today.getFullYear(), today.getMonth()));
 document.getElementById("calFilterTeacher").addEventListener("change", ()=>{
   detailShowAll = false;            /* 선생님을 바꾸면 '전체 보기'는 다시 꺼 둡니다 */
+  expandedDays.clear();
+  renderCalendar();
+});
+document.getElementById("mathOnly").addEventListener("change", ()=>{
+  expandedDays.clear();
   renderCalendar();
 });
 document.getElementById("hideEmptyExams").addEventListener("change", renderCalendar);
