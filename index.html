@@ -1763,6 +1763,8 @@
       <button class="btn secondary edit-only" id="excelUploadBtn">📄 엑셀로 일괄 등록</button>
       <button class="btn secondary edit-only" id="classImportBtn" title="반별 현황표 엑셀에서 반·담임을 읽어옵니다">📋 반 배정 가져오기</button>
       <input type="file" id="classImportInput" accept=".xlsx,.xls" style="display:none;">
+      <button class="btn secondary edit-only" id="scoreImportBtn" title="성적입력 시트의 지필고사 점수를 시험 카드에 채웁니다">📊 시험 점수 가져오기</button>
+      <input type="file" id="scoreImportInput" accept=".xlsx,.xls" style="display:none;">
       <button class="btn secondary" id="excelDownloadBtn" title="지금 화면에 보이는 학생만 내보냅니다">⤓ 엑셀로 내보내기</button>
       <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
       <span id="excelUploadStatus" style="font-size:12px; color:var(--c2);"></span>
@@ -2004,6 +2006,28 @@
     <h3>데이터 정리</h3>
     <p class="modal-meta" id="cleanupMeta"></p>
     <div id="cleanupBody"></div>
+  </div>
+</div>
+
+<!-- 시험 점수 가져오기 모달 -->
+<div class="overlay" id="scoreImportModal">
+  <div class="modal" style="max-width:640px;">
+    <button class="close-x" id="closeScoreImport">&times;</button>
+    <h3>시험 점수 가져오기</h3>
+    <p class="modal-meta" id="scoreImportMeta"></p>
+    <div class="imp-target">
+      <span class="lbl">이 점수는</span>
+      <div class="seg" id="scoreTarget">
+        <button data-e="중간고사" class="on">중간고사</button>
+        <button data-e="기말고사">기말고사</button>
+      </div>
+      <span class="hint">성적입력 시트의 <b>지필고사 점수</b> 칸을 읽습니다</span>
+    </div>
+    <div id="scoreImportBody"></div>
+    <div class="btn-row" style="display:flex; gap:8px; margin-top:16px;">
+      <button class="btn" id="scoreImportApply">적용하기</button>
+      <button class="btn secondary" id="scoreImportCancel">취소</button>
+    </div>
   </div>
 </div>
 
@@ -4418,6 +4442,217 @@ document.getElementById("classImportApply").addEventListener("click", async (ev)
       if(undoFields.length) await restoreStudentFields(undoFields);
       if(addedIds.length) await removeStudentsBulk(addedIds);
       showToast("가져오기를 되돌렸어요.", {type:"warn"});
+    }
+  });
+});
+
+
+/* ---------- 시험 점수 가져오기 ----------
+   "성적입력(중1)" 같은 시트에서 '지필고사 점수' 칸을 읽어
+   학교별 시험 카드의 학생 점수에 그대로 채워 넣습니다.
+   이름·학교로 학생을 찾고, 이름 뒤 숫자는 반 배정 가져오기와 같은 방식으로 떼고 봅니다. */
+
+let scoreRows = [];            // [{name, school, score, sheet}]
+let scoreExamName = "중간고사";
+let scorePlan = null;
+let scoreFileName = "";
+
+/* 제목줄에서 '지필고사' 칸을 찾습니다. 못 찾으면 null */
+function parseScoreSheet(grid){
+  const HEAD = 14;             /* 제목줄은 보통 맨 위 몇 줄 안에 있습니다 */
+  for(let r = 0; r < Math.min(grid.length, HEAD); r++){
+    const row = (grid[r] || []).map(normLabel);
+    const scoreCol = row.findIndex(v=> v && /지필/.test(v));
+    if(scoreCol < 0) continue;
+    const nameCol   = row.findIndex(v=> v && /^(이름|성명|학생명|학생)$/.test(v));
+    const schoolCol = row.findIndex(v=> v && /^(학교|출신학교|중학교)$/.test(v));
+    if(nameCol < 0 || schoolCol < 0) continue;
+    const out = [];
+    for(let rr = r + 1; rr < grid.length; rr++){
+      const name = cellStr(grid, rr, nameCol);
+      const school = cellStr(grid, rr, schoolCol);
+      if(!name || !school) continue;
+      const raw = cellStr(grid, rr, scoreCol).replace(/[^\d.\-]/g, "");
+      if(raw === "") continue;
+      const score = Number(raw);
+      if(!isFinite(score)) continue;
+      out.push({ name, school, score: Math.max(0, Math.min(100, Math.round(score))) });
+    }
+    return out;
+  }
+  return null;
+}
+
+/* 시트 이름에서 학년을 봅니다 — "성적입력(중1)" → 중1 */
+function gradeFromSheetName(nm){
+  const m = String(nm || "").match(/(중|고)\s*([1-3])/);
+  return m ? (m[1] + m[2]) : "";
+}
+
+function buildScorePlan(rows, examName){
+  const claimed = new Set();
+  const fill = [], change = [], same = [], noStudent = [], noExam = [];
+  const byExam = new Map();           /* examId → {exam, scores:{}} */
+
+  rows.forEach(r=>{
+    const alive = s=> sameSchool(s.school, r.school) && statusOf(s) !== "퇴원" && !claimed.has(s.id);
+    let matched = students.filter(s=> s.name === r.name && alive(s));
+    if(matched.length === 0) matched = students.filter(s=> baseName(s.name) === baseName(r.name) && alive(s));
+    if(matched.length !== 1){ noStudent.push({ ...r, count: matched.length }); return; }
+
+    const s = matched[0];
+    claimed.add(s.id);
+    const exam = findExam(s.school, s.grade, examName);
+    if(!exam){ noExam.push({ ...r, grade: s.grade }); return; }
+
+    const cur = (exam.scores || {})[s.id];
+    const row = { ...r, id: s.id, storedName: s.name, examId: exam.id, before: cur };
+    if(cur === r.score){ same.push(row); return; }
+    (cur === undefined || cur === null || cur === "") ? fill.push(row) : change.push(row);
+
+    if(!byExam.has(exam.id)) byExam.set(exam.id, { exam, scores: { ...(exam.scores || {}) } });
+    byExam.get(exam.id).scores[s.id] = r.score;
+  });
+
+  return { fill, change, same, noStudent, noExam, byExam };
+}
+
+function renderScorePlan(){
+  document.querySelectorAll("#scoreTarget button").forEach(b=>
+    b.classList.toggle("on", b.dataset.e === scoreExamName));
+  const plan = scorePlan;
+  const total = plan.fill.length + plan.change.length + plan.same.length + plan.noStudent.length + plan.noExam.length;
+  document.getElementById("scoreImportMeta").textContent =
+    `${scoreFileName} · 점수가 적힌 학생 ${total}명을 읽었어요`;
+
+  let html = `<div class="imp-sum">
+    <div class="imp-card new"><div class="n">${plan.fill.length}</div><div class="l">새로 채움</div></div>
+    ${plan.change.length ? `<div class="imp-card upd"><div class="n">${plan.change.length}</div><div class="l">점수 바뀜</div></div>` : ""}
+    <div class="imp-card same"><div class="n">${plan.same.length}</div><div class="l">이미 같음</div></div>
+    ${plan.noStudent.length ? `<div class="imp-card warn"><div class="n">${plan.noStudent.length}</div><div class="l">학생 못 찾음</div></div>` : ""}
+    ${plan.noExam.length ? `<div class="imp-card warn"><div class="n">${plan.noExam.length}</div><div class="l">시험 카드 없음</div></div>` : ""}
+  </div>`;
+
+  const listOf = (arr, render, limit=40) =>
+    `<div class="imp-list">${arr.slice(0, limit).map(render).join("")}</div>` +
+    (arr.length > limit ? `<p class="imp-note">외 ${arr.length - limit}명</p>` : "");
+
+  if(plan.byExam.size){
+    const lines = [...plan.byExam.values()]
+      .map(v=> `${shortSchool(v.exam.school)} ${v.exam.grade}`).sort((a,b)=> a.localeCompare(b,"ko"));
+    html += `<p class="imp-note">${escapeHtml(scoreExamName)} 카드 ${plan.byExam.size}곳에 씁니다 — ${escapeHtml(lines.join(", "))}</p>`;
+  }
+
+  if(plan.change.length){
+    html += `<div class="imp-sec"><h5>점수가 바뀌는 학생 ${plan.change.length}명</h5>` +
+      listOf(plan.change, u=>`<div class="imp-row">
+        <span class="who">${escapeHtml(u.storedName)}</span>
+        <span class="sch">${escapeHtml(shortSchool(u.school))}</span>
+        <span class="chg"><del>${escapeHtml(String(u.before))}</del><ins>${u.score}</ins></span></div>`) + `</div>`;
+  }
+  if(plan.fill.length){
+    html += `<div class="imp-sec"><h5>새로 채워지는 학생 ${plan.fill.length}명</h5>` +
+      listOf(plan.fill, u=>`<div class="imp-row">
+        <span class="who">${escapeHtml(u.storedName)}</span>
+        <span class="sch">${escapeHtml(shortSchool(u.school))}</span>
+        <span class="chg">${u.score}점</span></div>`) + `</div>`;
+  }
+  if(plan.noExam.length){
+    const schools = uniq(plan.noExam.map(x=> `${shortSchool(x.school)} ${x.grade}`)).sort();
+    html += `<div class="imp-sec"><h5>${escapeHtml(scoreExamName)} 카드가 없어 건너뛴 학생 ${plan.noExam.length}명</h5>
+      <p class="imp-note">시험정보 입력 탭에서 이 학교의 ${escapeHtml(scoreExamName)}를 먼저 저장한 뒤 다시 넣어주세요 — ${escapeHtml(schools.join(", "))}</p></div>`;
+  }
+  if(plan.noStudent.length){
+    html += `<div class="imp-sec"><h5>명단에서 찾지 못한 학생 ${plan.noStudent.length}명</h5>
+      <p class="imp-note">이름·학교가 다르거나 퇴원 처리된 학생입니다. 학생 관리에서 확인해주세요.</p>` +
+      listOf(plan.noStudent, u=>`<div class="imp-row">
+        <span class="who">${escapeHtml(u.name)}</span>
+        <span class="sch">${escapeHtml(shortSchool(u.school))}</span>
+        <span class="chg">${u.count > 1 ? `같은 학교에 동명이인 ${u.count}명` : "명단에 없음"} · ${u.score}점</span></div>`) + `</div>`;
+  }
+
+  html += `<p class="imp-note">점수만 씁니다. 직전보충 참석·시험 범위 등 다른 값은 건드리지 않습니다. 적용 뒤 “되돌리기”로 한 번에 취소할 수 있어요.</p>`;
+  document.getElementById("scoreImportBody").innerHTML = html;
+  document.getElementById("scoreImportApply").disabled = (plan.fill.length + plan.change.length) === 0;
+}
+
+function openScoreImport(sheets, fileName){
+  /* 앱에 있는 학년의 시트만 읽습니다 (중2·중3 시트는 건너뜁니다) */
+  const haveGrades = new Set(students.map(s=> s.grade).filter(Boolean));
+  const mine = sheets.filter(sh=> haveGrades.has(gradeFromSheetName(sh.name)));
+  const use = mine.length ? mine : sheets;      /* 우리 학년 시트가 없으면 전체를 훑습니다 */
+  let rows = [];
+  use.forEach(sh=>{
+    const got = parseScoreSheet(sh.grid);
+    if(got && got.length) rows = rows.concat(got.map(x=> ({ ...x, sheet: sh.name })));
+  });
+  if(rows.length === 0){
+    showToast("'지필고사 점수' 칸이 있는 시트를 찾지 못했어요. 성적입력 시트가 들어 있는 파일인지 확인해주세요.",
+      {type:"warn", duration:9000});
+    return false;
+  }
+  scoreRows = rows;
+  scoreFileName = fileName || "";
+  scorePlan = buildScorePlan(scoreRows, scoreExamName);
+  renderScorePlan();
+  document.getElementById("scoreImportModal").classList.add("active");
+  return true;
+}
+function closeScoreImport(){
+  document.getElementById("scoreImportModal").classList.remove("active");
+  scoreRows = []; scorePlan = null;
+}
+
+document.getElementById("scoreImportBtn").addEventListener("click", ()=>{
+  if(!guardEdit()) return;
+  document.getElementById("scoreImportInput").click();
+});
+document.getElementById("scoreImportInput").addEventListener("change", async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const grids = await gridsOf(await file.arrayBuffer());
+    if(!grids) showToast("엑셀을 읽지 못했어요. 파일이 .xlsx 인지 확인해주세요.", {type:"bad"});
+    else openScoreImport(grids, file.name);
+  }catch(err){
+    console.error(err);
+    showToast("파일을 읽는 중 문제가 생겼어요.", {type:"bad"});
+  }finally{ e.target.value = ""; }
+});
+document.querySelectorAll("#scoreTarget button").forEach(b=> b.addEventListener("click", ()=>{
+  scoreExamName = b.dataset.e;
+  if(!scoreRows.length) return;
+  scorePlan = buildScorePlan(scoreRows, scoreExamName);
+  renderScorePlan();
+}));
+document.getElementById("closeScoreImport").addEventListener("click", closeScoreImport);
+document.getElementById("scoreImportCancel").addEventListener("click", closeScoreImport);
+document.getElementById("scoreImportModal").addEventListener("click", (ev)=>{
+  if(ev.target.id === "scoreImportModal") closeScoreImport();
+});
+
+document.getElementById("scoreImportApply").addEventListener("click", async (ev)=>{
+  if(!guardEdit()) return;
+  const plan = scorePlan;
+  if(!plan || plan.byExam.size === 0) return;
+  const btn = ev.currentTarget;
+  btn.disabled = true; btn.textContent = "적용 중...";
+
+  /* 되돌리기용으로 지금 점수를 그대로 떠 둡니다 */
+  const undo = [...plan.byExam.values()].map(v=> ({ id: v.exam.id, scores: { ...(v.exam.scores || {}) } }));
+  for(const v of plan.byExam.values()){
+    await updateExamDoc(v.exam.id, { scores: v.scores });
+  }
+  const n = plan.fill.length + plan.change.length;
+  logChange("시험 점수 가져오기", `${scoreExamName} · ${scoreFileName}`, n);
+
+  btn.disabled = false; btn.textContent = "적용하기";
+  closeScoreImport();
+  showToast(`${scoreExamName} 점수 ${n}명분을 채웠어요.`, {
+    type:"ok", actionLabel:"되돌리기",
+    onAction: async ()=>{
+      for(const u of undo){ await updateExamDoc(u.id, { scores: u.scores }); }
+      showToast("점수 가져오기를 되돌렸어요.", {type:"warn"});
     }
   });
 });
