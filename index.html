@@ -765,6 +765,20 @@
   .cmp-row{display:flex; gap:12px; align-items:flex-start; border:1.5px solid var(--c5); border-radius:11px;
     padding:12px 14px; background:var(--c4); margin-bottom:9px; cursor:pointer; width:100%;
     text-align:left; font-family:inherit;}
+  /* 학교 카드 바로 밑에 붙는 학생 명단 */
+  .cmp-item{margin-bottom:9px;}
+  .cmp-item .cmp-row{margin-bottom:0; border-bottom-left-radius:0; border-bottom-right-radius:0;}
+  .day-stu{border:1.5px solid var(--c5); border-top:none; border-radius:0 0 11px 11px;
+    background:var(--c16); padding:8px 14px 10px;}
+  .day-stu.empty{font-size:12px; font-weight:700; color:var(--c3);}
+  .ds-grp{display:flex; gap:8px; align-items:baseline; padding:3px 0; flex-wrap:wrap;}
+  .ds-grp + .ds-grp{border-top:1px dashed var(--c13);}
+  .ds-t{flex:0 0 auto; min-width:64px; font-size:11.5px; font-weight:800; color:var(--c9);}
+  .ds-names{display:flex; flex-wrap:wrap; gap:4px;}
+  .ds-n{border:1px solid var(--c39); background:var(--paper-card); border-radius:999px;
+    padding:2px 9px; font-size:12px; font-weight:700; font-family:inherit; color:var(--ink); cursor:pointer;}
+  .ds-n:hover{border-color:var(--mustard); background:var(--c25);}
+  .ds-n .sc{margin-left:5px; font-weight:900; color:var(--green);}
   .cmp-row:hover{border-color:var(--mustard); background:var(--c25);}
   .cmp-row.missing{background:var(--c18); border-color:var(--c60);}
   .cmp-row.missing:hover{background:var(--c83);}
@@ -6112,13 +6126,39 @@ function openDayModal(key, keepFilters){
 
   /* 학교별 시험 범위 비교 목록 */
   const box = document.getElementById("dayExamList");
+  /* 캘린더에서 고른 선생님이 있으면 학생 명단도 그 선생님 담당만 */
+  const calTeacher = (document.getElementById("calFilterTeacher")?.value || "").trim();
+  const studentsOf = (e)=>{
+    const ss = studentsForExam(e);
+    return calTeacher
+      ? ss.filter(s=> examTeacherOf(s) === calTeacher || regularTeacherOf(s) === calTeacher)
+      : ss;
+  };
+  const stuBlock = (e)=>{
+    const ss = studentsOf(e);
+    if(!ss.length) return `<div class="day-stu empty">${
+      calTeacher ? escapeHtml(calTeacher) + " 선생님이 맡은 학생이 없어요" : "등록된 학생이 없어요"}</div>`;
+    const sc = scoresOf(e);
+    const by = {};
+    ss.forEach(s=>{ const t = teacherOf(s) || "담임 미지정"; (by[t] = by[t] || []).push(s); });
+    const names = Object.keys(by).sort((a,b)=> a.localeCompare(b, "ko"));
+    return `<div class="day-stu">` + names.map(t=>
+      `<div class="ds-grp"><span class="ds-t">${escapeHtml(t)}${t === "담임 미지정" ? "" : "T"}</span>` +
+      `<span class="ds-names">${by[t].map(s=>{
+        const v = sc[s.id];
+        return `<button class="ds-n" data-student="${escapeHtml(s.id)}">${escapeHtml(s.name)}` +
+               (v === undefined || v === null || v === "" ? "" : `<span class="sc">${escapeHtml(String(v))}</span>`) +
+               `</button>`;
+      }).join("")}</span></div>`).join("") + `</div>`;
+  };
   box.innerHTML = list.length===0
     ? `<div class="empty-state">${all.length? "이 조건에 맞는 시험이 없어요." : "이 날짜에 표시할 시험이 없어요."}</div>`
     : list.map(e=>{
-        const count = studentsForExam(e).length;
+        const count = studentsOf(e).length;
         const period = (e.startDate===e.endDate) ? fmtWithDow(e.startDate) : `${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)}`;
         const print = e.printStatus==="confirmed" ? "프린트 확인" : "프린트 미확인";
-        return `<button class="cmp-row ${hasScope(e)?"":"missing"}" data-exam="${e.id}">
+        return `<div class="cmp-item">
+        <button class="cmp-row ${hasScope(e)?"":"missing"}" data-exam="${e.id}">
           <span class="cmp-school">
             <span class="sname">${escapeHtml(shortSchool(e.school))}</span>
             <span class="smeta">
@@ -6132,7 +6172,9 @@ function openDayModal(key, keepFilters){
             ${e.schoolNotice ? `<span class="nt">📌 ${escapeHtml(e.schoolNotice)}</span>` : ""}
             <span class="period">${escapeHtml(period)} · ${print} · ${escapeHtml(e.examName||"")}</span>
           </span>
-        </button>`;
+        </button>
+        ${stuBlock(e)}
+        </div>`;
       }).join("");
 
   box.querySelectorAll(".cmp-row").forEach(row=>{
@@ -6142,6 +6184,11 @@ function openDayModal(key, keepFilters){
       openDetailModal(row.dataset.exam, {type:"day", key: backKey});
     });
   });
+  /* 학생 이름을 누르면 그 학생 상세 창 */
+  box.querySelectorAll(".ds-n").forEach(btn=> btn.addEventListener("click", (ev)=>{
+    ev.stopPropagation();
+    openStudentModal(btn.dataset.student);
+  }));
   document.getElementById("dayModal").classList.add("active");
 }
 function closeDayModal(){
