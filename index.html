@@ -5737,6 +5737,12 @@ function visibleExams(){
     return true;
   });
 }
+/* 캘린더의 '선생님별 보기'가 켜져 있으면, 알약·목록에 뜨는 인원수도 그 선생님 담당만 셉니다 */
+function calStudentsForExam(e){
+  const teacherFilter = (document.getElementById("calFilterTeacher")?.value || "").trim();
+  const ss = studentsForExam(e);
+  return teacherFilter ? ss.filter(s=> examTeacherOf(s)===teacherFilter || regularTeacherOf(s)===teacherFilter) : ss;
+}
 function sortExams(list){
   return [...list].sort((a,b)=>
     (a.school||"").localeCompare(b.school||"") ||
@@ -5896,7 +5902,7 @@ function renderCalListView(){
       </div>
       <div class="cl-body">
         ${list.map(e=>{
-          const count = studentsForExam(e).length;
+          const count = calStudentsForExam(e).length;
           const scope = e.examScope ? escapeHtml(e.examScope.split("\n")[0]).slice(0,34)
                       : (unitsOf(e).length ? escapeHtml(unitsOf(e).join(" · ")).slice(0,40) : "시험 범위 미입력");
           const isMath = !!e.mathDate && e.mathDate === key;
@@ -5946,7 +5952,7 @@ function renderCalendar(){
     const restCount = dayExams.length - shown.length;
     const tKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
     const pillsHtml = shown.map(e=>{
-      const count = studentsForExam(e).length;
+      const count = calStudentsForExam(e).length;
       /* 날짜만 봐도 중간·기말은 알 수 있어서 알약에서는 뺐습니다 */
       const label = `${shortSchool(e.school)} ${e.grade||""}`.trim();
       const full = `${e.school||""} ${e.grade||""} ${e.examName||""}`.trim();
