@@ -527,6 +527,25 @@
   .filter-bar label{margin-bottom:4px; color:var(--c135);}
   .filter-bar select{background:var(--c1);}
 
+  /* 필터 줄 체크박스 — 토글 스위치 모양으로 (기본 네모 체크박스 대신) */
+  .checkbox-row{display:flex; align-items:center; gap:9px; cursor:pointer; user-select:none;}
+  .checkbox-row label{margin:0; cursor:pointer; font-weight:600; font-size:13px; color:var(--ink);}
+  .checkbox-row input[type="checkbox"]{
+    appearance:none; -webkit-appearance:none; margin:0; flex-shrink:0;
+    width:38px; height:22px; border-radius:999px; position:relative;
+    background:var(--c19); border:1.5px solid var(--c13); cursor:pointer;
+    transition:background .16s ease, border-color .16s ease;
+  }
+  .checkbox-row input[type="checkbox"]::after{
+    content:""; position:absolute; top:2px; left:2px; width:15px; height:15px;
+    border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.28);
+    transition:transform .16s ease;
+  }
+  .checkbox-row input[type="checkbox"]:checked{ background:var(--mustard); border-color:var(--mustard); }
+  .checkbox-row input[type="checkbox"]:checked::after{ transform:translateX(16px); }
+  .checkbox-row input[type="checkbox"]:hover{ border-color:var(--rust); }
+  .checkbox-row input[type="checkbox"]:focus-visible{ outline:2px solid var(--rust); outline-offset:2px; }
+
   .student-checks{
     display:flex; flex-wrap:wrap; gap:8px; border:1.5px solid var(--c23); border-radius:9px;
     padding:10px; max-height:160px; overflow-y:auto; background:var(--c4);
@@ -1383,14 +1402,26 @@
   .score-in{margin-left:auto; width:52px; font-size:12px; font-weight:800; padding:2px 5px;
     text-align:center; border:1px solid var(--c42); border-radius:6px; background:var(--paper-card); color:var(--ink);}
   .score-in::-webkit-outer-spin-button, .score-in::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
-  /* 학생별 직전보충 날짜 */
-  .chip-mdate{display:flex; align-items:center; gap:5px; width:100%; margin:1px 0 3px;}
+  /* 학생별 직전보충 날짜 (한 학생에 여러 건 가능) */
+  .chip-mdate{display:flex; align-items:flex-start; gap:5px; width:100%; margin:1px 0 3px;}
   .chip-mdate i{font-style:normal; font-size:9.5px; font-weight:800; letter-spacing:.02em;
-    background:var(--c29); color:var(--c9); border-radius:5px; padding:1px 5px; flex:0 0 auto;}
-  .mdate-in{flex:1; min-width:0; font-size:11px; font-weight:700; font-family:inherit;
-    padding:2px 5px; border:1px solid var(--c42); border-radius:6px;
-    background:var(--paper-card); color:var(--ink); cursor:text;}
-  .assign-chip{min-width:176px;}
+    background:var(--c29); color:var(--c9); border-radius:5px; padding:1px 5px; flex:0 0 auto; margin-top:3px;}
+  .mdate-list{display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;}
+  .mdate-entry{display:flex; align-items:center; gap:3px;}
+  .mdate-date, .mdate-time, .mdate-in{font-size:11px; font-weight:700; font-family:inherit;
+    padding:2px 4px; border:1px solid var(--c42); border-radius:6px;
+    background:var(--paper-card); color:var(--ink); cursor:text; min-width:0;}
+  .mdate-date{flex:1.3;}
+  .mdate-time{flex:1;}
+  .mdate-del{flex:0 0 auto; width:16px; height:16px; line-height:14px; padding:0; text-align:center;
+    border:1px solid var(--c42); border-radius:50%; background:var(--paper-card); color:var(--c2);
+    font-size:11px; cursor:pointer;}
+  .mdate-del:hover{background:var(--c18); color:var(--rust); border-color:var(--rust);}
+  .mdate-add{align-self:flex-start; font-size:10.5px; font-weight:700; color:var(--rust);
+    background:transparent; border:1px dashed var(--c42); border-radius:6px; padding:2px 7px; cursor:pointer;}
+  .mdate-add:hover{background:var(--c18); border-color:var(--rust);}
+  .mdate-empty{font-size:11px; color:var(--c2);}
+  .assign-chip{min-width:208px;}
   .score-in[type=number]{-moz-appearance:textfield;}
   .assign-chip{cursor:pointer;}
   .assign-chip .score-in{cursor:text;}
@@ -1612,6 +1643,10 @@
       <div class="checkbox-row" style="align-self:center;">
         <input type="checkbox" id="mathOnly">
         <label style="margin:0;" title="수학 시험을 보는 날에만 알약이 뜹니다">수학 시험만 보기</label>
+      </div>
+      <div class="checkbox-row" style="align-self:center;">
+        <input type="checkbox" id="makeupOnly">
+        <label style="margin:0;" title="직전보충 일정이 걸린 시험만 보여줍니다 (시험 전체 일정 또는 학생별 직보 날짜)">직보만 보기</label>
       </div>
     </div>
 
@@ -5724,13 +5759,22 @@ function schoolMatchesQuery(school, q){
 
 /* 화면 필터(학교 검색 / 학생 없는 시험 숨기기 / 선생님별 보기)를 적용한 전체 시험 목록 */
 function mathOnlyOn(){ return !!document.getElementById("mathOnly")?.checked; }
+function makeupOnlyOn(){ return !!document.getElementById("makeupOnly")?.checked; }
+/* 이 시험에 직전보충이 하나라도 걸려 있는지 — 시험 전체 일정 또는 학생별 직보 날짜 */
+function examHasMakeup(e){
+  if((e.makeupDate||"").trim()) return true;
+  const md = e.makeupDates || {};
+  return Object.values(md).some(v=> mdateEntriesOf(v).some(en=> (en.date||"").trim()));
+}
 function visibleExams(){
   const teacherFilter = document.getElementById("calFilterTeacher").value;
   const hideEmpty = document.getElementById("hideEmptyExams").checked;
   const mathOnly = mathOnlyOn();
+  const makeupOnly = makeupOnlyOn();
   return exams.filter(e=>{
     if(!e.startDate || !e.endDate || e.notConducted) return false;
     if(mathOnly && !e.mathDate) return false;          /* 수학 날짜가 없으면 뺍니다 */
+    if(makeupOnly && !examHasMakeup(e)) return false;  /* 직전보충이 걸린 시험만 */
     if(calSchoolQ && !schoolMatchesQuery(e.school, calSchoolQ)) return false;
     if(hideEmpty && studentsForExam(e).length === 0) return false;
     if(teacherFilter && !studentsForExam(e).some(s=> examTeacherOf(s)===teacherFilter)) return false;
@@ -6053,6 +6097,10 @@ document.getElementById("calFilterTeacher").addEventListener("change", ()=>{
   renderCalendar();
 });
 document.getElementById("mathOnly").addEventListener("change", ()=>{
+  expandedDays.clear();
+  renderCalendar();
+});
+document.getElementById("makeupOnly").addEventListener("change", ()=>{
   expandedDays.clear();
   renderCalendar();
 });
@@ -7506,6 +7554,12 @@ let detailPending = null;          /* {examId, attend, scores} */
 
 function attendOf(exam){ return (exam && exam.makeupAttend) || {}; }
 function mdatesOf(exam){ return (exam && exam.makeupDates) || {}; }   /* 학생별 직보 날짜 */
+/* 학생 한 명의 직보 일정칸 — 예전엔 문자열 하나("YYYY-MM-DD")였는데, 이제 여러 건({date,time}[])을 넣을 수 있습니다 */
+function mdateEntriesOf(raw){
+  if(Array.isArray(raw)) return raw;
+  if(typeof raw === "string" && raw.trim()) return [{date: raw, time: ""}];
+  return [];
+}
 function scoresOf(exam){ return (exam && exam.scores) || {}; }
 
 function markDetailStatus(text){
@@ -7531,7 +7585,10 @@ function queueDetailSave(examId, patch){
     const attend = {...attendOf(exam)}, scores = {...scoresOf(exam)}, mdates = {...mdatesOf(exam)};
     Object.entries(job.attend).forEach(([k,v])=>{ if(v) attend[k] = true; else delete attend[k]; });
     Object.entries(job.scores).forEach(([k,v])=>{ if(v === "" || v === null || v === undefined) delete scores[k]; else scores[k] = v; });
-    Object.entries(job.mdates).forEach(([k,v])=>{ if(!v) delete mdates[k]; else mdates[k] = v; });
+    Object.entries(job.mdates).forEach(([k,v])=>{
+      const arr = Array.isArray(v) ? v.filter(en=> (en.date||"").trim() || (en.time||"").trim()) : [];
+      if(!arr.length) delete mdates[k]; else mdates[k] = arr;
+    });
     try{
       await updateExamDoc(job.examId, { makeupAttend: attend, scores, makeupDates: mdates });
       markDetailStatus("저장됨");
@@ -7693,7 +7750,7 @@ function openDetailModal(examId, returnTo){
   const missingRegular = relevant.filter(s=> !regularTeacherOf(s));
 
   const attend = attendOf(exam), scores = scoresOf(exam), mdates = mdatesOf(exam);
-  const mdateN = relevant.filter(s=> (mdates[s.id]||"").trim()).length;
+  const mdateN = relevant.filter(s=> mdateEntriesOf(mdates[s.id]).some(en=> (en.date||"").trim())).length;
   const attendN = relevant.filter(s=> attend[s.id]).length;
   const scoreN  = relevant.filter(s=> scoresOf(exam)[s.id] !== undefined && scoresOf(exam)[s.id] !== "").length;
   const scoreLabel = `${exam.examName || "시험"} 점수`;
@@ -7746,10 +7803,19 @@ function openDetailModal(examId, returnTo){
         <input class="score-in" type="number" min="0" max="100" inputmode="numeric"
                placeholder="점수" value="${sc===undefined||sc===null?"":escapeHtml(String(sc))}" ${editMode?"":"disabled"}>
       </span>
-      <span class="chip-mdate">
+      <span class="chip-mdate" data-sid="${escapeHtml(s.id)}">
         <i>직보</i>
-        <input class="mdate-in" type="date" value="${escapeHtml(mdates[s.id]||"")}"
-               title="이 학생이 직전보충 오는 날" ${editMode?"":"disabled"}>
+        <span class="mdate-list">${(()=>{
+          const entries = mdateEntriesOf(mdates[s.id]);
+          if(!entries.length) return editMode ? "" : `<span class="mdate-empty">--</span>`;
+          return entries.map((en,idx)=> `<span class="mdate-entry" data-idx="${idx}">
+              <input class="mdate-date" type="date" value="${escapeHtml(en.date||"")}"
+                     title="이 학생이 직전보충 오는 날" ${editMode?"":"disabled"}>
+              <input class="mdate-time" type="time" value="${escapeHtml(en.time||"")}"
+                     title="시간" ${editMode?"":"disabled"}>
+              ${editMode?`<button type="button" class="mdate-del" title="이 일정 삭제">×</button>`:""}
+            </span>`).join("");
+        })()}${editMode?`<button type="button" class="mdate-add" title="직보 일정 추가">+ 추가</button>`:""}</span>
       </span>
       ${teaLine("내신담임", examTeacherOf(s), "tea", teacherBasis==="exam")}
       ${line("내신반", (s.examClass||"").trim(), "ex")}
@@ -7837,16 +7903,64 @@ function openDetailModal(examId, returnTo){
   });
 
   /* 점수 입력 */
-  /* 학생별 직보 날짜 */
+  /* 학생별 직보 날짜(+시간) — 한 학생에 여러 건 가능 */
+  const gatherMdateEntries = (listEl)=> [...listEl.querySelectorAll(".mdate-entry")].map(row=> ({
+    date: row.querySelector(".mdate-date")?.value || "",
+    time: row.querySelector(".mdate-time")?.value || ""
+  }));
+  const refreshMdateCount = ()=>{
+    const cnt = document.getElementById("mdateCount");
+    if(!cnt) return;
+    let n = 0;
+    tgBox.querySelectorAll(".mdate-list").forEach(l=>{
+      if(gatherMdateEntries(l).some(en=> (en.date||"").trim())) n++;
+    });
+    cnt.textContent = n;
+  };
+  const saveMdatesFor = (sid, listEl)=>{
+    const entries = gatherMdateEntries(listEl).filter(en=> (en.date||"").trim() || (en.time||"").trim());
+    refreshMdateCount();
+    queueDetailSave(examId, { mdates: { [sid]: entries } });
+  };
   tgBox.addEventListener("change", (ev)=>{
     const inp = ev.target;
-    if(!inp.classList.contains("mdate-in")) return;
-    const sid = inp.closest(".assign-chip")?.dataset.sid;
-    if(!sid) return;
-    if(!guardEdit()){ inp.value = mdatesOf(exam)[sid] || ""; return; }
-    const cnt = document.getElementById("mdateCount");
-    if(cnt) cnt.textContent = [...tgBox.querySelectorAll(".mdate-in")].filter(x=> x.value.trim() !== "").length;
-    queueDetailSave(examId, { mdates: { [sid]: inp.value } });
+    if(!inp.classList.contains("mdate-date") && !inp.classList.contains("mdate-time")) return;
+    const chip = inp.closest(".chip-mdate");
+    const sid = chip?.dataset.sid;
+    const listEl = chip?.querySelector(".mdate-list");
+    if(!sid || !listEl) return;
+    if(!guardEdit()){ if(currentDetailExamId===examId) openDetailModal(examId, returnTo); return; }
+    saveMdatesFor(sid, listEl);
+  });
+  tgBox.addEventListener("click", (ev)=>{
+    const addBtn = ev.target.closest(".mdate-add");
+    if(addBtn){
+      ev.stopPropagation();
+      if(!guardEdit()) return;
+      const listEl = addBtn.closest(".mdate-list");
+      const emptyMsg = listEl.querySelector(".mdate-empty");
+      if(emptyMsg) emptyMsg.remove();
+      const idx = listEl.querySelectorAll(".mdate-entry").length;
+      const row = document.createElement("span");
+      row.className = "mdate-entry"; row.dataset.idx = idx;
+      row.innerHTML = `<input class="mdate-date" type="date" value="" title="이 학생이 직전보충 오는 날">` +
+        `<input class="mdate-time" type="time" value="" title="시간">` +
+        `<button type="button" class="mdate-del" title="이 일정 삭제">×</button>`;
+      listEl.insertBefore(row, addBtn);
+      row.querySelector(".mdate-date")?.focus();
+      return;
+    }
+    const delBtn = ev.target.closest(".mdate-del");
+    if(delBtn){
+      ev.stopPropagation();
+      if(!guardEdit()) return;
+      const chip = delBtn.closest(".chip-mdate");
+      const sid = chip?.dataset.sid;
+      const listEl = chip?.querySelector(".mdate-list");
+      delBtn.closest(".mdate-entry")?.remove();
+      if(sid && listEl) saveMdatesFor(sid, listEl);
+      return;
+    }
   });
 
   tgBox.addEventListener("input", (ev)=>{
@@ -7866,7 +7980,7 @@ function openDetailModal(examId, returnTo){
     if(cnt) cnt.textContent = [...tgBox.querySelectorAll(".score-in")].filter(x=> x.value.trim() !== "").length;
     queueDetailSave(examId, { scores: { [sid]: v } });
   });
-  const isChipInput = el => el.classList.contains("score-in") || el.classList.contains("mdate-in");
+  const isChipInput = el => el.classList.contains("score-in") || el.classList.contains("mdate-date") || el.classList.contains("mdate-time");
   tgBox.addEventListener("focusin", (ev)=>{ if(isChipInput(ev.target)) detailBusy = true; });
   tgBox.addEventListener("focusout", (ev)=>{
     if(isChipInput(ev.target)) setTimeout(()=>{ if(!detailPending) detailBusy = false; }, 400);
