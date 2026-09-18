@@ -5733,7 +5733,7 @@ function visibleExams(){
     if(mathOnly && !e.mathDate) return false;          /* 수학 날짜가 없으면 뺍니다 */
     if(calSchoolQ && !schoolMatchesQuery(e.school, calSchoolQ)) return false;
     if(hideEmpty && studentsForExam(e).length === 0) return false;
-    if(teacherFilter && !studentsForExam(e).some(s=> examTeacherOf(s)===teacherFilter || regularTeacherOf(s)===teacherFilter)) return false;
+    if(teacherFilter && !studentsForExam(e).some(s=> examTeacherOf(s)===teacherFilter)) return false;
     return true;
   });
 }
@@ -5741,7 +5741,7 @@ function visibleExams(){
 function calStudentsForExam(e){
   const teacherFilter = (document.getElementById("calFilterTeacher")?.value || "").trim();
   const ss = studentsForExam(e);
-  return teacherFilter ? ss.filter(s=> examTeacherOf(s)===teacherFilter || regularTeacherOf(s)===teacherFilter) : ss;
+  return teacherFilter ? ss.filter(s=> examTeacherOf(s)===teacherFilter) : ss;
 }
 function sortExams(list){
   return [...list].sort((a,b)=>
@@ -6172,7 +6172,7 @@ function openDayModal(key, keepFilters){
   const studentsOf = (e)=>{
     const ss = studentsForExam(e);
     return calTeacher
-      ? ss.filter(s=> examTeacherOf(s) === calTeacher || regularTeacherOf(s) === calTeacher)
+      ? ss.filter(s=> examTeacherOf(s) === calTeacher)
       : ss;
   };
   const stuBlock = (e)=>{
@@ -7677,7 +7677,7 @@ function openDetailModal(examId, returnTo){
   const calTeacher = (document.getElementById("calFilterTeacher")?.value || "").trim();
   const everyone = studentsForExam(exam);
   const relevant = (calTeacher && !detailShowAll)
-    ? everyone.filter(s=> examTeacherOf(s) === calTeacher || regularTeacherOf(s) === calTeacher)
+    ? everyone.filter(s=> examTeacherOf(s) === calTeacher)
     : everyone;
   const byTeacher = {};
   relevant.forEach(s=>{
