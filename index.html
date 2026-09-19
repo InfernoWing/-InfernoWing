@@ -1624,9 +1624,9 @@
 
     <div class="filter-bar">
       <div>
-        <label>학교 검색</label>
+        <label>학교 · 학생 검색</label>
         <div class="school-search">
-          <input type="text" id="calSchoolSearch" list="schoolList" name="school-q" placeholder="학교 이름 (초성도 됩니다)"
+          <input type="text" id="calSchoolSearch" list="schoolList" name="school-q" placeholder="학교 또는 학생 이름 (초성도 됩니다)"
                  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore>
           <button class="clr" id="calSchoolClear" title="지우기">&times;</button>
         </div>
@@ -5756,6 +5756,13 @@ function schoolMatchesQuery(school, q){
   if(isChosungQuery(q)) return nameChosung(name).startsWith(q);
   return name.toLowerCase().includes(q);
 }
+/* "학교 검색"칸에 학생 이름을 쳐도 그 학생의 학교 시험이 나오도록 —
+   학교 이름과 같은 방식(부분 일치 · 초성)으로 재원 학생 이름도 같이 봅니다 */
+function schoolBoxMatchesExam(e, q){
+  if(!q) return true;
+  if(schoolMatchesQuery(e.school, q)) return true;
+  return studentsForExam(e).some(s=> statusOf(s)==="재원" && schoolMatchesQuery(s.name, q));
+}
 
 /* 화면 필터(학교 검색 / 학생 없는 시험 숨기기 / 선생님별 보기)를 적용한 전체 시험 목록 */
 function mathOnlyOn(){ return !!document.getElementById("mathOnly")?.checked; }
@@ -5775,7 +5782,7 @@ function visibleExams(){
     if(!e.startDate || !e.endDate || e.notConducted) return false;
     if(mathOnly && !e.mathDate) return false;          /* 수학 날짜가 없으면 뺍니다 */
     if(makeupOnly && !examHasMakeup(e)) return false;  /* 직전보충이 걸린 시험만 */
-    if(calSchoolQ && !schoolMatchesQuery(e.school, calSchoolQ)) return false;
+    if(calSchoolQ && !schoolBoxMatchesExam(e, calSchoolQ)) return false;
     if(hideEmpty && studentsForExam(e).length === 0) return false;
     if(teacherFilter && !studentsForExam(e).some(s=> examTeacherOf(s)===teacherFilter)) return false;
     return true;
@@ -6116,15 +6123,23 @@ function renderSchoolHit(){
   calSchoolInput.classList.toggle("hit-none", false);
   if(!calSchoolQ){ calSchoolHit.textContent = ""; calSchoolHit.className = "search-hit"; return; }
 
-  const list = visibleExams();   // 이미 학교 검색이 적용된 목록
+  const list = visibleExams();   // 이미 학교·학생 검색이 적용된 목록
   if(list.length === 0){
     calSchoolHit.className = "search-hit none";
     // 다른 필터(선생님별 보기 등) 때문에 가려진 건지 구분해서 알려줘요
     const raw = exams.filter(e=> e.startDate && e.endDate && !e.notConducted
-      && schoolMatchesQuery(e.school, calSchoolQ));
+      && schoolBoxMatchesExam(e, calSchoolQ));
     if(raw.length){
       const nm = [...new Set(raw.map(e=>shortSchool(e.school)))];
       calSchoolHit.textContent = `${nm.slice(0,3).join(", ")}${nm.length>3?" 외":""} — 다른 필터에 가려졌어요`;
+      return;
+    }
+    // 학생 이름으로 찾았는데 그 학생 학교에 등록된 시험이 없는 경우
+    const matchedStu = students.filter(s=> statusOf(s)==="재원" && schoolMatchesQuery(s.name, calSchoolQ));
+    if(matchedStu.length){
+      const schools = [...new Set(matchedStu.map(s=>s.school).filter(Boolean))];
+      calSchoolHit.textContent = `${matchedStu.slice(0,3).map(s=>s.name).join(", ")}${matchedStu.length>3?" 외":""} 학생` +
+        (schools.length ? `(${schools.slice(0,2).map(shortSchool).join(", ")})` : "") + ` — 등록된 시험이 없어요`;
       return;
     }
     // 시험은 없어도 학생 명단에 그 학교가 있는지 알려줘요
@@ -6132,7 +6147,7 @@ function renderSchoolHit(){
       .filter(sc=> schoolMatchesQuery(sc, calSchoolQ));
     calSchoolHit.textContent = known.length
       ? `${known.slice(0,3).map(shortSchool).join(", ")}${known.length>3?" 외":""} — 등록된 시험이 없어요`
-      : "일치하는 학교가 없어요";
+      : "일치하는 학교·학생이 없어요";
     return;
   }
 
