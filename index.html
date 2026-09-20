@@ -5767,12 +5767,16 @@ function schoolBoxMatchesExam(e, q){
 /* 화면 필터(학교 검색 / 학생 없는 시험 숨기기 / 선생님별 보기)를 적용한 전체 시험 목록 */
 function mathOnlyOn(){ return !!document.getElementById("mathOnly")?.checked; }
 function makeupOnlyOn(){ return !!document.getElementById("makeupOnly")?.checked; }
-/* 이 시험에 직전보충이 하나라도 걸려 있는지 — 시험 전체 일정 또는 학생별 직보 날짜 */
-function examHasMakeup(e){
-  if((e.makeupDate||"").trim()) return true;
+/* 이 시험에 걸린 직전보충 날짜들 — 시험 전체 공통 일정 + 학생별 직보 날짜를 모두 모읍니다 */
+function examMakeupDatesOf(e){
+  const set = new Set();
+  if((e.makeupDate||"").trim()) set.add(e.makeupDate);
   const md = e.makeupDates || {};
-  return Object.values(md).some(v=> mdateEntriesOf(v).some(en=> (en.date||"").trim()));
+  Object.values(md).forEach(v=> mdateEntriesOf(v).forEach(en=>{ if((en.date||"").trim()) set.add(en.date); }));
+  return set;
 }
+/* 이 시험에 직전보충이 하나라도 걸려 있는지 */
+function examHasMakeup(e){ return examMakeupDatesOf(e).size > 0; }
 function visibleExams(){
   const teacherFilter = document.getElementById("calFilterTeacher").value;
   const hideEmpty = document.getElementById("hideEmptyExams").checked;
@@ -5803,8 +5807,15 @@ function sortExams(list){
 }
 function visibleExamsForDate(key){
   const mathOnly = mathOnlyOn();
-  return sortExams(visibleExams().filter(e=>
-    mathOnly ? (e.mathDate === key) : (key>=e.startDate && key<=e.endDate)));
+  const makeupOnly = makeupOnlyOn();
+  return sortExams(visibleExams().filter(e=>{
+    /* "직보만 보기"를 켜면 시험 기간 전체가 아니라 실제 직보 날짜에만 알약이 뜹니다 —
+       직보는 보통 시험 기간보다 앞선 날(전날)이라 원래 범위 밖일 때가 많습니다 */
+    if(mathOnly && makeupOnly) return e.mathDate === key || examMakeupDatesOf(e).has(key);
+    if(makeupOnly) return examMakeupDatesOf(e).has(key);
+    if(mathOnly) return e.mathDate === key;
+    return key>=e.startDate && key<=e.endDate;
+  }));
 }
 /* 그 달과 하루라도 겹치는 시험 (월 피커의 건수 표시용) */
 function examsInMonth(y,m){
@@ -7891,34 +7902,18 @@ function openDetailModal(examId, returnTo){
     });
   });
 
-  /* 이름을 누르면 그 학생의 시험을 날짜순으로 쭉 보여주는 학생 상세 창 */
-  tgBox.addEventListener("click", (ev)=>{
-    const nameEl = ev.target.closest("[data-open-student]");
-    if(nameEl){
-      ev.stopPropagation();
-      document.getElementById("detailModal").classList.remove("active");
-      currentDetailExamId = null;             /* 재렌더 감시가 상세 창을 도로 띄우지 않도록 */
-      openStudentModal(nameEl.dataset.openStudent, { type:"detail", id: examId });
-      return;
-    }
-  });
-  /* 카드를 누르면 참석 표시 */
-  tgBox.addEventListener("click", (ev)=>{
-    if(ev.target.closest("[data-open-student]")) return;      /* 이름은 위에서 따로 처리 */
-    if(ev.target.classList.contains("score-in")) return;      /* 점수칸은 빼고 */
-    if(ev.target.closest(".chip-mdate")) return;              /* 직보 날짜칸도 빼고 */
-    const chip = ev.target.closest(".assign-chip");
-    if(!chip || !chip.dataset.sid) return;
-    if(!guardEdit()) return;
-    const on = !chip.classList.contains("att");
-    chip.classList.toggle("att", on);
-    const cnt = document.getElementById("attendCount");
-    if(cnt) cnt.textContent = tgBox.querySelectorAll(".assign-chip.att").length;
-    queueDetailSave(examId, { attend: { [chip.dataset.sid]: on } });
-  });
+  /* 클릭·입력 이벤트는 이 칸(tgBox)에 딱 한 번만 겁니다 — 아래 함수 참고 */
+  wireDetailTgBoxOnce(tgBox);
+}
+/* tgBox(#detailTeacherGroups)는 매번 새로 만드는 칸이 아니라 화면에 하나만 있는 칸이라,
+   openDetailModal이 다시 그려질 때마다(선생님 기준 변경, 실시간 반영 등) 여기서 addEventListener를 계속
+   걸면 리스너가 계속 쌓여서 "+ 추가"를 한 번 눌러도 여러 줄이 한꺼번에 생기는 등 여러 번 실행되는 문제가
+   있었습니다. tgBox.dataset.wired 로 한 번만 걸어 둡니다. 안의 내용(examId 등)은 항상 그 순간의
+   currentDetailExamId로 새로 찾아옵니다. */
+function wireDetailTgBoxOnce(tgBox){
+  if(tgBox.dataset.wired) return;
+  tgBox.dataset.wired = "1";
 
-  /* 점수 입력 */
-  /* 학생별 직보 날짜(+시간) — 한 학생에 여러 건 가능 */
   const gatherMdateEntries = (listEl)=> [...listEl.querySelectorAll(".mdate-entry")].map(row=> ({
     date: row.querySelector(".mdate-date")?.value || "",
     time: row.querySelector(".mdate-time")?.value || ""
@@ -7935,18 +7930,23 @@ function openDetailModal(examId, returnTo){
   const saveMdatesFor = (sid, listEl)=>{
     const entries = gatherMdateEntries(listEl).filter(en=> (en.date||"").trim() || (en.time||"").trim());
     refreshMdateCount();
-    queueDetailSave(examId, { mdates: { [sid]: entries } });
+    queueDetailSave(currentDetailExamId, { mdates: { [sid]: entries } });
   };
-  tgBox.addEventListener("change", (ev)=>{
-    const inp = ev.target;
-    if(!inp.classList.contains("mdate-date") && !inp.classList.contains("mdate-time")) return;
-    const chip = inp.closest(".chip-mdate");
-    const sid = chip?.dataset.sid;
-    const listEl = chip?.querySelector(".mdate-list");
-    if(!sid || !listEl) return;
-    if(!guardEdit()){ if(currentDetailExamId===examId) openDetailModal(examId, returnTo); return; }
-    saveMdatesFor(sid, listEl);
+
+  /* 이름을 누르면 그 학생의 시험을 날짜순으로 쭉 보여주는 학생 상세 창 */
+  tgBox.addEventListener("click", (ev)=>{
+    const nameEl = ev.target.closest("[data-open-student]");
+    if(nameEl){
+      ev.stopPropagation();
+      const examId = currentDetailExamId;
+      document.getElementById("detailModal").classList.remove("active");
+      currentDetailExamId = null;             /* 재렌더 감시가 상세 창을 도로 띄우지 않도록 */
+      openStudentModal(nameEl.dataset.openStudent, { type:"detail", id: examId });
+      return;
+    }
   });
+
+  /* 직보 + 추가 / 삭제 — 참석 토글보다 먼저 걸러야 해서 별도 리스너로 둡니다 */
   tgBox.addEventListener("click", (ev)=>{
     const addBtn = ev.target.closest(".mdate-add");
     if(addBtn){
@@ -7959,7 +7959,7 @@ function openDetailModal(examId, returnTo){
       const row = document.createElement("span");
       row.className = "mdate-entry"; row.dataset.idx = idx;
       row.innerHTML = `<input class="mdate-date" type="date" value="" title="이 학생이 직전보충 오는 날">` +
-        `<input class="mdate-time" type="time" value="" title="시간">` +
+        `<input class="mdate-time" type="time" value="13:00" title="시간 — 기본 오후 1시, 필요하면 바꾸세요">` +
         `<button type="button" class="mdate-del" title="이 일정 삭제">×</button>`;
       listEl.insertBefore(row, addBtn);
       row.querySelector(".mdate-date")?.focus();
@@ -7978,6 +7978,34 @@ function openDetailModal(examId, returnTo){
     }
   });
 
+  /* 카드를 누르면 참석 표시 */
+  tgBox.addEventListener("click", (ev)=>{
+    if(ev.target.closest("[data-open-student]")) return;      /* 이름은 위에서 따로 처리 */
+    if(ev.target.classList.contains("score-in")) return;      /* 점수칸은 빼고 */
+    if(ev.target.closest(".chip-mdate")) return;              /* 직보 날짜칸도 빼고 */
+    const chip = ev.target.closest(".assign-chip");
+    if(!chip || !chip.dataset.sid) return;
+    if(!guardEdit()) return;
+    const on = !chip.classList.contains("att");
+    chip.classList.toggle("att", on);
+    const cnt = document.getElementById("attendCount");
+    if(cnt) cnt.textContent = tgBox.querySelectorAll(".assign-chip.att").length;
+    queueDetailSave(currentDetailExamId, { attend: { [chip.dataset.sid]: on } });
+  });
+
+  /* 학생별 직보 날짜(+시간) 저장 */
+  tgBox.addEventListener("change", (ev)=>{
+    const inp = ev.target;
+    if(!inp.classList.contains("mdate-date") && !inp.classList.contains("mdate-time")) return;
+    const chip = inp.closest(".chip-mdate");
+    const sid = chip?.dataset.sid;
+    const listEl = chip?.querySelector(".mdate-list");
+    if(!sid || !listEl) return;
+    if(!guardEdit()){ if(currentDetailExamId) openDetailModal(currentDetailExamId); return; }
+    saveMdatesFor(sid, listEl);
+  });
+
+  /* 점수 입력 */
   tgBox.addEventListener("input", (ev)=>{
     const inp = ev.target;
     if(!inp.classList.contains("score-in")) return;
@@ -7993,7 +8021,7 @@ function openDetailModal(examId, returnTo){
     }
     const cnt = document.getElementById("scoreCount");
     if(cnt) cnt.textContent = [...tgBox.querySelectorAll(".score-in")].filter(x=> x.value.trim() !== "").length;
-    queueDetailSave(examId, { scores: { [sid]: v } });
+    queueDetailSave(currentDetailExamId, { scores: { [sid]: v } });
   });
   const isChipInput = el => el.classList.contains("score-in") || el.classList.contains("mdate-date") || el.classList.contains("mdate-time");
   tgBox.addEventListener("focusin", (ev)=>{ if(isChipInput(ev.target)) detailBusy = true; });
