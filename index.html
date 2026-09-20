@@ -7588,6 +7588,29 @@ function mdateEntriesOf(raw){
 }
 function scoresOf(exam){ return (exam && exam.scores) || {}; }
 
+/* 직보 시간 — 브라우저 기본 시간 선택창은 커스터마이즈가 안 되어서, 목록에서 클릭 한 번으로 바로 바뀌는 select로 대체 */
+function timeOptionsHtml(selected){
+  const cur = (selected||"").trim();
+  let opts = ['<option value="">시간 미정</option>'];
+  let hasCur = false;
+  for(let h=9; h<=22; h++){
+    for(let m=0; m<60; m+=30){
+      const hh = String(h).padStart(2,"0"), mm = String(m).padStart(2,"0");
+      const val = `${hh}:${mm}`;
+      const ampm = h < 12 ? "오전" : "오후";
+      const h12 = (h % 12) === 0 ? 12 : (h % 12);
+      const label = `${ampm} ${h12}시${m===0?"":" "+m+"분"}`;
+      if(val === cur) hasCur = true;
+      opts.push(`<option value="${val}"${val===cur?" selected":""}>${label}</option>`);
+    }
+  }
+  if(cur && !hasCur){
+    /* 프리셋에 없는 값(예전 데이터 등)도 그대로 보이게 맨 위에 추가 */
+    opts.splice(1, 0, `<option value="${escapeHtml(cur)}" selected>${escapeHtml(cur)}</option>`);
+  }
+  return opts.join("");
+}
+
 function markDetailStatus(text){
   const el = document.getElementById("detailSaveState");
   if(el) el.textContent = text || "";
@@ -7837,8 +7860,7 @@ function openDetailModal(examId, returnTo){
           return entries.map((en,idx)=> `<span class="mdate-entry" data-idx="${idx}">
               <input class="mdate-date" type="date" value="${escapeHtml(en.date||"")}"
                      title="이 학생이 직전보충 오는 날" ${editMode?"":"disabled"}>
-              <input class="mdate-time" type="time" value="${escapeHtml(en.time||"")}"
-                     title="시간" ${editMode?"":"disabled"}>
+              <select class="mdate-time" title="시간" ${editMode?"":"disabled"}>${timeOptionsHtml(en.time||"")}</select>
               ${editMode?`<button type="button" class="mdate-del" title="이 일정 삭제">×</button>`:""}
             </span>`).join("");
         })()}${editMode?`<button type="button" class="mdate-add" title="직보 일정 추가">+ 추가</button>`:""}</span>
@@ -7956,13 +7978,21 @@ function wireDetailTgBoxOnce(tgBox){
       const emptyMsg = listEl.querySelector(".mdate-empty");
       if(emptyMsg) emptyMsg.remove();
       const idx = listEl.querySelectorAll(".mdate-entry").length;
+      /* 직보는 보통 수학 시험 전날이라, 그 시험에 수학 날짜가 있으면 하루 전을 기본값으로 넣어둡니다 */
+      const curExam = exams.find(x=> x.id === currentDetailExamId);
+      const defaultDate = curExam && curExam.mathDate ? shiftKey(curExam.mathDate, -1) : "";
       const row = document.createElement("span");
       row.className = "mdate-entry"; row.dataset.idx = idx;
-      row.innerHTML = `<input class="mdate-date" type="date" value="" title="이 학생이 직전보충 오는 날">` +
-        `<input class="mdate-time" type="time" value="13:00" title="시간 — 기본 오후 1시, 필요하면 바꾸세요">` +
+      row.innerHTML = `<input class="mdate-date" type="date" value="${escapeHtml(defaultDate)}" title="이 학생이 직전보충 오는 날 — 기본은 수학 시험 전날, 필요하면 바꾸세요">` +
+        `<select class="mdate-time" title="시간 — 기본 오후 1시, 필요하면 바꾸세요">${timeOptionsHtml("13:00")}</select>` +
         `<button type="button" class="mdate-del" title="이 일정 삭제">×</button>`;
       listEl.insertBefore(row, addBtn);
       row.querySelector(".mdate-date")?.focus();
+      /* 날짜 기본값을 채워 넣었으면(수학 시험일이 있는 시험) 손 안 대고 넘어가도 바로 저장해 둡니다 */
+      if(defaultDate){
+        const sid = addBtn.closest(".chip-mdate")?.dataset.sid;
+        if(sid) saveMdatesFor(sid, listEl);
+      }
       return;
     }
     const delBtn = ev.target.closest(".mdate-del");
