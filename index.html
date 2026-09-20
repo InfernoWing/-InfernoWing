@@ -519,13 +519,20 @@
   .btn-row{margin-top:4px;}
 
   .filter-bar{
-    display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;
+    display:flex; gap:10px 18px; flex-wrap:wrap; align-items:flex-end;
     background:var(--c15); border:1.5px solid var(--c13); border-radius:11px;
     padding:12px 14px; margin-bottom:18px;
   }
   .filter-bar > div{min-width:150px;}
+  .filter-bar .f-search{flex:1 1 280px; min-width:190px; max-width:560px;}
+  .filter-bar .f-teacher{flex:0 0 172px; min-width:172px;}
+  /* 토글 묶음 — 입력칸과 같은 높이라 아래쪽 줄이 딱 맞습니다 */
+  .filter-toggles{display:flex; align-items:center; gap:10px 20px; flex-wrap:wrap;
+    min-height:40px; min-width:0;}
   .filter-bar label{margin-bottom:4px; color:var(--c135);}
   .filter-bar select{background:var(--c1);}
+  /* 입력칸·선택칸 높이를 똑같이 맞춰 아래 줄이 어긋나지 않게 */
+  .filter-bar input[type=text], .filter-bar select{height:40px; line-height:normal;}
 
   /* 필터 줄 체크박스 — 토글 스위치 모양으로 (기본 네모 체크박스 대신) */
   .checkbox-row{display:flex; align-items:center; gap:9px; cursor:pointer; user-select:none;}
@@ -611,7 +618,9 @@
   /* 월 이름을 눌러 여는 월 피커 (구글 캘린더 방식) */
   .month-label.tappable{cursor:pointer; padding:4px 10px; border-radius:9px; border:1.5px solid transparent;}
   .month-label.tappable:hover{background:var(--c15); border-color:var(--c12);}
-  .month-label .caret{font-size:10px; color:var(--c3); margin-left:4px;}
+  .month-label .caret{display:inline-block; font-size:0; line-height:0; width:0; height:0;
+    border-left:4.5px solid transparent; border-right:4.5px solid transparent;
+    border-top:5px solid var(--c3); margin-left:7px; vertical-align:middle;}
   .month-picker{
     display:none; position:absolute; top:44px; right:0;
     background:var(--c1); border:1.5px solid var(--c12); border-radius:13px; padding:13px;
@@ -665,7 +674,7 @@
   .cal-scroll{ overflow-x:auto; padding-bottom:6px;
     overscroll-behavior-x:contain;   /* 옆으로 밀 때 브라우저 뒤로가기가 걸리지 않게 */ }
   .cal-inner{ min-width:700px; }
-  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; }
   .cal-dow{ text-align:center; font-size:11.5px; font-weight:700; color:var(--c122); padding-bottom:4px; }
   .cal-dow.sat{color:var(--blue);} .cal-dow.sun{color:var(--rust);}
   .cal-cell{
@@ -690,7 +699,7 @@
     border-radius:6px; padding:1px 6px; margin-left:5px;}
   .tl-daycell.holi{background:var(--c129);}
   .tl-dnum.holi{color:var(--rust);} .tl-dnum.holi .dw{color:var(--rust); opacity:.75;}
-  .cal-cell .pills{display:flex; flex-direction:column; gap:3px; margin-top:3px;}
+  .cal-cell .pills{display:flex; flex-direction:column; gap:3px; margin-top:3px; min-width:0;}
 
   /* 학년별 알약 색상 */
   .exam-pill{
@@ -698,7 +707,7 @@
     display:flex; align-items:center; justify-content:space-between; gap:5px;
     background:var(--pb); border:1px solid var(--pd); color:var(--pt);
     border-radius:7px; padding:3px 7px; font-size:11px; font-weight:700;
-    cursor:pointer; overflow:hidden;
+    cursor:pointer; overflow:hidden; min-width:0;
   }
   .exam-pill.c1{--pb:var(--c17); --pd:var(--c11); --pt:var(--c10); --pc:var(--c26);}
   .exam-pill.c2{--pb:var(--c35); --pd:var(--c21); --pt:var(--c30); --pc:var(--c34);}
@@ -708,7 +717,7 @@
   .exam-pill.c6{--pb:var(--c57); --pd:var(--c66); --pt:var(--c52); --pc:var(--c70);}
   .exam-pill.c7{--pb:var(--c46); --pd:var(--c53); --pt:var(--c59); --pc:var(--c2);}
   .exam-pill:hover{filter:brightness(0.97); border-color:var(--pc);}
-  .exam-pill .label{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .exam-pill .label{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
   .exam-pill .count{
     background:var(--pc); color:var(--c1); border-radius:999px; min-width:16px; height:16px;
     font-size:10px; display:flex; align-items:center; justify-content:center; padding:0 4px; flex-shrink:0;
@@ -835,13 +844,17 @@
   .summary-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin-bottom:18px;}
   .stat-card{
     border:1.5px solid var(--c5); border-radius:12px; padding:12px 14px; background:var(--c4);
-    text-align:left; font-family:inherit; cursor:pointer; transition:.14s; display:block; width:100%;
+    text-align:left; font-family:inherit; cursor:pointer; transition:.14s; width:100%;
+    display:flex; flex-direction:column; min-width:0;
   }
   .stat-card:hover{border-color:var(--mustard); background:var(--c25); transform:translateY(-1px);}
   .stat-card .sl{font-size:10.5px; font-weight:800; color:var(--c3); letter-spacing:.04em; display:block; margin-bottom:6px;}
-  .stat-card .sv{font-size:19px; font-weight:800; color:var(--ink); line-height:1.2;}
-  .stat-card .su{font-size:12px; font-weight:700; color:var(--c2); margin-left:3px;}
-  .stat-card .sd{font-size:11.5px; color:var(--c2); margin-top:5px; line-height:1.5;
+  .stat-card .sv{font-size:19px; font-weight:800; color:var(--ink); line-height:1.25;
+    display:flex; align-items:baseline; min-width:0;}
+  .stat-card .svt{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;}
+  .stat-card .su{font-size:12px; font-weight:700; color:var(--c2); margin-left:3px; flex:0 0 auto;}
+  .stat-card .sd{display:block; font-size:11.5px; color:var(--c2); line-height:1.5;
+    margin-top:auto; padding-top:6px;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .stat-card.alert{border-color:var(--c60); background:var(--c18);}
   .stat-card.alert .sv{color:var(--rust);}
@@ -851,7 +864,7 @@
   .stat-card.soon{border-color:var(--mustard); background:var(--c139);}
   .stat-card.soon .sv{color:var(--c108);}
   .dday{display:inline-block; background:var(--rust); color:var(--c1); font-size:11px; font-weight:800;
-    padding:2px 8px; border-radius:20px; margin-left:6px; vertical-align:2px;}
+    padding:2px 8px; border-radius:20px; margin-left:7px; flex:0 0 auto; align-self:center;}
   .dday.wide{background:var(--board);}
   .dday.now{background:var(--green);}
 
@@ -1185,11 +1198,13 @@
   .school-search .clr.show{display:flex;}
   .school-search .clr:hover{background:var(--c37); color:var(--rust);}
   .search-hit{font-size:11.5px; font-weight:700; color:var(--c3); margin-top:5px; display:block;}
+  .search-hit:empty{display:none;}
   .search-hit.none{color:var(--rust);}
   .hit-jump{border:none; background:none; padding:0; font:inherit; color:var(--rust);
     font-weight:800; text-decoration:underline; cursor:pointer;}
   .hit-jump:hover{opacity:.75;}
-  .school-search input{min-width:170px;}
+  .school-search input{min-width:0; width:100%;}
+  .school-search{width:100%;}
 
   /* ---------- 반 배정 가져오기 ---------- */
   .imp-sum{display:flex; flex-wrap:wrap; gap:9px; margin:4px 0 14px;}
@@ -1623,7 +1638,7 @@
     <div class="summary-row" id="summaryRow"></div>
 
     <div class="filter-bar">
-      <div>
+      <div class="f-search">
         <label>학교 · 학생 검색</label>
         <div class="school-search">
           <input type="text" id="calSchoolSearch" list="schoolList" name="school-q" placeholder="학교 또는 학생 이름 (초성도 됩니다)"
@@ -1632,21 +1647,23 @@
         </div>
         <span class="search-hit" id="calSchoolHit"></span>
       </div>
-      <div>
+      <div class="f-teacher">
         <label>선생님별 보기</label>
         <select id="calFilterTeacher"><option value="">전체 선생님</option></select>
       </div>
-      <div class="checkbox-row" style="align-self:center;">
-        <input type="checkbox" id="hideEmptyExams" checked>
-        <label style="margin:0;">학생 없는 시험 숨기기</label>
-      </div>
-      <div class="checkbox-row" style="align-self:center;">
-        <input type="checkbox" id="mathOnly">
-        <label style="margin:0;" title="수학 시험을 보는 날에만 알약이 뜹니다">수학 시험만 보기</label>
-      </div>
-      <div class="checkbox-row" style="align-self:center;">
-        <input type="checkbox" id="makeupOnly">
-        <label style="margin:0;" title="직전보충 일정이 걸린 시험만 보여줍니다 (시험 전체 일정 또는 학생별 직보 날짜)">직보만 보기</label>
+      <div class="filter-toggles">
+        <span class="checkbox-row">
+          <input type="checkbox" id="hideEmptyExams" checked>
+          <label style="margin:0;">학생 없는 시험 숨기기</label>
+        </span>
+        <span class="checkbox-row">
+          <input type="checkbox" id="mathOnly">
+          <label style="margin:0;" title="수학 시험을 보는 날에만 알약이 뜹니다">수학 시험만 보기</label>
+        </span>
+        <span class="checkbox-row">
+          <input type="checkbox" id="makeupOnly">
+          <label style="margin:0;" title="직전보충 일정이 걸린 시험만 보여줍니다 (시험 전체 일정 또는 학생별 직보 날짜)">직보만 보기</label>
+        </span>
       </div>
     </div>
 
@@ -6383,7 +6400,7 @@ function renderSummary(){
   if(up.length===0){
     card1 = `<button class="stat-card done" data-go="none">
       <span class="sl">다가오는 시험</span>
-      <span class="sv">없음</span>
+      <span class="sv"><span class="svt">없음</span></span>
       <span class="sd">예정된 시험이 없어요</span></button>`;
   } else {
     const first = up[0];
@@ -6394,7 +6411,7 @@ function renderSummary(){
       : `<span class="dday ${d>14?"wide":""}">D-${d}</span>`;
     card1 = `<button class="stat-card ${d<=7?"soon":""}" data-go="upcoming" data-date="${first.startDate}">
       <span class="sl">다가오는 시험</span>
-      <span class="sv">${escapeHtml(first.examName||"시험")}${badge}</span>
+      <span class="sv"><span class="svt">${escapeHtml(first.examName||"시험")}</span>${badge}</span>
       <span class="sd">${escapeHtml(fmtWithDow(first.startDate))} 시작 · ${schools}개교 ${sameDay.length}건</span></button>`;
   }
 
