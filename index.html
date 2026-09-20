@@ -435,8 +435,11 @@
   html[data-theme="dark"] .idx-item.active .c{color:#2c2208;}
   html[data-theme="dark"] .att-mark{color:#16281d;}
   html[data-theme="dark"]{color-scheme:dark;}
-  .theme-btn{margin-left:8px; background:transparent; border:1.5px solid rgba(255,255,255,.35); color:#fff;
-    width:34px; height:34px; border-radius:50%; font-size:15px; cursor:pointer; line-height:1;}
+  .theme-btn{background:transparent; border:1.5px solid rgba(255,255,255,.35); color:#fff;
+    width:34px; height:34px; border-radius:50%; font-size:15px; cursor:pointer; line-height:1; flex:0 0 auto;}
+  /* [E] '수정 모드'와 달 모양 버튼을 오른쪽 위에 나란히 */
+  .head-actions{position:absolute; top:0; right:0; display:flex; align-items:center; gap:8px;}
+  .head-actions .mode-btn{position:static;}
   .theme-btn:hover{background:rgba(255,255,255,.14);}
   html[data-theme="dark"] img,
   html[data-theme="dark"] .no-invert{ filter:none; }
@@ -458,7 +461,7 @@
   ::selection{background:var(--mustard-dim);}
 
   header.app-head{
-    background:var(--board); color:var(--chalk); padding:26px 20px 20px;
+    background:var(--board); color:var(--chalk); padding:16px 20px 14px;
     position:relative; overflow:hidden; border-bottom:6px solid var(--mustard);
   }
   header.app-head::before{
@@ -472,6 +475,10 @@
   .eyebrow{ font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--mustard); font-weight:700; margin-bottom:6px; }
   h1.title{ font-family:'Gowun Batang',serif; font-size:clamp(24px,4.2vw,34px); margin:0 0 4px; font-weight:700; }
   .subtitle{color:var(--chalk-dim); font-size:13.5px; margin:0;}
+  /* [E] 탭 이름과 같은 패널 제목은 숨깁니다 (인쇄할 땐 다시 보이게) */
+  .panel-title{display:none;}
+  @media print{ .panel-title{display:block !important;} }
+  .panel > .panel-desc{margin-top:0;}
 
   nav.tabs{ max-width:1120px; margin:18px auto 0; padding:0 20px; display:flex; gap:8px; }
   nav.tabs button{
@@ -583,7 +590,7 @@
   .exam-school-row{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:18px;}
   .exam-school-row select{width:auto; min-width:200px;}
   .exam-summary{font-size:12.5px; color:var(--c2); font-weight:600;}
-  .exam-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:14px;}
+  .exam-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px;}
   .exam-card{border:1.5px solid var(--c5); border-radius:12px; padding:14px; background:var(--c4); display:flex; flex-direction:column; gap:9px;}
   .exam-card .card-head{display:flex; justify-content:space-between; align-items:center; padding-bottom:8px; border-bottom:1.5px dashed var(--c13);}
   .exam-card .ctitle{font-weight:800; font-size:14px;}
@@ -592,8 +599,9 @@
   .not-held-row input{width:auto;}
   .reason-box{display:none;}
   .reason-box.show{display:block;}
-  .mini-row{display:flex; gap:7px;}
-  .mini-row > div{flex:1; min-width:0;}
+  /* [D] 날짜칸이 좁아 글자가 잘리지 않게 — 안 들어가면 아랫줄로 */
+  .mini-row{display:flex; gap:7px; flex-wrap:wrap;}
+  .mini-row > div{flex:1 1 104px; min-width:0;}
   .exam-card label.small{font-size:10.5px; margin-bottom:3px; color:var(--c2);}
   .exam-card input, .exam-card select, .exam-card textarea{font-size:12px; padding:7px 8px;}
   .exam-card textarea{min-height:44px; resize:vertical;}
@@ -1379,6 +1387,8 @@
   #detailModal.active, #studentModal.active, #dayModal.active, #briefModal.active{ display:block; overflow-y:auto; }
   #detailModal .modal, #studentModal .modal, #dayModal .modal, #briefModal .modal{
     max-height:none; overflow:visible; margin:0 auto; }
+  /* [A] 학생이 많은 창은 넓게 — 카드가 2~3열로 들어갑니다 */
+  #detailModal .modal, #dayModal .modal{ max-width:1040px; }
   .modal h3{font-family:'Gowun Batang',serif; margin:0 0 4px; font-size:20px;}
   .close-x{ float:right; background:none; border:none; font-size:20px; cursor:pointer; color:var(--c106); }
   .modal-meta{ color:var(--c2); font-size:12.5px; margin:0 0 16px; line-height:1.7; }
@@ -1422,12 +1432,12 @@
   .chip-mdate i{font-style:normal; font-size:9.5px; font-weight:800; letter-spacing:.02em;
     background:var(--c29); color:var(--c9); border-radius:5px; padding:1px 5px; flex:0 0 auto; margin-top:3px;}
   .mdate-list{display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;}
-  .mdate-entry{display:flex; align-items:center; gap:3px;}
+  .mdate-entry{display:flex; align-items:center; gap:3px; flex-wrap:wrap;}
   .mdate-date, .mdate-time, .mdate-in{font-size:11px; font-weight:700; font-family:inherit;
     padding:2px 4px; border:1px solid var(--c42); border-radius:6px;
     background:var(--paper-card); color:var(--ink); cursor:text; min-width:0;}
-  .mdate-date{flex:1.3;}
-  .mdate-time{flex:1;}
+  .mdate-date{flex:1 1 104px; min-width:0;}
+  .mdate-time{flex:1 1 84px; min-width:0;}
   .mdate-del{flex:0 0 auto; width:16px; height:16px; line-height:14px; padding:0; text-align:center;
     border:1px solid var(--c42); border-radius:50%; background:var(--paper-card); color:var(--c2);
     font-size:11px; cursor:pointer;}
@@ -1436,23 +1446,24 @@
     background:transparent; border:1px dashed var(--c42); border-radius:6px; padding:2px 7px; cursor:pointer;}
   .mdate-add:hover{background:var(--c18); border-color:var(--rust);}
   .mdate-empty{font-size:11px; color:var(--c2);}
-  .assign-chip{min-width:208px;}
+  .assign-chip{min-width:0;}
   .score-in[type=number]{-moz-appearance:textfield;}
   .assign-chip{cursor:pointer;}
   .assign-chip .score-in{cursor:text;}
 
-  .assign-row{display:flex; flex-wrap:wrap; gap:8px;}
+  /* [A] 학생 카드를 같은 너비의 여러 열로 — 직보 칸이 있어도 줄이 안 무너지게 */
+  .assign-row{display:grid; grid-template-columns:repeat(auto-fill,minmax(238px,1fr)); gap:8px;}
   .assign-chip{ display:inline-flex; flex-direction:column; align-items:flex-start; gap:2px;
     border:1.5px solid var(--c5); border-radius:9px; padding:6px 11px; font-size:13px; background:var(--c4); }
   .assign-chip .sname{font-weight:700; line-height:1.3; cursor:pointer; text-decoration:underline; text-decoration-color:transparent; text-underline-offset:2px;}
   .assign-chip .sname:hover{text-decoration-color:currentColor;}
-  .assign-chip{min-width:132px;}
+  .assign-chip{min-width:0;}
   .assign-chip .sname{margin-bottom:2px;}
   .assign-chip .cl{font-size:11px; font-weight:800; line-height:1.35; display:flex; align-items:baseline; gap:5px;}
   .assign-chip .cl i{font-style:normal; font-size:9.5px; font-weight:800; letter-spacing:.02em;
     padding:1px 5px; border-radius:4px; flex:0 0 auto;}
   .assign-chip .cl em{font-style:normal; font-size:9.5px; font-weight:700; color:var(--c3);}
-  .assign-chip{min-width:150px;}
+  .assign-chip{min-width:0;}
   .tbasis-row{display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin:16px 0 10px;}
   .tbasis-row .tb-lbl{font-size:11px; font-weight:800; color:var(--c2); margin-left:auto;}
   .seg.tb-seg{display:inline-flex; border:1px solid var(--c39); border-radius:8px; overflow:hidden; background:var(--c16);}
@@ -1486,6 +1497,14 @@
     border-radius:20px; cursor:pointer; white-space:nowrap; border:none; }
   .badge-warn.active{background:var(--rust); color:var(--c1);}
   .table-scroll{overflow-x:auto;}
+  /* [C] 화면이 넓어 표가 다 들어갈 땐 가로 스크롤 상자를 없애고 머리글을 위에 붙입니다 */
+  @media (min-width:1000px){
+    .table-scroll{overflow:visible;}
+    .student-table thead th, .scope-table thead th{
+      position:sticky; top:0; z-index:5; background:var(--paper-card);
+      box-shadow:0 2px 0 0 var(--c5);}
+    .student-table thead th.act{z-index:6; background:var(--paper-card);}
+  }
 
   /* ---------- 학생 관리: 색인 · 일괄선택 ---------- */
   .cho-bar{display:flex; gap:4px; flex-wrap:wrap; align-items:center; margin-bottom:11px;
@@ -1599,8 +1618,10 @@
     <div class="eyebrow">ACADEMY DESK</div>
     <h1 class="title">학원 관리 시스템</h1>
     <p class="subtitle">학교를 고르면 학년별 시험 카드가 자동으로 뜨고, 캘린더·학생 관리와 연동돼요</p>
-    <button class="mode-btn" id="modeBtn"><span class="dot"></span><span id="modeLabel">보기 모드</span></button>
-    <button class="theme-btn" id="themeBtn" title="밝게 / 어둡게 바꾸기" aria-label="화면 밝기 바꾸기">🌙</button>
+    <div class="head-actions">
+      <button class="mode-btn" id="modeBtn"><span class="dot"></span><span id="modeLabel">보기 모드</span></button>
+      <button class="theme-btn" id="themeBtn" title="밝게 / 어둡게 바꾸기" aria-label="화면 밝기 바꾸기">🌙</button>
+    </div>
   </div>
 </header>
 
@@ -1796,6 +1817,26 @@
     <h2 class="panel-title">학생 관리</h2>
     <p class="panel-desc">학교·학년·담임 선생님·반을 등록해두면, 시험정보 입력과 캘린더에 자동으로 연동돼요. 여러 명을 체크해서 한 번에 바꿀 수 있습니다.</p>
 
+    <datalist id="schoolList"></datalist>
+    <datalist id="teacherList"></datalist>
+    <datalist id="regularClassList"></datalist>
+    <datalist id="examClassList"></datalist>
+    <datalist id="gradeList">
+      <option value="중1"><option value="중2"><option value="중3">
+      <option value="고1"><option value="고2"><option value="고3">
+    </datalist>
+    <div class="btn-row" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+      <button class="btn secondary edit-only" id="stuAddToggle">+ 새 학생 직접 입력</button>
+      <button class="btn secondary edit-only" id="excelUploadBtn">📄 엑셀로 일괄 등록</button>
+      <button class="btn secondary edit-only" id="classImportBtn" title="반별 현황표 엑셀에서 반·담임을 읽어옵니다">📋 반 배정 가져오기</button>
+      <input type="file" id="classImportInput" accept=".xlsx,.xls" style="display:none;">
+      <button class="btn secondary edit-only" id="scoreImportBtn" title="성적입력 시트의 지필고사 점수를 시험 카드에 채웁니다">📊 시험 점수 가져오기</button>
+      <input type="file" id="scoreImportInput" accept=".xlsx,.xls" style="display:none;">
+      <button class="btn secondary" id="excelDownloadBtn" title="지금 화면에 보이는 학생만 내보냅니다">⤓ 엑셀로 내보내기</button>
+      <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+      <span id="excelUploadStatus" style="font-size:12px; color:var(--c2);"></span>
+    </div>
+    <div id="stuAddBox" style="display:none;">
     <div class="form-row edit-only">
       <div>
         <label>학번</label>
@@ -1836,24 +1877,9 @@
         <input type="text" id="stuExamClass" placeholder="나중에 채워도 돼요" list="examClassList">
       </div>
     </div>
-    <datalist id="schoolList"></datalist>
-    <datalist id="teacherList"></datalist>
-    <datalist id="regularClassList"></datalist>
-    <datalist id="examClassList"></datalist>
-    <datalist id="gradeList">
-      <option value="중1"><option value="중2"><option value="중3">
-      <option value="고1"><option value="고2"><option value="고3">
-    </datalist>
-    <div class="btn-row" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+    <div class="btn-row edit-only" style="margin-bottom:4px;">
       <button class="btn edit-only" id="addStudentBtn">+ 학생 추가</button>
-      <button class="btn secondary edit-only" id="excelUploadBtn">📄 엑셀로 일괄 등록</button>
-      <button class="btn secondary edit-only" id="classImportBtn" title="반별 현황표 엑셀에서 반·담임을 읽어옵니다">📋 반 배정 가져오기</button>
-      <input type="file" id="classImportInput" accept=".xlsx,.xls" style="display:none;">
-      <button class="btn secondary edit-only" id="scoreImportBtn" title="성적입력 시트의 지필고사 점수를 시험 카드에 채웁니다">📊 시험 점수 가져오기</button>
-      <input type="file" id="scoreImportInput" accept=".xlsx,.xls" style="display:none;">
-      <button class="btn secondary" id="excelDownloadBtn" title="지금 화면에 보이는 학생만 내보냅니다">⤓ 엑셀로 내보내기</button>
-      <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
-      <span id="excelUploadStatus" style="font-size:12px; color:var(--c2);"></span>
+    </div>
     </div>
 
     <div style="height:22px;"></div>
@@ -2590,6 +2616,8 @@ applyMode();
 function switchTab(tabName){
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active", b.dataset.tab===tabName));
   document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active", p.id==="panel-"+tabName));
+  /* [B] 숨어 있을 땐 폭을 잴 수 없어서, 열릴 때 한 번 다시 그립니다 */
+  if(tabName==="schedule" && typeof renderScheduleTab === "function") renderScheduleTab();
 }
 document.querySelectorAll(".tab-btn").forEach(btn=>{
   btn.addEventListener("click", ()=> switchTab(btn.dataset.tab));
@@ -3910,6 +3938,15 @@ document.getElementById("clearFilterBtn").addEventListener("click", ()=>{
   stuStatusOn = new Set(["재원","휴원"]);
   renderStudents();
 });
+/* [C] '새 학생 직접 입력'을 눌렀을 때만 입력칸을 펼칩니다 */
+document.getElementById("stuAddToggle").addEventListener("click", ()=>{
+  const box = document.getElementById("stuAddBox");
+  const open = box.style.display === "none";
+  box.style.display = open ? "block" : "none";
+  document.getElementById("stuAddToggle").textContent = open ? "× 직접 입력 닫기" : "+ 새 학생 직접 입력";
+  if(open) setTimeout(()=>{ const el=document.getElementById("stuName"); if(el) el.focus(); }, 40);
+});
+
 document.getElementById("addStudentBtn").addEventListener("click", async ()=>{
   if(!guardEdit()) return;
   const studentNumber = document.getElementById("stuNumber").value.trim();
@@ -6564,6 +6601,21 @@ function renderScheduleTab(){
     const w = (dw===0 || dw===6) ? TL_WKND_W : TL_DAY_W;
     dayLeft[i] = cursorX; dayWid[i] = w; cursorX += w;
   }
+  /* [B] 오른쪽이 남으면 날짜 칸을 늘려 화면 폭을 꽉 채웁니다 (막대 글씨가 잘리지 않게) */
+  {
+    const box0 = document.getElementById("schedScroll");
+    const mainEl = document.querySelector("main");
+    const boxW = (box0 && box0.clientWidth) ? box0.clientWidth
+               : (mainEl ? Math.max(0, mainEl.clientWidth - 76) : 0);
+    const avail = boxW - TL_NAME_W - 4;
+    if(avail > 0 && cursorX > 0){
+      const k = Math.min(2.6, avail / cursorX);
+      if(k > 1.02){
+        cursorX = 0;
+        for(let i=0;i<days;i++){ dayWid[i] = Math.round(dayWid[i]*k); dayLeft[i] = cursorX; cursorX += dayWid[i]; }
+      }
+    }
+  }
   const trackW = cursorX;
 
   /* 날짜 눈금 — 모든 날짜에 일자와 요일을 표시 */
@@ -6685,6 +6737,14 @@ document.getElementById("closeRetroHist").addEventListener("click", ()=>
   document.getElementById("retroHistModal").classList.remove("active"));
 document.getElementById("retroHistModal").addEventListener("click", (e)=>{
   if(e.target.id === "retroHistModal") e.target.classList.remove("active");
+});
+
+let schedResizeT = null;
+window.addEventListener("resize", ()=>{
+  const panel = document.getElementById("panel-schedule");
+  if(!panel || !panel.classList.contains("active")) return;
+  clearTimeout(schedResizeT);
+  schedResizeT = setTimeout(()=>{ try{ renderScheduleTab(); }catch(e){} }, 180);
 });
 
 document.getElementById("schedSeasonSelect").addEventListener("change", (e)=>{
