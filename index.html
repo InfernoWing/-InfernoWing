@@ -190,8 +190,10 @@
     --c168:#f3f0e6;
     --c169:#ffd9cd;
     --c170:#ffffff1a;
+    --math-c:#2f6fed;
   }
   html[data-theme="dark"]{
+    --math-c:#5b8dff;
     --c1:#212121;
     --c2:#b3aea6;
     --c3:#bcb7a9;
@@ -734,14 +736,18 @@
   .exam-pill.past{opacity:.45; filter:saturate(.5);}
   .exam-pill.past:hover{opacity:.8;}
   .exam-pill.ongoing{box-shadow:0 0 0 1.5px var(--pc); font-weight:800;}
-  /* 수학 시험일 — 진하게 + 배지 */
-  .exam-pill.math{border-color:var(--pc); border-width:1.5px; font-weight:800;
-    box-shadow:inset 3px 0 0 var(--pc);}
+  .cal-cell .day-summary-btn{align-self:flex-start; background:none; border:none; color:var(--c2);
+    font-size:10.5px; font-weight:700; cursor:pointer; padding:1px 2px; margin-top:1px; text-decoration:underline;
+    text-underline-offset:2px;}
+  .cal-cell .day-summary-btn:hover{color:var(--math-c);}
+  /* 수학 시험일 — 진하게 + 배지 (오늘 표시 주황색과 헷갈리지 않도록 파란색 고정) */
+  .exam-pill.math{border-color:var(--math-c); border-width:1.5px; font-weight:800;
+    box-shadow:inset 3px 0 0 var(--math-c);}
   .exam-pill.math.past{opacity:.6;}
-  .exam-pill .mbadge{background:var(--pc); color:var(--c1); border-radius:5px; font-size:9px;
+  .exam-pill .mbadge{background:var(--math-c); color:var(--c1); border-radius:5px; font-size:9px;
     font-weight:800; padding:1px 4px; flex-shrink:0; letter-spacing:.02em;}
-  .cl-item.math{border-color:var(--pc); box-shadow:inset 3px 0 0 var(--pc);}
-  .cl-item .mbadge{background:var(--pc); color:var(--c1); border-radius:5px; font-size:9.5px;
+  .cl-item.math{border-color:var(--math-c); box-shadow:inset 3px 0 0 var(--math-c);}
+  .cl-item .mbadge{background:var(--math-c); color:var(--c1); border-radius:5px; font-size:9.5px;
     font-weight:800; padding:1px 5px; margin-left:2px;}
   .meta-math{font-weight:800; color:var(--rust);}
   .math-lb{color:var(--rust) !important; font-weight:800 !important;}
@@ -1042,6 +1048,7 @@
 
   /* 동명이인 표시 */
   .tag.dup{background:var(--c153); color:var(--violet); cursor:help;}
+  .tag.merge{background:var(--c153); color:var(--rust); cursor:help; font-weight:700;}
   .badge-info{font-size:11.5px; font-weight:700; background:var(--violet-dim); color:var(--violet);
     padding:5px 11px; border-radius:20px; cursor:pointer; white-space:nowrap; border:none;}
   .badge-info.active{background:var(--violet); color:var(--c1);}
@@ -1120,6 +1127,10 @@
   .auto-bak-row:first-child{border-top:none;}
   .auto-bak-row .d{font-weight:800; min-width:88px;}
   .auto-bak-row .n{color:var(--c2); flex:1;}
+  .auto-bak-dir-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding-bottom:10px; margin-bottom:10px; border-bottom:1px dashed var(--c130);}
+  .auto-bak-dir-row #autoBakDirStatus{font-size:12px; font-weight:700; color:var(--c2);}
+  .auto-bak-dir-row #autoBakDirStatus.on{color:var(--green);}
+  .auto-bak-dir-row #autoBakDirStatus.warn{color:var(--rust);}
 
   /* 합칠 후보 — 눈에 띄게 */
   .badge-info.warn{background:var(--mustard-dim); color:var(--c102);}
@@ -1340,7 +1351,7 @@
   .toast.ok{border-left:4px solid var(--green);}
   .toast.warn{border-left:4px solid var(--mustard);}
   .toast.bad{border-left:4px solid var(--rust);}
-  .toast .tmsg{flex:1; line-height:1.5;}
+  .toast .tmsg{flex:1; line-height:1.5; white-space:pre-line;}
   .toast .tact{border:1.5px solid var(--c152); background:var(--c170); color:var(--chalk); font-family:inherit;
     font-weight:800; font-size:12px; padding:6px 12px; border-radius:8px; cursor:pointer; white-space:nowrap;}
   .toast .tact:hover{background:var(--c107);}
@@ -1378,6 +1389,10 @@
     .overlay.active{position:static; display:block !important; background:none; padding:0;}
     .overlay.active .modal{max-width:none; max-height:none; box-shadow:none; padding:0; overflow:visible;}
     .overlay:not(.active){display:none !important;}
+
+    /* 학교별 일정 — 가로로 잘리지 않고, 막대 색이 그대로 인쇄되게 */
+    .tl-scroll{overflow:visible !important;}
+    .tl-row{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
   }
   .print-title{display:none;}
 
@@ -1766,14 +1781,16 @@
         <h2 class="panel-title">학교별 일정</h2>
         <p class="panel-desc">가로가 날짜, 세로가 학교입니다. 어느 학교가 언제 시험인지, 어느 주에 몰려 있는지 한눈에 보여요.</p>
       </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;" class="print-hide">
         <button class="btn secondary" id="schedImportBtn"
           title="학교별 일정표 엑셀을 그대로 고르면 됩니다 — 시험기간·수학시험일·교과서·특이사항과 색칠한 단원까지 읽습니다">📅 학교별 일정 가져오기</button>
         <input type="file" id="schedImportInput" accept=".xlsx,.xls" style="display:none;">
         <button class="btn secondary" id="schedTodayBtn">오늘로 이동</button>
+        <button class="btn secondary" id="schedPrintBtn" title="지금 보이는 일정표를 그대로 인쇄하거나 PDF로 저장합니다">🖨 인쇄 / PDF 저장</button>
       </div>
     </div>
 
+    <div class="print-title" id="schedPrintTitle"></div>
     <div class="filter-bar">
       <div>
         <label>시험 선택</label>
@@ -2003,6 +2020,11 @@
 
     <div class="auto-bak" id="autoBakBox">
       <h4>자동 백업 <span class="hint">하루 한 번, 이 브라우저에 최근 7일치가 저장됩니다</span></h4>
+      <div class="auto-bak-dir-row edit-only" id="autoBakDirRow">
+        <span id="autoBakDirStatus">폴더 저장: 설정 안 함</span>
+        <button class="btn secondary small print-hide" id="autoBakDirBtn">📁 폴더 정해서 매일 자동으로 파일 남기기</button>
+        <button class="btn secondary small print-hide" id="autoBakDirClear" style="display:none;">연결 해제</button>
+      </div>
       <div id="autoBakList"></div>
     </div>
 
@@ -2264,6 +2286,19 @@
     <p class="modal-meta" id="dayMeta"></p>
     <div class="filter-line" id="dayFilters"></div>
     <div id="dayExamList"></div>
+  </div>
+</div>
+
+<!-- 하루 요약 (달력 칸의 "요약" 버튼) -->
+<div class="overlay" id="daySummaryModal">
+  <div class="modal" style="max-width:560px;">
+    <button class="close-x" id="closeDaySummaryModal">×</button>
+    <h3 id="daySummaryTitle">시험 요약</h3>
+    <textarea class="copy-area" id="daySummaryText" readonly spellcheck="false" style="min-height:260px;"></textarea>
+    <div class="copy-actions">
+      <button class="btn" id="daySummaryCopyBtn">📋 복사하기</button>
+      <span class="hint">직보만 보기를 켜면 그날의 직전보강 정보로 바뀝니다.</span>
+    </div>
   </div>
 </div>
 
@@ -3586,6 +3621,7 @@ function renderStudents(){
   mgBadge.style.display = mg.length ? "" : "none";
   mgBadge.textContent = `합칠 후보 ${mg.length}명`;
   mgBadge.classList.toggle("active", showMergeOnly);
+  const mgIds = new Set(mg.map(x=> x.id));
 
   renderChoBar(); renderStatusFilters(); renderGradeFilters(); renderIdxPanel(); renderCrumbs();
   renderSortHeaders();
@@ -3632,6 +3668,9 @@ function renderStudents(){
         <td class="name-cell" data-c="name"><span class="stu-link" data-student="${s.id}">${escapeHtml(s.name)}</span>${
           (nameCounts[(s.name||"").trim()]||0) > 1
             ? ` <span class="tag dup" title="같은 이름의 학생이 ${nameCounts[(s.name||"").trim()]}명 있어요 — 학교·학년·담임으로 구분하세요">동명 ${nameCounts[(s.name||"").trim()]}</span>` : ""
+        }${
+          mgIds.has(s.id)
+            ? ` <span class="tag merge" title="같은 학교에 이름 뒤 숫자만 다른 학생이 있어요 — 한 명이 둘로 갈라진 것일 수 있습니다. 위 '합칠 후보' 배지를 눌러 확인하세요">합칠?</span>` : ""
         }</td>
         <td data-c="school">${s.school? `<span class="tag school clickable" data-jump="school" data-v="${escapeHtml(s.school)}">${escapeHtml(shortSchool(s.school))}</span>`:"—"}</td>
         <td data-c="grade">${s.grade? `<span class="tag grade clickable" data-jump="grade" data-v="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:"—"}</td>
@@ -3667,6 +3706,7 @@ function renderStudents(){
           <input type="checkbox" class="edit-only" data-id="${s.id}" ${sel?"checked":""}>
           <span class="sc-name" data-student="${s.id}">${escapeHtml(s.name)}</span>
           ${(nameCounts[(s.name||"").trim()]||0) > 1 ? `<span class="tag dup">동명 ${nameCounts[(s.name||"").trim()]}</span>` : ""}
+          ${mgIds.has(s.id) ? `<span class="tag merge" title="합칠 후보 — 위 배지를 눌러 확인하세요">합칠?</span>` : ""}
           <span class="tag st-${st}">${st}</span>
           ${s.studentNumber ? `<span class="sc-num">${escapeHtml(s.studentNumber)}</span>` : ""}
         </div>
@@ -3751,7 +3791,7 @@ function renderStudents(){
     };
     /* 예전 '담임' 칸은 내신 담임을 따라갑니다 (옛 화면과의 호환용) */
     payload.teacher = payload.examTeacher || payload.regularTeacher || "";
-    if(!payload.name){ alert("이름은 비워둘 수 없어요."); return; }
+    if(!payload.name){ showToast("이름은 비워둘 수 없어요.", {type:"bad"}); return; }
     editingStudentId = null;          // 먼저 편집 모드를 끄고 저장 (즉시 다시 그려도 편집칸이 남지 않도록)
     updateStudentDoc(b.dataset.id, payload).then(renderStudents);
   }));
@@ -3894,9 +3934,11 @@ document.querySelectorAll("#stuTeaToggle button").forEach(b=> b.addEventListener
   stuF.teacher = null;                 /* 기준이 바뀌면 걸려 있던 담임 조건은 풉니다 */
   renderStudents();
 }));
-let recentTimer = null, lastTypedTerm = "";
+let recentTimer = null, lastTypedTerm = "", stuSearchRenderTimer = null;
 document.getElementById("studentSearch").addEventListener("input", ()=>{
-  renderStudents();
+  /* 글자 하나하나마다 345명 전체를 다시 그리면 빠르게 칠 때 살짝 버벅일 수 있어, 타이핑이 잠깐 멈출 때만 그립니다 */
+  clearTimeout(stuSearchRenderTimer);
+  stuSearchRenderTimer = setTimeout(renderStudents, 150);
   const typed = document.getElementById("studentSearch").value;
   clearTimeout(recentTimer);
   /* 검색칸을 비우면, 직전에 찾던 말을 최근 검색어로 남깁니다 */
@@ -3915,6 +3957,15 @@ document.addEventListener("keydown", (e)=>{
   e.preventDefault();
   switchTab("students");
   box.focus(); box.select();
+});
+/* Ctrl+S(Cmd+S) — 시험정보 입력 탭에서 저장 안 된 카드를 바로 저장 (브라우저 저장창 대신) */
+document.addEventListener("keydown", (e)=>{
+  if(e.key !== "s" || (!e.ctrlKey && !e.metaKey)) return;
+  const panel = document.getElementById("panel-examinput");
+  if(!panel || !panel.classList.contains("active")) return;
+  e.preventDefault();
+  const btn = document.getElementById("saveAllExamBtn");
+  if(btn && !btn.disabled) btn.click();
 });
 renderRecent();
 document.getElementById("incompleteBadge").addEventListener("click", ()=>{
@@ -3967,7 +4018,7 @@ document.getElementById("addStudentBtn").addEventListener("click", async ()=>{
   const regularTeacher = document.getElementById("stuRegularTeacher").value.trim();
   const regularAssistant = document.getElementById("stuRegularAssistant").value.trim();
   const examClass = document.getElementById("stuExamClass").value.trim();
-  if(!name){ alert("이름을 입력해주세요."); return; }
+  if(!name){ showToast("이름을 입력해주세요.", {type:"bad"}); return; }
   await addStudent({studentNumber, name, school, grade, teacher, examTeacher: teacher,
                     regularClass, regularTeacher, regularAssistant, examClass, status:"재원"});
   ["stuNumber","stuName","stuSchool","stuGrade","stuTeacher","stuRegularClass",
@@ -4035,7 +4086,7 @@ document.getElementById("excelFileInput").addEventListener("change", (e)=>{
 
       if(parsed.length===0){
         statusEl.textContent = "";
-        alert("추가할 학생을 찾지 못했어요. '이름' 열이 채워져 있는지 확인해주세요.\n(제목행 예: 학번, 이름, 학교, 학년, 담임, 정규 담임, 정규 부담임, 수업요일, 정규반, 시험대비 반)");
+        showToast("추가할 학생을 찾지 못했어요. '이름' 열이 채워져 있는지 확인해주세요.\n(제목행 예: 학번, 이름, 학교, 학년, 담임, 정규 담임, 정규 부담임, 수업요일, 정규반, 시험대비 반)", {type:"bad", duration:10000});
         return;
       }
 
@@ -4053,7 +4104,7 @@ document.getElementById("excelFileInput").addEventListener("change", (e)=>{
     } catch(err){
       console.error(err);
       statusEl.textContent = "";
-      alert("파일을 읽는 중 문제가 생겼어요. 엑셀 템플릿 형식(학번/이름/학교/학년/담당/수업요일 제목행)과 같은지 확인해주세요.");
+      showToast("파일을 읽는 중 문제가 생겼어요. 엑셀 템플릿 형식(학번/이름/학교/학년/담당/수업요일 제목행)과 같은지 확인해주세요.", {type:"bad", duration:10000});
     } finally {
       e.target.value = "";
     }
@@ -5520,14 +5571,31 @@ function collectCardData(cardEl){
   return data;
 }
 
+const EXAM_FIELD_LABEL = {startDate:"시작일", endDate:"종료일", mathDate:"수학 시험일", examScope:"시험 범위",
+  schoolNotice:"학교 안내", notConducted:"미실시", notConductedReason:"미실시 사유", printStatus:"프린트 상태",
+  inputTeacher:"입력자", units:"단원", retros:"회고"};
+
 async function saveExamCard(cardEl, extra={}){
   const data = collectCardData(cardEl);
   const existing = findExam(data.school, data.grade, data.examName);
   const savedAt = new Date().toISOString().slice(0,10);
+  const label = `${shortSchool(data.school)} ${data.grade} ${data.examName}`;
   if(existing){
+    /* 안 채워진 칸(undefined)과 빈 값(""·false·[])을 같은 것으로 보고 비교합니다 —
+       옛날 시험 카드는 printStatus·units 같은 칸이 아예 없어서, 그냥 값을 비교하면 처음 저장할 때마다
+       "바뀜"으로 잘못 잡힙니다 */
+    const jn = (k, v) => {
+      if(k === "notConducted") return v ? "1" : "0";
+      if(k === "units") return JSON.stringify((v && v.length) ? v : []);
+      if(k === "retros") return JSON.stringify(v || {});
+      return (v || "").toString().trim();
+    };
+    const changed = Object.keys(data).filter(k=> EXAM_FIELD_LABEL[k] && jn(k, data[k]) !== jn(k, existing[k]));
     await updateExamDoc(existing.id, {...data, ...extra, savedAt});
+    if(changed.length) logChange("시험 정보 수정", `${label} — ${changed.map(k=> EXAM_FIELD_LABEL[k]).join(", ")}`, 1);
   } else {
     await addExam({...data, makeupDate:"", ...extra, savedAt});
+    logChange("시험 정보 저장", label, 1);
   }
 }
 
@@ -5868,10 +5936,12 @@ function sortExams(list){
     (a.examName||"").localeCompare(b.examName||"")
   );
 }
-function visibleExamsForDate(key){
+/* ve(선택): 이미 구한 visibleExams() 결과가 있으면 넘겨서 다시 계산하지 않습니다
+   (달력 한 번 그릴 때 날짜 칸마다 이 함수를 부르므로, 매번 새로 거르면 같은 계산을 30번 넘게 반복하게 됩니다) */
+function visibleExamsForDate(key, ve){
   const mathOnly = mathOnlyOn();
   const makeupOnly = makeupOnlyOn();
-  return sortExams(visibleExams().filter(e=>{
+  return sortExams((ve || visibleExams()).filter(e=>{
     /* "직보만 보기"를 켜면 시험 기간 전체가 아니라 실제 직보 날짜에만 알약이 뜹니다 —
        직보는 보통 시험 기간보다 앞선 날(전날)이라 원래 범위 밖일 때가 많습니다 */
     if(mathOnly && makeupOnly) return e.mathDate === key || examMakeupDatesOf(e).has(key);
@@ -6009,11 +6079,12 @@ function renderCalListView(){
   const box = document.getElementById("calList");
   const tk = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
   const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  const ve = visibleExams();   /* 이 달을 그리는 동안은 한 번만 계산 */
 
   let html = "";
   for(let d=1; d<=daysInMonth; d++){
     const key = dateKey(viewYear, viewMonth, d);
-    const list = visibleExamsForDate(key);
+    const list = visibleExamsForDate(key, ve);
     if(list.length===0) continue;
     const dt = toDate(key);
     const dow = weekdayShort(dt);
@@ -6061,12 +6132,13 @@ function renderCalendar(){
   /* 일요일부터 시작합니다 (일 월 화 수 목 금 토) */
   const firstDow = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  const ve = visibleExams();   /* 이 달을 그리는 동안(날짜 칸 + 범례)은 한 번만 계산 */
 
   let html = "";
   for(let i=0;i<firstDow;i++) html += `<div class="cal-cell empty"></div>`;
   for(let d=1; d<=daysInMonth; d++){
     const key = dateKey(viewYear, viewMonth, d);
-    const dayExams = visibleExamsForDate(key);
+    const dayExams = visibleExamsForDate(key, ve);
     const isToday = key === dateKey(today.getFullYear(), today.getMonth(), today.getDate());
     const dowIdx = (firstDow + d - 1) % 7; // 0=일 ... 6=토
     const dowClass = dowIdx===6 ? "sat" : dowIdx===0 ? "sun" : "";
@@ -6090,11 +6162,14 @@ function renderCalendar(){
       ? `<button class="more-pill" data-more="${key}">+${restCount}개 더</button>`
       : (openCell && dayExams.length > MAX_PILLS
           ? `<button class="more-pill open" data-more="${key}">접기</button>` : "");
+    /* 시험이 하나라도 있는 날엔 "요약" 링크를 하나 더 둡니다 — 눌러 큰 창을 안 열어도 그날 전체가 텍스트로 보입니다 */
+    const summaryHtml = dayExams.length
+      ? `<button class="day-summary-btn" data-summary="${key}">요약</button>` : "";
 
     const isPast = key < dateKey(today.getFullYear(), today.getMonth(), today.getDate());
     html += `<div class="cal-cell ${isToday?"today":""} ${isPast?"past":""} ${dowClass} ${holi?"holi":""} ${openCell&&dayExams.length>MAX_PILLS?"open":""}" data-date="${key}"${holi?` title="${escapeHtml(holi)}"`:""}>
       <div class="num">${d}${holi?`<span class="hol">${escapeHtml(holi)}</span>`:""}</div>
-      <div class="pills">${pillsHtml}${moreHtml}</div>
+      <div class="pills">${pillsHtml}${moreHtml}${summaryHtml}</div>
     </div>`;
   }
   grid.innerHTML = html;
@@ -6110,16 +6185,23 @@ function renderCalendar(){
       renderCalendar();
     });
   });
-  renderCalLegend();
+  grid.querySelectorAll(".day-summary-btn").forEach(b=>{
+    b.addEventListener("click", (ev)=>{
+      ev.stopPropagation();
+      openDaySummaryModal(b.dataset.summary);
+    });
+  });
+  renderCalLegend(ve);
 }
 
-/* 이 달에 나온 학년만 색상 범례로 표시 */
-function renderCalLegend(){
+/* 이 달에 나온 학년만 색상 범례로 표시. ve(선택): renderCalendar()가 이미 구해둔 목록 재사용 */
+function renderCalLegend(ve){
   const box = document.getElementById("calLegend");
   const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  const list = ve || visibleExams();
   const seen = [];
   for(let d=1; d<=daysInMonth; d++){
-    visibleExamsForDate(dateKey(viewYear, viewMonth, d)).forEach(e=>{
+    visibleExamsForDate(dateKey(viewYear, viewMonth, d), list).forEach(e=>{
       if(e.grade && !seen.includes(e.grade)) seen.push(e.grade);
     });
   }
@@ -6375,6 +6457,121 @@ function closeDayModal(){
 }
 document.getElementById("closeDayModal").addEventListener("click", closeDayModal);
 document.getElementById("dayModal").addEventListener("click", (e)=>{ if(e.target.id==="dayModal") closeDayModal(); });
+
+/* ---------- 하루 요약 (달력 칸의 "요약" 버튼) ----------
+   "직보만 보기"가 켜져 있으면 그날의 직전보강 정보로, 꺼져 있으면 그날 시험 전체를
+   학교별 · 선생님별로 훑어볼 수 있는 텍스트로 정리합니다. 큰 상세 창을 열지 않아도 됩니다. */
+function daySummaryHeadText(key){
+  const d = toDate(key);
+  const holi = holidayOf(key);
+  return `${d.getMonth()+1}월 ${d.getDate()}일 (${weekdayShort(d)})${holi ? " · " + holi : ""}`;
+}
+function daySummaryExamText(key, list){
+  const calTeacher = (document.getElementById("calFilterTeacher")?.value || "").trim();
+  const lines = [daySummaryHeadText(key) + " 시험 요약"];
+  if(calTeacher) lines.push(`(${calTeacher}T 담당만)`);
+  lines.push("");
+
+  const bySchool = [];
+  const teacherTotal = {};  // teacher -> {count, bySchool:{school:count}}
+  let total = 0;
+  list.forEach(e=>{
+    const ss = calStudentsForExam(e);
+    const label = `${shortSchool(e.school)} ${e.grade||""}`.trim();
+    const isMath = !!e.mathDate && e.mathDate === key;
+    bySchool.push(`${label} · ${ss.length}명${isMath ? " · 수학" : ""}`);
+    total += ss.length;
+    ss.forEach(s=>{
+      const t = examTeacherOf(s) || "담임 미지정";
+      if(!teacherTotal[t]) teacherTotal[t] = { count:0, bySchool:{} };
+      teacherTotal[t].count++;
+      teacherTotal[t].bySchool[label] = (teacherTotal[t].bySchool[label] || 0) + 1;
+    });
+  });
+
+  lines.push(`■ 학교별 (총 ${list.length}개교 · ${total}명)`);
+  lines.push(...bySchool);
+  lines.push("");
+  lines.push("■ 선생님별");
+  const teacherNames = Object.keys(teacherTotal).sort((a,b)=> teacherTotal[b].count - teacherTotal[a].count);
+  if(!teacherNames.length) lines.push("(대상 학생이 없어요)");
+  teacherNames.forEach(t=>{
+    const info = teacherTotal[t];
+    const brk = Object.entries(info.bySchool).map(([sc,n])=> `${sc} ${n}`).join(" · ");
+    lines.push(`${t}${t==="담임 미지정"?"":"T"} ${info.count}명 (${brk})`);
+  });
+  return lines.join("\n");
+}
+function daySummaryMakeupText(key, list){
+  const calTeacher = (document.getElementById("calFilterTeacher")?.value || "").trim();
+  const lines = [daySummaryHeadText(key) + " 직전보강 요약"];
+  if(calTeacher) lines.push(`(${calTeacher}T 담당만)`);
+  lines.push("");
+
+  const commonRows = [];
+  const slotMap = new Map();   // "시간" -> {teacher -> {names:[], school}}
+  list.forEach(e=>{
+    const label = `${shortSchool(e.school)} ${e.grade||""}`.trim();
+    if((e.makeupDate||"").trim() === key){
+      const ss = calStudentsForExam(e);
+      commonRows.push(`${label} — 전체 공통 ${ss.length}명${(e.makeupNote||"").trim() ? "  " + e.makeupNote.trim() : ""}`);
+    }
+    makeupGroupsOf(e).filter(g=> g.date === key).forEach(g=>{
+      const time = g.time ? timeText(g.time) : "시간 미정";
+      if(!slotMap.has(time)) slotMap.set(time, new Map());
+      const byTeacher = slotMap.get(time);
+      g.names.forEach(nm=>{
+        const st = students.find(x=> x.name === nm && x.school === e.school);
+        const t = st ? (examTeacherOf(st) || "담임 미지정") : "담임 미지정";
+        if(calTeacher && t !== calTeacher) return;
+        if(!byTeacher.has(t)) byTeacher.set(t, []);
+        byTeacher.get(t).push(`${nm}(${label})`);
+      });
+    });
+  });
+
+  if(!commonRows.length && slotMap.size === 0) return lines.concat(["직전보강 일정이 없어요."]).join("\n");
+
+  if(commonRows.length){
+    lines.push("■ 전체 공통 일정");
+    lines.push(...commonRows);
+    lines.push("");
+  }
+  if(slotMap.size){
+    lines.push("■ 시간대별 (학생별 지정)");
+    const times = [...slotMap.keys()].sort((a,b)=> a==="시간 미정" ? 1 : b==="시간 미정" ? -1 : a.localeCompare(b,"ko"));
+    times.forEach(time=>{
+      const byTeacher = slotMap.get(time);
+      [...byTeacher.entries()].forEach(([t, names])=>{
+        if(!names.length) return;
+        lines.push(`${time} — ${t}${t==="담임 미지정"?"":"T"} ${names.length}명: ${names.join(", ")}`);
+      });
+    });
+  }
+  return lines.join("\n");
+}
+function daySummaryText(key){
+  const list = visibleExamsForDate(key);
+  if(!list.length) return daySummaryHeadText(key) + "\n\n이 날짜에 시험이 없어요.";
+  return makeupOnlyOn() ? daySummaryMakeupText(key, list) : daySummaryExamText(key, list);
+}
+function openDaySummaryModal(key){
+  const d = toDate(key);
+  document.getElementById("daySummaryTitle").textContent =
+    `${d.getMonth()+1}월 ${d.getDate()}일 요약${makeupOnlyOn() ? " (직전보강)" : ""}`;
+  document.getElementById("daySummaryText").value = daySummaryText(key);
+  document.getElementById("daySummaryModal").classList.add("active");
+}
+function closeDaySummaryModal(){ document.getElementById("daySummaryModal").classList.remove("active"); }
+document.getElementById("closeDaySummaryModal").addEventListener("click", closeDaySummaryModal);
+document.getElementById("daySummaryModal").addEventListener("click", (e)=>{
+  if(e.target.id==="daySummaryModal") closeDaySummaryModal();
+});
+document.getElementById("daySummaryCopyBtn").addEventListener("click", async ()=>{
+  const ta = document.getElementById("daySummaryText");
+  try{ await navigator.clipboard.writeText(ta.value); showToast("복사했어요.", {type:"ok"}); }
+  catch(e){ ta.select(); document.execCommand("copy"); showToast("복사했어요.", {type:"ok"}); }
+});
 document.addEventListener("keydown", (e)=>{
   if(e.key==="Escape"){
     closeMonthPicker();
@@ -6383,6 +6580,10 @@ document.addEventListener("keydown", (e)=>{
     closeDayModal();
     document.getElementById("detailModal").classList.remove("active");
     currentDetailExamId = null;
+    /* 나머지 팝업창도 Esc로 닫히게 (비밀번호창, 안내창, 가져오기창 등) */
+    document.querySelectorAll(".overlay.active").forEach(o=>{
+      if(o.id !== "askModal") o.classList.remove("active");
+    });
   }
 });
 
@@ -6588,6 +6789,10 @@ function renderScheduleTab(){
   document.getElementById("schedSummary").innerHTML =
     `${schools.length}개교 · 시험 ${list.length}건` +
     (noScope ? ` · <span style="color:var(--rust);">범위 미입력 ${noScope}건</span>` : "");
+  { const ptEl = document.getElementById("schedPrintTitle");
+    if(ptEl) ptEl.innerHTML = `학교별 일정 — ${escapeHtml(seasonLabelOf(schedSeason))}${schedGrade? " · "+escapeHtml(schedGrade):""}` +
+      `<span class="sub"> · ${schools.length}개교 · 시험 ${list.length}건 · ${new Date().toISOString().slice(0,10)} 기준</span>`;
+  }
 
   if(list.length===0){
     tl.innerHTML = ""; legend.innerHTML = "";
@@ -6759,6 +6964,7 @@ window.addEventListener("resize", ()=>{
 document.getElementById("schedSeasonSelect").addEventListener("change", (e)=>{
   schedSeason = e.target.value; schedGrade = ""; renderScheduleTab();
 });
+document.getElementById("schedPrintBtn").addEventListener("click", ()=> window.print());
 document.getElementById("schedTodayBtn").addEventListener("click", ()=>{
   const dated = exams.filter(e=> e.startDate && e.endDate && !e.notConducted);
   if(dated.length===0){ showToast("표시할 시험이 없어요.", {type:"warn"}); return; }
@@ -7517,12 +7723,128 @@ function readAutoBaks(){
   catch(e){ return []; }
 }
 
+/* ---------- 자동 백업을 실제 폴더에도 파일로 남기기 (File System Access API, 크롬·엣지) ----------
+   한 번 폴더를 골라 허락해두면(showDirectoryPicker), 그 뒤로는 하루 한 번 자동 백업할 때마다
+   묻지 않고 조용히 그 폴더에 파일을 씁니다. 폴더 선택 핸들은 파일이 아니라 "권한이 있는 손잡이"라
+   localStorage에는 못 넣고 IndexedDB에 넣습니다. */
+function openBakDB(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open("kladi_filesys", 1);
+    req.onupgradeneeded = ()=> req.result.createObjectStore("handles");
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function saveBakDirHandle(handle){
+  const db = await openBakDB();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction("handles", "readwrite");
+    tx.objectStore("handles").put(handle, "dir");
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  });
+}
+async function loadBakDirHandle(){
+  try{
+    const db = await openBakDB();
+    return await new Promise((resolve, reject)=>{
+      const tx = db.transaction("handles", "readonly");
+      const req = tx.objectStore("handles").get("dir");
+      req.onsuccess = ()=> resolve(req.result || null);
+      req.onerror = ()=> reject(req.error);
+    });
+  }catch(e){ return null; }
+}
+async function clearBakDirHandle(){
+  const db = await openBakDB();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction("handles", "readwrite");
+    tx.objectStore("handles").delete("dir");
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  });
+}
+function fsApiSupported(){ return typeof window.showDirectoryPicker === "function"; }
+
+/* 지금 고른 폴더의 연결 상태를 화면에 표시 (설정 안 함 / 연결됨 / 다시 연결 필요) */
+async function refreshAutoBakDirStatus(){
+  const statusEl = document.getElementById("autoBakDirStatus");
+  const clearBtn = document.getElementById("autoBakDirClear");
+  const pickBtn = document.getElementById("autoBakDirBtn");
+  if(!statusEl) return;
+  if(!fsApiSupported()){
+    statusEl.textContent = "폴더 저장: 이 브라우저는 지원하지 않아요 (크롬·엣지에서 가능)";
+    statusEl.className = "";
+    pickBtn.disabled = true; clearBtn.style.display = "none";
+    return;
+  }
+  const handle = await loadBakDirHandle();
+  if(!handle){
+    statusEl.textContent = "폴더 저장: 설정 안 함";
+    statusEl.className = "";
+    clearBtn.style.display = "none";
+    return;
+  }
+  let perm = "prompt";
+  try{ perm = await handle.queryPermission({mode:"readwrite"}); }catch(e){}
+  if(perm === "granted"){
+    statusEl.textContent = `폴더 저장: "${handle.name}" 폴더에 매일 자동 저장 중 ✓`;
+    statusEl.className = "on";
+  } else {
+    statusEl.textContent = `폴더 저장: "${handle.name}" — 다시 연결이 필요해요 (버튼을 한 번 더 눌러주세요)`;
+    statusEl.className = "warn";
+  }
+  clearBtn.style.display = "";
+}
+
+/* 오늘치 백업을 고른 폴더에 파일로 씁니다. 폴더가 없거나 권한이 없으면 조용히 건너뜁니다
+   (권한 재요청은 사용자가 직접 눌러야만 가능해서, 여기서는 묻지 않고 상태만 갱신합니다). */
+async function writeAutoBakToFolder(entry){
+  if(!fsApiSupported()) return;
+  const handle = await loadBakDirHandle();
+  if(!handle) return;
+  try{
+    const perm = await handle.queryPermission({mode:"readwrite"});
+    if(perm !== "granted"){ refreshAutoBakDirStatus(); return; }
+    const fname = `학원데이터_자동백업_${entry.date}.json`;
+    const fileHandle = await handle.getFileHandle(fname, {create:true});
+    const writable = await fileHandle.createWritable();
+    await writable.write(JSON.stringify(
+      {app:"학원 관리 시스템", version:1, exportedAt:entry.at, students:entry.students, exams:entry.exams},
+      null, 2));
+    await writable.close();
+  }catch(e){ console.warn("자동 백업을 폴더에 쓰지 못했어요", e); refreshAutoBakDirStatus(); }
+}
+
+document.getElementById("autoBakDirBtn")?.addEventListener("click", async ()=>{
+  if(!fsApiSupported()){ showToast("이 브라우저는 지원하지 않아요. 크롬이나 엣지에서 해보세요.", {type:"warn"}); return; }
+  try{
+    const handle = await window.showDirectoryPicker({mode:"readwrite"});
+    await saveBakDirHandle(handle);
+    await refreshAutoBakDirStatus();
+    const today = readAutoBaks().find(b=> b.date === new Date().toISOString().slice(0,10));
+    if(today) await writeAutoBakToFolder(today);
+    showToast(`"${handle.name}" 폴더에 앞으로 매일 자동 백업 파일을 남길게요.`, {type:"ok"});
+  }catch(e){
+    if(e && e.name === "AbortError") return;   /* 폴더 선택창을 그냥 닫은 경우 */
+    showToast("폴더를 연결하지 못했어요.", {type:"bad"});
+  }
+});
+document.getElementById("autoBakDirClear")?.addEventListener("click", async ()=>{
+  if(!await askConfirm("자동 백업 폴더 연결을 해제할까요?\n이미 저장된 파일은 그대로 남아있고, 앞으로만 저장하지 않습니다.")) return;
+  await clearBakDirHandle();
+  await refreshAutoBakDirStatus();
+  showToast("폴더 연결을 해제했어요.", {type:"warn"});
+});
+
 function saveAutoBackup(){
   if(!students.length) return;                       /* 아직 안 불러왔으면 건너뜁니다 */
   const today = new Date().toISOString().slice(0,10);
   let list = readAutoBaks();
-  if(list.some(b=> b.date === today)) { renderAutoBaks(); return; }
-  list.unshift({ date: today, at: new Date().toISOString(), students, exams });
+  const already = list.find(b=> b.date === today);
+  if(already) { renderAutoBaks(); refreshAutoBakDirStatus(); writeAutoBakToFolder(already); return; }
+  const entry = { date: today, at: new Date().toISOString(), students, exams };
+  list.unshift(entry);
   list = list.slice(0, AUTO_BAK_KEEP);
   try{
     localStorage.setItem(AUTO_BAK_KEY, JSON.stringify(list));
@@ -7533,19 +7855,29 @@ function saveAutoBackup(){
     }
   }
   renderAutoBaks();
+  refreshAutoBakDirStatus();
+  writeAutoBakToFolder(entry);
 }
 
 function renderAutoBaks(){
   const box = document.getElementById("autoBakList");
   if(!box) return;
+  refreshAutoBakDirStatus();
   const list = readAutoBaks();
   box.innerHTML = list.length === 0
     ? `<p class="imp-note">아직 저장된 자동 백업이 없어요.</p>`
     : list.map(b=>`<div class="auto-bak-row">
         <span class="d">${escapeHtml(b.date)}</span>
         <span class="n">학생 ${b.students.length}명 · 시험 ${b.exams.length}건</span>
+        <button class="btn secondary small auto-bak-dl" data-date="${escapeHtml(b.date)}" title="이 자동 백업을 이 컴퓨터가 아니어도 되찾을 수 있게 파일로 저장합니다">파일로 받기</button>
         <button class="btn secondary small edit-only auto-bak-restore" data-date="${escapeHtml(b.date)}">되돌리기</button>
       </div>`).join("");
+  box.querySelectorAll(".auto-bak-dl").forEach(btn=> btn.addEventListener("click", ()=>{
+    const b = readAutoBaks().find(x=> x.date === btn.dataset.date);
+    if(!b) return;
+    downloadBackupJson(b.students, b.exams, b.at, b.date);
+    showToast(`${b.date} 자동 백업을 파일로 저장했어요.`, {type:"ok"});
+  }));
   box.querySelectorAll(".auto-bak-restore").forEach(btn=> btn.addEventListener("click", async ()=>{
     if(!guardEdit()) return;
     const b = readAutoBaks().find(x=> x.date === btn.dataset.date);
@@ -7569,19 +7901,19 @@ function renderAutoBaks(){
 }
 
 /* ---------- 전체 백업 · 복원 ---------- */
-document.getElementById("backupBtn").addEventListener("click", ()=>{
-  const data = {
-    app: "학원 관리 시스템",
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    students, exams
-  };
+/* 백업 내용을 실제 파일(.json)로 내려받습니다 — 자동 백업(브라우저 안에만 있음)도 이걸로 파일화합니다 */
+function downloadBackupJson(stuList, examList, exportedAt, fileTag){
+  const data = { app: "학원 관리 시스템", version: 1, exportedAt: exportedAt || new Date().toISOString(),
+    students: stuList, exams: examList };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `학원데이터_백업_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `학원데이터_백업_${fileTag || new Date().toISOString().slice(0,10)}.json`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=> URL.revokeObjectURL(a.href), 1500);
+}
+document.getElementById("backupBtn").addEventListener("click", ()=>{
+  downloadBackupJson(students, exams);
   showToast(`학생 ${students.length}명 · 시험 ${exams.length}건을 백업 파일로 저장했어요.`, {type:"ok"});
 });
 
@@ -7978,6 +8310,12 @@ function openDetailModal(examId, returnTo){
     const btn = ev.currentTarget;
     btn.disabled = true; btn.textContent = "저장 중...";
     await updateExamDoc(examId, payload);
+    { const changedFields = [];
+      if(scope !== before.examScope) changedFields.push("시험 범위");
+      if(notice !== before.schoolNotice) changedFields.push("학교 안내");
+      if(retroChanged) changedFields.push("회고");
+      logChange("시험 범위 수정", `${shortSchool(exam.school)} ${exam.grade} ${exam.examName} — ${changedFields.join(", ")}`, 1);
+    }
     showToast(retroChanged ? "회고와 시험 범위를 저장했어요." : "시험 범위를 저장했어요.", {
       type:"ok", actionLabel:"되돌리기",
       onAction: async ()=>{
