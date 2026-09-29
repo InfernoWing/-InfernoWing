@@ -692,7 +692,8 @@
     position:relative; background:var(--c4); display:flex; flex-direction:column;
   }
   .cal-cell.empty{background:transparent; border:none;}
-  .cal-cell .num{font-size:12px; font-weight:700; color:var(--c3); flex:0 0 auto;}
+  .cal-cell .num{font-size:12px; font-weight:700; color:var(--c3); flex:0 0 auto;
+    display:flex; align-items:baseline; gap:5px;}
   .cal-cell.today{border-color:var(--mustard); background:var(--c141);}
   .cal-cell.today .num{color:var(--rust);}
   .cal-cell.sat .num{color:var(--blue);}
@@ -736,9 +737,9 @@
   .exam-pill.past{opacity:.45; filter:saturate(.5);}
   .exam-pill.past:hover{opacity:.8;}
   .exam-pill.ongoing{box-shadow:0 0 0 1.5px var(--pc); font-weight:800;}
-  .cal-cell .day-summary-btn{align-self:flex-start; background:none; border:none; color:var(--c2);
-    font-size:10.5px; font-weight:700; cursor:pointer; padding:1px 2px; margin-top:1px; text-decoration:underline;
-    text-underline-offset:2px;}
+  .cal-cell .num .day-summary-btn{margin-left:auto; background:none; border:none; color:var(--c2);
+    font-size:10.5px; font-weight:700; cursor:pointer; padding:1px 2px; text-decoration:underline;
+    text-underline-offset:2px; flex:0 0 auto;}
   .cal-cell .day-summary-btn:hover{color:var(--math-c);}
   /* 수학 시험일 — 진하게 + 배지 (오늘 표시 주황색과 헷갈리지 않도록 파란색 고정) */
   .exam-pill.math{border-color:var(--math-c); border-width:1.5px; font-weight:800;
@@ -6172,7 +6173,9 @@ function renderCalendar(){
       /* 날짜만 봐도 중간·기말은 알 수 있어서 알약에서는 뺐습니다 */
       const label = `${shortSchool(e.school)} ${e.grade||""}`.trim();
       const full = `${e.school||""} ${e.grade||""} ${e.examName||""}`.trim();
-      const state = e.endDate < tKey ? "past" : (e.startDate <= tKey ? "ongoing" : "");
+      /* 직보만 보기에서는 "진행중/이미 끝남" 표시(테두리 강조·흐리게)를 빼서, 그날 직보가 있는 학교끼리
+         디자인이 서로 달라 보이지 않게 합니다 — 시험 기간과는 상관없이 그 학교의 직보가 그날 있다는 뜻이라서요. */
+      const state = makeupOnlyOn() ? "" : (e.endDate < tKey ? "past" : (e.startDate <= tKey ? "ongoing" : ""));
       const isMath = !!e.mathDate && e.mathDate === key;
       if(isMath) sawMathPill = true;
       const tip = `${escapeHtml(full)} · ${count}명` + (e.mathDate ? ` · 수학 ${escapeHtml(fmtWithDow(e.mathDate))}` : "");
@@ -6188,8 +6191,8 @@ function renderCalendar(){
 
     const isPast = key < dateKey(today.getFullYear(), today.getMonth(), today.getDate());
     html += `<div class="cal-cell ${isToday?"today":""} ${isPast?"past":""} ${dowClass} ${holi?"holi":""} ${openCell&&dayExams.length>MAX_PILLS?"open":""}" data-date="${key}"${holi?` title="${escapeHtml(holi)}"`:""}>
-      <div class="num">${d}${holi?`<span class="hol">${escapeHtml(holi)}</span>`:""}</div>
-      <div class="pills">${pillsHtml}${moreHtml}${summaryHtml}</div>
+      <div class="num">${d}${holi?`<span class="hol">${escapeHtml(holi)}</span>`:""}${summaryHtml}</div>
+      <div class="pills">${pillsHtml}${moreHtml}</div>
     </div>`;
   }
   grid.innerHTML = html;
@@ -6531,7 +6534,9 @@ function daySummaryMakeupText(key, list){
   lines.push("");
 
   const commonRows = [];
-  const slotMap = new Map();   // "시간" -> {teacher -> {names:[], school}}
+  /* 선생님별로 먼저 묶습니다 — 시간을 안 넣는 선생님이 훨씬 많아서, 시간대로 먼저 나누면
+     "시간 미정"에 다 몰려 누가 몇 명인지 한눈에 안 들어옵니다. 시간은 있을 때만 이름 옆에 붙입니다. */
+  const teacherMap = new Map();   // teacher -> [{name, label, time}]
   list.forEach(e=>{
     const label = `${shortSchool(e.school)} ${e.grade||""}`.trim();
     if((e.makeupDate||"").trim() === key){
@@ -6539,35 +6544,31 @@ function daySummaryMakeupText(key, list){
       commonRows.push(`${label} — 전체 공통 ${ss.length}명${(e.makeupNote||"").trim() ? "  " + e.makeupNote.trim() : ""}`);
     }
     makeupGroupsOf(e).filter(g=> g.date === key).forEach(g=>{
-      const time = g.time ? timeText(g.time) : "시간 미정";
-      if(!slotMap.has(time)) slotMap.set(time, new Map());
-      const byTeacher = slotMap.get(time);
+      const time = g.time ? timeText(g.time) : "";
       g.names.forEach(nm=>{
         const st = students.find(x=> x.name === nm && x.school === e.school);
         const t = st ? (examTeacherOf(st) || "담임 미지정") : "담임 미지정";
         if(calTeacher && t !== calTeacher) return;
-        if(!byTeacher.has(t)) byTeacher.set(t, []);
-        byTeacher.get(t).push(`${nm}(${label})`);
+        if(!teacherMap.has(t)) teacherMap.set(t, []);
+        teacherMap.get(t).push({ name: nm, label, time });
       });
     });
   });
 
-  if(!commonRows.length && slotMap.size === 0) return lines.concat(["직전보강 일정이 없어요."]).join("\n");
+  if(!commonRows.length && teacherMap.size === 0) return lines.concat(["직전보강 일정이 없어요."]).join("\n");
 
   if(commonRows.length){
     lines.push("■ 전체 공통 일정");
     lines.push(...commonRows);
     lines.push("");
   }
-  if(slotMap.size){
-    lines.push("■ 시간대별 (학생별 지정)");
-    const times = [...slotMap.keys()].sort((a,b)=> a==="시간 미정" ? 1 : b==="시간 미정" ? -1 : a.localeCompare(b,"ko"));
-    times.forEach(time=>{
-      const byTeacher = slotMap.get(time);
-      [...byTeacher.entries()].forEach(([t, names])=>{
-        if(!names.length) return;
-        lines.push(`${time} — ${t}${t==="담임 미지정"?"":"T"} ${names.length}명: ${names.join(", ")}`);
-      });
+  if(teacherMap.size){
+    lines.push("■ 선생님별 (학생별 지정)");
+    const teachers = [...teacherMap.keys()].sort((a,b)=> teacherMap.get(b).length - teacherMap.get(a).length);
+    teachers.forEach(t=>{
+      const entries = teacherMap.get(t);
+      const names = entries.map(x=> `${x.name}(${x.label}${x.time ? "·" + x.time : ""})`);
+      lines.push(`${t}${t==="담임 미지정"?"":"T"} ${entries.length}명: ${names.join(", ")}`);
     });
   }
   return lines.join("\n");
