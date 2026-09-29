@@ -3120,6 +3120,11 @@ function renderSchedPlan(){
   </div>`;
 
   const list = (arr, render) => `<div class="imp-list">${arr.map(render).join("")}</div>`;
+  /* 바뀐 것도 새로 만들 것도 없으면 — 업로드가 안 된 것처럼 보이지 않도록 분명히 알려줍니다 */
+  if(!plan.updates.length && !plan.adds.length && !plan.bookChanges.length){
+    html += `<p class="imp-note" style="font-weight:800; color:var(--rust);">
+      변경사항이 없어요 — 표의 내용이 지금 앱에 있는 것과 이미 같습니다. (파일은 정상적으로 읽혔어요)</p>`;
+  }
   if(plan.updates.length){
     html += `<div class="imp-sec"><h5>일정이 바뀌는 학교 ${plan.updates.length}곳</h5>` +
       list(plan.updates, u=>`<div class="imp-row"><span class="who">${escapeHtml(shortSchool(u.school))}</span>
@@ -4489,11 +4494,18 @@ function renderClassImportPlan(plan, fileName){
       </label>`).join("") + `</div></div>`;
   }
 
+  leavePick = new Set(missing.filter(m=>m.listed).map(m=>m.id));
+
+  /* 바뀐 것도 새로 만들 것도 퇴원 처리할 것도 없으면 — 업로드가 안 된 것처럼 보이지 않도록 분명히 알려줍니다 */
+  if(!plan.updates.length && !plan.adds.length && !leavePick.size){
+    html += `<p class="imp-note" style="font-weight:800; color:var(--rust);">
+      변경사항이 없어요 — 표의 내용이 지금 앱에 있는 것과 이미 같습니다. (파일은 정상적으로 읽혔어요)</p>`;
+  }
+
   const other = classImportField === "examClass" ? "정규반" : "시험대비 반";
   html += `<p class="imp-note">학번과 ${other} 등 다른 값은 건드리지 않습니다. 적용 뒤 “되돌리기”로 한 번에 취소할 수 있어요.</p>`;
 
   document.getElementById("classImportBody").innerHTML = html;
-  leavePick = new Set(missing.filter(m=>m.listed).map(m=>m.id));
   document.getElementById("classImportBody").querySelectorAll(".leave-chk").forEach(cb=>
     cb.addEventListener("change", ()=>{
       cb.checked ? leavePick.add(cb.dataset.id) : leavePick.delete(cb.dataset.id);
@@ -4757,6 +4769,12 @@ function renderScorePlan(){
         <span class="who">${escapeHtml(u.name)}</span>
         <span class="sch">${escapeHtml(shortSchool(u.school))}</span>
         <span class="chg">${u.count > 1 ? `같은 학교에 동명이인 ${u.count}명` : "명단에 없음"} · ${u.score}점</span></div>`) + `</div>`;
+  }
+
+  /* 새로 채울 것도 바뀔 것도 없으면 — 업로드가 안 된 것처럼 보이지 않도록 분명히 알려줍니다 */
+  if(!plan.fill.length && !plan.change.length){
+    html += `<p class="imp-note" style="font-weight:800; color:var(--rust);">
+      변경사항이 없어요 — 표의 점수가 지금 앱에 있는 것과 이미 같습니다. (파일은 정상적으로 읽혔어요)</p>`;
   }
 
   html += `<p class="imp-note">점수만 씁니다. 직전보충 참석·시험 범위 등 다른 값은 건드리지 않습니다. 적용 뒤 “되돌리기”로 한 번에 취소할 수 있어요.</p>`;
@@ -6133,6 +6151,7 @@ function renderCalendar(){
   const firstDow = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
   const ve = visibleExams();   /* 이 달을 그리는 동안(날짜 칸 + 범례)은 한 번만 계산 */
+  let sawMathPill = false;   /* 이 달에 수학 시험일 표시(파란색)가 하나라도 있으면 범례에 설명을 붙입니다 */
 
   let html = "";
   for(let i=0;i<firstDow;i++) html += `<div class="cal-cell empty"></div>`;
@@ -6155,6 +6174,7 @@ function renderCalendar(){
       const full = `${e.school||""} ${e.grade||""} ${e.examName||""}`.trim();
       const state = e.endDate < tKey ? "past" : (e.startDate <= tKey ? "ongoing" : "");
       const isMath = !!e.mathDate && e.mathDate === key;
+      if(isMath) sawMathPill = true;
       const tip = `${escapeHtml(full)} · ${count}명` + (e.mathDate ? ` · 수학 ${escapeHtml(fmtWithDow(e.mathDate))}` : "");
       return `<div class="exam-pill ${gradeColor(e.grade)} ${state} ${isMath?"math":""}" data-exam="${e.id}" title="${tip}"><span class="label">${escapeHtml(label)}</span>${isMath?`<span class="mbadge">수학</span>`:""}<span class="count">${count}</span></div>`;
     }).join("");
@@ -6191,11 +6211,12 @@ function renderCalendar(){
       openDaySummaryModal(b.dataset.summary);
     });
   });
-  renderCalLegend(ve);
+  renderCalLegend(ve, sawMathPill);
 }
 
-/* 이 달에 나온 학년만 색상 범례로 표시. ve(선택): renderCalendar()가 이미 구해둔 목록 재사용 */
-function renderCalLegend(ve){
+/* 이 달에 나온 학년만 색상 범례로 표시. ve(선택): renderCalendar()가 이미 구해둔 목록 재사용
+   sawMath: 이 달에 파란색 "수학" 표시가 하나라도 있으면 범례에 설명을 한 줄 붙입니다 */
+function renderCalLegend(ve, sawMath){
   const box = document.getElementById("calLegend");
   const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
   const list = ve || visibleExams();
@@ -6209,7 +6230,8 @@ function renderCalLegend(ve){
   box.innerHTML = `<span>학년 색상</span>` + sortGrades(seen).map(g=>{
     const c = gradeColor(g);
     return `<span class="lg"><span class="sw" style="background:${COLOR_HEX[c]}; border-color:${COLOR_BORDER[c]};"></span>${escapeHtml(g)}</span>`;
-  }).join("") + `<span style="margin-left:4px;">· 흐린 알약은 이미 끝난 시험</span>`;
+  }).join("") + `<span style="margin-left:4px;">· 흐린 알약은 이미 끝난 시험</span>`
+    + (sawMath ? `<span class="lg"><span class="sw" style="background:var(--math-c); border-color:var(--math-c);"></span>파란 테두리는 수학 시험일</span>` : "");
 }
 function goToMonth(y,m){ viewYear=y; viewMonth=m; renderCalendar(); }
 function shiftMonth(delta){
