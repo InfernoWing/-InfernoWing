@@ -6332,7 +6332,10 @@ function visibleExams(){
   const mathOnly = mathOnlyOn();
   const makeupOnly = makeupOnlyOn();
   return exams.filter(e=>{
-    if(!e.startDate || !e.endDate || e.notConducted) return false;
+    if(e.notConducted) return false;
+    /* 시험 날짜를 아직 못 정한 카드도, 직보만 보기에서는 직보 날짜가 있으면 보여줍니다
+       (직보 날짜는 시험 날짜보다 먼저 입력되는 일이 많아요) */
+    if((!e.startDate || !e.endDate) && !(makeupOnly && !mathOnly && examHasMakeup(e))) return false;
     if(mathOnly && !e.mathDate) return false;          /* 수학 날짜가 없으면 뺍니다 */
     if(makeupOnly && !examHasMakeup(e)) return false;  /* 직전보충이 걸린 시험만 */
     if(calSchoolQ && !schoolBoxMatchesExam(e, calSchoolQ)) return false;
@@ -6372,7 +6375,15 @@ function visibleExamsForDate(key, ve){
 function examsInMonth(y,m){
   const first = dateKey(y,m,1);
   const last  = dateKey(y,m,new Date(y,m+1,0).getDate());
-  return visibleExams().filter(e=> e.startDate<=last && e.endDate>=first);
+  return visibleExams().filter(e=>{
+    /* 직보만 보기: 실제로 알약이 뜨는 날(직보 날짜) 기준으로 셉니다 */
+    if(makeupOnlyOn()){
+      const dates = [...examMakeupDatesOf(e)];
+      if(mathOnlyOn() && e.mathDate) dates.push(e.mathDate);
+      return dates.some(d=> d>=first && d<=last);
+    }
+    return e.startDate<=last && e.endDate>=first;
+  });
 }
 
 /* ---------- 월 피커 (방안 A) ---------- */
