@@ -490,6 +490,16 @@
   }
   nav.tabs button.active{ opacity:1; background:var(--board); color:var(--chalk); border-color:var(--board); }
   nav.tabs button:hover{opacity:.85;}
+  nav.tabs .tl-short{display:none;}
+  /* 휴대폰: 탭 이름이 중간에서 끊겨 두 줄("시험정/보 입력")이 되던 것 → 짧은 이름으로 한 줄 고정,
+     그래도 넘치면 옆으로 밀 수 있게. 상단 설명 문구와 요약 카드는 접어서 캘린더가 바로 보이게. */
+  @media (max-width:700px){
+    nav.tabs{ padding:0 12px; gap:5px; overflow-x:auto; scrollbar-width:none; }
+    nav.tabs::-webkit-scrollbar{display:none;}
+    nav.tabs button{ flex:1 0 auto; white-space:nowrap; font-size:13.5px; padding:10px 10px; }
+    nav.tabs .tl-long{display:none;}
+    nav.tabs .tl-short{display:inline;}
+  }
 
   main{ max-width:1120px; margin:0 auto; padding:0 20px 60px; }
   section.panel{
@@ -937,6 +947,13 @@
   .cl-head .d .dow{font-size:12px; color:var(--c2); margin-left:5px;}
   .cl-head .d .sat{color:var(--blue);} .cl-head .d .sun{color:var(--rust);}
   .cl-head .n{font-size:11px; font-weight:700; color:var(--c2);}
+  .cl-head-right{display:flex; align-items:center; gap:8px;}
+  .cl-past-toggle{width:100%; background:none; border:1.5px dashed var(--line); border-radius:10px;
+    padding:8px 12px; font-family:inherit; font-size:12.5px; font-weight:700; color:var(--c2); cursor:pointer;}
+  .cl-past-toggle:hover{border-color:var(--mustard); color:var(--ink);}
+  .cl-head-right .day-summary-btn{background:none; border:none; color:var(--c2); font-size:10.5px;
+    font-weight:700; cursor:pointer; padding:1px 2px; text-decoration:underline; text-underline-offset:2px;}
+  .cl-head-right .day-summary-btn:hover{color:var(--math-c);}
   .cl-body{padding:9px 11px; display:flex; flex-direction:column; gap:6px;}
   .cl-item{display:flex; align-items:center; justify-content:space-between; gap:8px;
     border:1px solid var(--pd); background:var(--pb); color:var(--pt);
@@ -1118,6 +1135,8 @@
   .hist-row .w{font-weight:800; min-width:96px;}
   .hist-row .d{color:var(--c8); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .hist-row .n{font-size:10.5px; font-weight:800; color:var(--mustard);}
+  .hist-row .by{font-size:10.5px; font-weight:800; color:var(--c1); background:var(--c2); border-radius:6px; padding:1px 6px; white-space:nowrap;}
+  .who-link{background:none; border:none; padding:0; font:inherit; color:var(--math-c); text-decoration:underline; cursor:pointer;}
   #histList{max-height:230px; overflow-y:auto;}
 
   /* 자동 백업 */
@@ -1633,9 +1652,41 @@
   .student-table tr:hover{background:var(--c74);}
   .student-table .name-cell{font-weight:700; white-space:nowrap;}
   .student-table .edit-field{padding:5px 7px; font-size:12px; width:100%;}
+
+  /* 인터넷 끊김 · 저장 대기 · 불러오기 실패 알림 — 화면 위 가운데에 떠 있음 */
+  .conn-banner{position:fixed; top:10px; left:50%; transform:translateX(-50%); z-index:200;
+    max-width:min(92vw, 640px); padding:9px 16px; border-radius:12px; font-size:13px; font-weight:700; line-height:1.45;
+    box-shadow:0 6px 20px rgba(0,0,0,.18); text-align:center;}
+  .conn-banner[hidden]{display:none;}
+  .conn-banner.warn{background:#fff4d6; color:#7a4b00; border:1.5px solid #e7a13c;}
+  .conn-banner.bad{background:#fde3df; color:#8a1f12; border:1.5px solid #d9573f;}
+  .conn-banner.info{background:#e8f0ff; color:#1f3f8a; border:1.5px solid #6d93e8;}
+
+  /* 시험 상세 창 — 지난 학기 기록 */
+  .term-hist{border:1px solid var(--line); border-radius:10px; padding:8px 12px; margin:6px 0; background:var(--paper-card);}
+  .term-hist summary{cursor:pointer; font-size:12.5px; color:var(--ink); line-height:1.5;}
+  .term-hist .th-body{margin-top:8px; font-size:12.5px; line-height:1.6; color:var(--ink); display:flex; flex-direction:column; gap:4px;}
+  .term-hist .th-l{display:inline-block; min-width:62px; font-weight:800; color:var(--c2); margin-right:6px;}
+
+  /* 휴대폰에서 캘린더가 바로 보이도록 — 요약 카드는 버튼으로 접고, 상단 설명 문구는 숨깁니다.
+     (다른 .summary-row 규칙보다 뒤에 있어야 적용되므로 스타일 맨 끝에 둡니다) */
+  .summary-toggle{display:none; width:100%; justify-content:space-between; align-items:center;
+    background:var(--paper-card); border:1.5px solid var(--line); border-radius:10px; padding:9px 12px;
+    font-family:inherit; font-size:13px; font-weight:700; color:var(--ink); cursor:pointer; margin-bottom:10px;}
+  .summary-toggle .st-hint{font-size:11.5px; font-weight:600; color:var(--c2);}
+  @media (max-width:700px){
+    .app-head .subtitle{display:none;}
+    #panel-calendar .panel-desc{display:none;}
+    .summary-toggle{display:flex;}
+    .summary-row{display:none;}
+    .summary-row.open{display:grid;}
+  }
 </style>
 </head>
 <body>
+
+<!-- 인터넷 끊김 · 저장 대기 · 데이터 못 불러옴 알림 (평소엔 숨김) -->
+<div class="conn-banner" id="connBanner" role="status" aria-live="polite" hidden></div>
 
 <header class="app-head">
   <div class="head-inner">
@@ -1651,10 +1702,10 @@
 
 <nav class="tabs">
   <button class="tab-btn active" data-tab="calendar">캘린더</button>
-  <button class="tab-btn edit-only" data-tab="examinput">시험정보 입력<span class="tab-badge" id="examTabBadge" style="display:none;">0</span></button>
-  <button class="tab-btn" data-tab="schedule">학교별 일정</button>
-  <button class="tab-btn" data-tab="scope">시험 범위</button>
-  <button class="tab-btn" data-tab="students">학생 관리</button>
+  <button class="tab-btn edit-only" data-tab="examinput"><span class="tl-long">시험정보 입력</span><span class="tl-short">시험입력</span><span class="tab-badge" id="examTabBadge" style="display:none;">0</span></button>
+  <button class="tab-btn" data-tab="schedule"><span class="tl-long">학교별 일정</span><span class="tl-short">일정</span></button>
+  <button class="tab-btn" data-tab="scope"><span class="tl-long">시험 범위</span><span class="tl-short">범위</span></button>
+  <button class="tab-btn" data-tab="students"><span class="tl-long">학생 관리</span><span class="tl-short">학생</span></button>
 </nav>
 
 <main>
@@ -1680,6 +1731,8 @@
       <button class="btn" id="todayBriefBtn">📋 오늘 수업</button>
     </div>
 
+    <button class="summary-toggle" id="summaryToggle" type="button" aria-expanded="false" aria-controls="summaryRow">
+      <span>📊 요약 보기</span><span class="st-hint" id="summaryToggleHint">▾</span></button>
     <div class="summary-row" id="summaryRow"></div>
 
     <div class="filter-bar">
@@ -2014,7 +2067,7 @@
     </div>
 
     <div class="auto-bak" id="histBox">
-      <h4>변경 이력 <span class="hint">이 브라우저에 최근 200건이 남습니다</span>
+      <h4>변경 이력 <span class="hint" id="histHint">이 브라우저에 최근 200건이 남습니다</span>
         <button class="btn secondary small print-hide" id="histClear" style="margin-left:auto;">기록 지우기</button></h4>
       <div id="histList"></div>
     </div>
@@ -2067,6 +2120,20 @@
 </div>
 
 <!-- 수정 모드 비밀번호 모달 -->
+<!-- 이 기기를 쓰는 선생님 이름 — 변경 이력에 "누가" 바꿨는지 남깁니다 -->
+<div class="overlay" id="whoModal">
+  <div class="modal" style="max-width:380px;">
+    <button class="close-x" id="whoClose">×</button>
+    <h3>이 기기를 쓰는 선생님</h3>
+    <p class="modal-meta">변경 이력에 누가 바꿨는지 함께 남아요. 이 기기(브라우저)에만 저장되고, 언제든 바꿀 수 있어요.</p>
+    <input type="text" id="whoInput" maxlength="20" placeholder="예: 한종보" autocomplete="off">
+    <div style="display:flex; gap:8px; margin-top:12px;">
+      <button class="btn" id="whoSave">저장</button>
+      <button class="btn secondary" id="whoSkip">나중에</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="pwModal">
   <div class="modal" style="max-width:420px;">
     <button class="close-x" id="closePwModal">&times;</button>
@@ -2332,6 +2399,7 @@ const firebaseConfig = {
 const isConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
 
 let db, collection, onSnapshot, addDoc, deleteDoc, updateDoc, setDoc, doc, query, orderBy;
+let writeBatch, deleteField, limitQ;   /* 복원(여러 건 한 번에) · 학생 한 명 칸 지우기 · 공유 이력 개수 제한 */
 let students = [];
 let exams = []; // {id, school, grade, examName, notConducted, notConductedReason, startDate, endDate, printStatus, inputTeacher, examScope, schoolNotice, makeupDate, retros, savedAt}
 
@@ -2360,23 +2428,63 @@ async function initFirebase(){
     onDataChange();
     return;
   }
-  const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-  const fsMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  let appMod, fsMod;
+  try{
+    appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fsMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  }catch(e){
+    console.error(e);
+    connState.error = "⚠ 서버 연결 프로그램을 불러오지 못했어요. 인터넷 연결을 확인한 뒤 새로고침해 주세요.";
+    updateConnUI();
+    return;
+  }
   const app = appMod.initializeApp(firebaseConfig);
-  db = fsMod.getFirestore(app);
+  /* 읽기 수 줄이기 — 이 브라우저에 받아둔 데이터를 보관(로컬 캐시)합니다.
+     예전엔 새로고침할 때마다, 와이파이가 잠깐 끊겼다 붙거나 노트북을 덮었다 열 때마다 학생·시험 540건을 전부 다시 읽었습니다.
+     캐시가 있으면 끊긴 지 30분 안에 다시 붙을 때 "바뀐 것만" 읽고(Firebase 요금 기준), 화면도 받아둔 데이터로 바로 뜹니다.
+     탭 하나만 캐시를 씁니다(여러 탭용 방식은 오히려 읽기가 늘어나는 알려진 문제가 있음). 두 번째 탭이나
+     캐시를 못 쓰는 브라우저(시크릿 창 등)는 자동으로 예전 방식으로 동작합니다. */
+  try{
+    db = fsMod.initializeFirestore(app, {
+      localCache: fsMod.persistentLocalCache({ tabManager: fsMod.persistentSingleTabManager() })
+    });
+  }catch(e){
+    console.warn("로컬 캐시를 켜지 못해 예전 방식으로 동작합니다", e);
+    db = fsMod.getFirestore(app);
+  }
   collection = fsMod.collection; onSnapshot = fsMod.onSnapshot;
-  addDoc = fsMod.addDoc; deleteDoc = fsMod.deleteDoc; updateDoc = fsMod.updateDoc; setDoc = fsMod.setDoc;
+  /* 저장(쓰기)은 전부 세어 둡니다 — 끊겼을 때 "저장 대기 n건" 표시, 대기 중에 창을 닫으려 하면 경고 */
+  addDoc = trackWrite(fsMod.addDoc); deleteDoc = trackWrite(fsMod.deleteDoc);
+  updateDoc = trackWrite(fsMod.updateDoc); setDoc = trackWrite(fsMod.setDoc);
   doc = fsMod.doc; query = fsMod.query; orderBy = fsMod.orderBy;
+  writeBatch = (dbx)=>{ const b = fsMod.writeBatch(dbx); b.commit = trackWrite(b.commit.bind(b)); return b; };
+  deleteField = fsMod.deleteField; limitQ = fsMod.limit;
 
-  onSnapshot(query(collection(db,"students"), orderBy("name")), snap=>{
-    students = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    onDataChange();
-  });
-  onSnapshot(collection(db,"exams"), snap=>{
-    exams = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    onDataChange();
-  });
-  onSnapshot(doc(db,"settings","app"), snap=>{
+  /* 캐시가 있으면 먼저 "받아둔 데이터"로 한 번, 서버 확인 뒤 한 번 더 옵니다.
+     내용이 그대로면 두 번째는 "서버 확인됨" 표시만 바뀌므로 화면은 다시 그리지 않고,
+     자동 백업은 서버에서 확인된 데이터로만 뜹니다(어제 받아둔 캐시로 오늘 백업을 뜨지 않도록). */
+  const seen = { students: false, exams: false };
+  onSnapshot(query(collection(db,"students"), orderBy("name")), {includeMetadataChanges:true}, snap=>{
+    const fromServer = !(snap.metadata && snap.metadata.fromCache);
+    const changed = !seen.students || snap.docChanges().length > 0;
+    if(fromServer) dataLoaded.students = true;
+    if(changed){ seen.students = true; students = snap.docs.map(d=>({id:d.id, ...d.data()})); onDataChange(); }
+    else if(fromServer) saveAutoBackup();
+  }, err=> onSnapError("학생 명단", err));
+  onSnapshot(collection(db,"exams"), {includeMetadataChanges:true}, snap=>{
+    const fromServer = !(snap.metadata && snap.metadata.fromCache);
+    const changed = !seen.exams || snap.docChanges().length > 0;
+    if(fromServer) dataLoaded.exams = true;
+    if(changed){ seen.exams = true; exams = snap.docs.map(d=>({id:d.id, ...d.data()})); onDataChange(); }
+    else if(fromServer) saveAutoBackup();
+  }, err=> onSnapError("시험 정보", err));
+  /* 설정 문서는 연결 상태(서버와 붙어 있는지)도 함께 봅니다 — 문서 하나라 부담이 거의 없습니다 */
+  onSnapshot(doc(db,"settings","app"), {includeMetadataChanges:true}, snap=>{
+    if(snap.metadata){
+      connState.fromCache = !!snap.metadata.fromCache;
+      if(!snap.metadata.fromCache) connState.serverSynced = true;
+      updateConnUI();
+    }
     const d = snap.data();
     if(d && d.editPasswordHash) editPwHash = d.editPasswordHash;
     if(d && d.textbooks && JSON.stringify(d.textbooks) !== JSON.stringify(textbooks)){
@@ -2388,10 +2496,68 @@ async function initFirebase(){
       applyDriveSettings();
       if(driveUrl && driveToken) refreshDrive(false);
     }
-  });
+  }, err=> onSnapError("설정", err));
 }
 
+/* ---------- 연결 상태 · 저장 대기 표시 ----------
+   예전엔 인터넷이 끊기거나 불러오기가 실패해도 화면엔 아무 표시가 없어서, 저장된 줄 알고 창을 닫으면
+   입력이 사라질 수 있었습니다. 이제 화면 위에 상태를 띄우고, 저장 대기 중에 창을 닫으려 하면 경고합니다. */
+const connState = { online: navigator.onLine !== false, fromCache: false, serverSynced: false, error: "" };
+let pendingWrites = 0, pendingSince = 0;
+function trackWrite(fn){
+  return (...args)=>{
+    pendingWrites++;
+    if(pendingWrites === 1){ pendingSince = Date.now(); setTimeout(updateConnUI, 4100); }
+    updateConnUI();
+    let p;
+    try{ p = fn(...args); }
+    catch(e){ pendingWrites = Math.max(0, pendingWrites - 1); updateConnUI(); throw e; }
+    return Promise.resolve(p).finally(()=>{ pendingWrites = Math.max(0, pendingWrites - 1); updateConnUI(); });
+  };
+}
+/* 실시간 구독이 오류로 끊기면(이 경우 다시 붙지 않음) 새로고침할 때까지 알림을 계속 띄워둡니다 */
+function onSnapError(what, err){
+  console.error(what, err);
+  const code = (err && err.code) || "";
+  connState.error =
+    code === "permission-denied"  ? `⚠ ${what}을(를) 불러올 권한이 없어요. 보안 설정을 확인해야 합니다 — 관리자에게 알려주세요.` :
+    code === "resource-exhausted" ? `⚠ 오늘 Firebase 사용 한도를 넘어서 ${what}을(를) 불러오지 못했어요. 한국 시간 오후 4~5시쯤 다시 풀립니다.` :
+                                    `⚠ ${what}을(를) 더 이상 받아오지 못하고 있어요${code ? ` (${code})` : ""}. 새로고침해 주세요.`;
+  updateConnUI();
+}
+function updateConnUI(){
+  const el = document.getElementById("connBanner");
+  if(!el) return;
+  if(!isConfigured){ el.hidden = true; return; }   /* 브라우저 저장 모드(테스트)는 인터넷과 상관없음 */
+  let msg = "", cls = "";
+  const offline = !connState.online || (connState.serverSynced && connState.fromCache);
+  if(connState.error){ msg = connState.error; cls = "bad"; }
+  else if(offline){
+    msg = "⚠ 인터넷 연결이 끊겼어요 — 지금 입력한 내용은 연결되면 자동으로 저장돼요" +
+          (pendingWrites ? ` (저장 대기 ${pendingWrites}건 · 이 창은 닫지 마세요)` : "") + ".";
+    cls = "warn";
+  } else if(pendingWrites > 0 && Date.now() - pendingSince > 4000){
+    msg = `저장 중… (${pendingWrites}건)`; cls = "info";
+  }
+  el.hidden = !msg;
+  el.textContent = msg;
+  el.className = "conn-banner " + cls;
+}
+window.addEventListener("online",  ()=>{ connState.online = true;  updateConnUI(); });
+window.addEventListener("offline", ()=>{ connState.online = false; updateConnUI(); });
+/* 저장 대기 중(서버에 아직 안 간 입력이 있거나, 0.7초 모아두는 중)에 창을 닫으려 하면 브라우저가 한 번 더 묻습니다 */
+window.addEventListener("beforeunload", (e)=>{
+  if(pendingWrites > 0 || detailPending){
+    flushDetailSaveNow();
+    e.preventDefault(); e.returnValue = ""; return "";
+  }
+});
+/* 휴대폰에서 다른 앱으로 넘어가면 모아두던 입력을 바로 저장 (백그라운드에선 타이머가 멈출 수 있음) */
+document.addEventListener("visibilitychange", ()=>{ if(document.hidden) flushDetailSaveNow(); });
+
 let firstLoadDone = false;
+let restoreBusy = false;   /* 백업 복원 중에는 자동 백업을 건너뜁니다 */
+const dataLoaded = { students: false, exams: false };   /* 서버에서 둘 다 받아온 뒤에만 자동 백업 */
 function onDataChange(){
   if(!firstLoadDone){
     firstLoadDone = true;
@@ -2485,11 +2651,117 @@ async function addExam(e){
   exams.push({ id, ...e }); saveLocal("kladi_exams", exams); onDataChange();
   return id;
 }
-async function updateExamDoc(id, payload){
-  if(isConfigured){ await updateDoc(doc(db,"exams",id), payload); }
+/* 학생 한 명 칸만 저장하기 — "scores.학생id" 처럼 점(.)으로 이어 쓴 이름은 그 칸 하나만 바꿉니다.
+   예전엔 점수·참석·직보 표를 통째로 다시 써서, 두 선생님이 같은 시험에 거의 동시에 입력하거나
+   한쪽 인터넷이 잠깐 끊겼다 붙으면 다른 선생님 입력이 지워질 수 있었습니다.
+   fieldDelete(): 그 칸 지우기 (서버: deleteField, 브라우저 저장 모드: 표시용 값) */
+const LOCAL_DEL = Object.freeze({ __localDelete: true });
+function fieldDelete(){ return isConfigured ? deleteField() : LOCAL_DEL; }
+function applyLocalPatch(obj, payload){
+  Object.entries(payload).forEach(([k, v])=>{
+    const parts = k.split(".");
+    let cur = obj;
+    for(let i = 0; i < parts.length - 1; i++){
+      const p = parts[i];
+      if(cur[p] === null || typeof cur[p] !== "object" || Array.isArray(cur[p])) cur[p] = {};
+      cur = cur[p];
+    }
+    const last = parts[parts.length - 1];
+    if(v === LOCAL_DEL) delete cur[last]; else cur[last] = v;
+  });
+}
+/* ---------- 학기가 바뀔 때 지난 학기 기록 보관 ----------
+   시험 카드는 학교·학년·중간/기말마다 한 장이라, 내년 봄 1학기 일정을 넣으면 올해 2학기 카드를 그대로 다시 씁니다.
+   그대로 두면 올해 참석·점수·직보 표시가 새 학기로 넘어가 섞이고, 범위·점수 기록은 사라집니다.
+   → 시작일이 다른 학기로 바뀌면: 지금 학기 내용을 카드 안 history["2026-2"] 로 옮기고, 새 학기 칸은 비워서 시작.
+     되돌리기·날짜 오타 수정으로 예전 학기로 돌아가면, 보관해둔 그 학기 내용을 다시 꺼내옵니다(서로 맞바꿈). */
+const TERM_RESET = {
+  endDate:"", mathDate:"", examScope:"", units:[], schoolNotice:"", printStatus:"unconfirmed",
+  notConducted:false, notConductedReason:"", makeupDate:"", makeupNote:"",
+  makeupAttend:{}, scores:{}, makeupDates:{}, inputTeacher:"", savedAt:""
+};
+const TERM_FIELDS = ["startDate", ...Object.keys(TERM_RESET)];
+function termKeyOfDate(ds){
+  if(!ds || !/^\d{4}-\d{2}-\d{2}$/.test(ds)) return "";
+  const d = toDate(ds);
+  return `${schoolYearOf(d.getFullYear(), d.getMonth())}-${semesterOf(d.getMonth())}`;
+}
+function withTermArchive(ex, payload, opts){
+  if(!ex || !payload || !Object.prototype.hasOwnProperty.call(payload, "startDate")) return payload;
+  const oldK = termKeyOfDate(ex.startDate), newK = termKeyOfDate(payload.startDate);
+  if(!oldK || !newK || oldK === newK) return payload;
+  const clone = v => (v && typeof v === "object") ? JSON.parse(JSON.stringify(v)) : v;
+  const out = {...payload};
+  /* ① 지금 학기 내용을 기록으로 — 되돌리기(discardCurrent)일 땐 방금 만든 새 학기 칸을 기록으로 남기지 않습니다 */
+  if(!(opts && opts.discardCurrent)){
+    const snap = {};
+    TERM_FIELDS.forEach(f=>{ if(ex[f] !== undefined) snap[f] = clone(ex[f]); });
+    snap.archivedAt = new Date().toISOString();
+    out[`history.${oldK}`] = snap;
+  }
+  /* ② 새 학기 칸 — 그 학기 기록이 있으면 되살리고, 없으면 비워서 시작. 이번에 직접 넣은 값은 그대로 */
+  const back = (ex.history && typeof ex.history === "object") ? ex.history[newK] : null;
+  Object.keys(TERM_RESET).forEach(f=>{
+    if(Object.prototype.hasOwnProperty.call(payload, f)) return;
+    out[f] = clone((back && back[f] !== undefined) ? back[f] : TERM_RESET[f]);
+  });
+  if(back) out[`history.${newK}`] = fieldDelete();
+  termArchiveNotices.push({ oldK, newK, restored: !!back,
+    label: `${shortSchool(ex.school)} ${ex.grade || ""} ${ex.examName || ""}`.trim() });
+  return out;
+}
+let termArchiveNotices = [];   /* 방금 학기 보관이 일어난 카드들 — 저장이 끝나면 한 번에 알려줍니다 */
+/* 시험 상세 창 아래 "지난 학기 기록" — 보관된 학기마다 한 줄, 누르면 범위·점수가 펼쳐집니다 */
+function termHistoryHtml(exam){
+  const h = (exam && exam.history && typeof exam.history === "object") ? exam.history : {};
+  const keys = Object.keys(h).filter(k=> h[k] && termNFromKey(k) !== null)
+    .sort((a,b)=> termNFromKey(b) - termNFromKey(a));
+  if(!keys.length) return "";
+  const nameOf = id => (students.find(s=> s.id === id) || {}).name || "(명단에 없는 학생)";
+  return `<div class="section-label">지난 학기 기록</div>` + keys.map(k=>{
+    const t = h[k] || {};
+    const sc = (t.scores && typeof t.scores === "object") ? t.scores : {};
+    const scN = Object.keys(sc).length;
+    const atN = Object.keys((t.makeupAttend && typeof t.makeupAttend === "object") ? t.makeupAttend : {}).length;
+    const mdN = Object.keys((t.makeupDates && typeof t.makeupDates === "object") ? t.makeupDates : {}).length;
+    const period = t.startDate
+      ? `${fmtWithDow(t.startDate)}${t.endDate && t.endDate !== t.startDate ? " ~ " + fmtWithDow(t.endDate) : ""}`
+      : "날짜 없음";
+    const scope = String(t.examScope || "").trim() || (Array.isArray(t.units) && t.units.length ? t.units.join(", ") : "");
+    const scoreList = Object.entries(sc)
+      .sort((a,b)=> nameOf(a[0]).localeCompare(nameOf(b[0]), "ko"))
+      .map(([id, v])=> `${escapeHtml(nameOf(id))} ${escapeHtml(String(v))}`).join(" · ");
+    return `<details class="term-hist"><summary><b>${escapeHtml(termLabelK(k))}</b> · ${escapeHtml(period)}${
+        t.mathDate ? ` · 수학 ${escapeHtml(fmtWithDow(t.mathDate))}` : ""} · 점수 ${scN}명 · 참석 ${atN}명 · 직보 ${mdN}명</summary>
+      <div class="th-body">
+        <div><span class="th-l">시험 범위</span>${escapeHtml(scope) || "—"}</div>
+        ${t.schoolNotice ? `<div><span class="th-l">학교 안내</span>${escapeHtml(t.schoolNotice)}</div>` : ""}
+        ${scN ? `<div><span class="th-l">점수</span>${scoreList}</div>` : ""}
+      </div></details>`;
+  }).join("");
+}
+function termLabelK(k){ const n = termNFromKey(k); return n === null ? k : termLabelN(n); }
+function flushTermArchiveNotice(){
+  const list = termArchiveNotices; termArchiveNotices = [];
+  const moved = list.filter(x=> !x.restored);
+  if(!moved.length) return;
+  const one = moved[0];
+  showToast(moved.length === 1
+    ? `${one.label}: 새 학기(${termLabelK(one.newK)})로 넘어가서, ${termLabelK(one.oldK)} 참석·점수·직보·범위는 카드 안 "지난 학기 기록"으로 옮겨뒀어요.`
+    : `시험 카드 ${moved.length}장이 새 학기로 넘어가서, 지난 학기 참석·점수·직보·범위는 각 카드 안 "지난 학기 기록"으로 옮겨뒀어요.`,
+    {type:"ok", duration:9000});
+  if(moved.length) logChange("지난 학기 기록 보관", moved.slice(0,3).map(x=>x.label).join(", ") + (moved.length > 3 ? " 외" : ""), moved.length);
+}
+async function updateExamDoc(id, payload, opts){
+  const ex = exams.find(e=>e.id===id);
+  const noticeMark = termArchiveNotices.length;
+  payload = withTermArchive(ex, payload, opts);   /* 다른 학기로 넘어가면 지난 학기 내용을 기록으로 옮김 */
+  if(isConfigured){
+    try{ await updateDoc(doc(db,"exams",id), payload); }
+    catch(e){ termArchiveNotices.length = noticeMark; throw e; }   /* 저장 실패면 "옮겼어요" 알림도 취소 */
+  }
   else{
-    const ex = exams.find(e=>e.id===id);
-    if(ex) Object.assign(ex, payload);
+    if(ex) applyLocalPatch(ex, payload);
     saveLocal("kladi_exams", exams);
     onDataChange();
   }
@@ -2630,6 +2902,7 @@ async function trySubmitPw(){
   renderStudents();
   showToast("수정 모드로 바꿨어요. 브라우저를 닫으면 다시 잠깁니다.", {type:"ok"});
   if(next) setTimeout(next, 120);
+  else if(!whoName() && !sessionStorage.getItem("kladi_who_skip")) setTimeout(openWhoModal, 400);
 }
 document.getElementById("pwSubmit").addEventListener("click", trySubmitPw);
 document.getElementById("pwInput").addEventListener("keydown", (e)=>{ if(e.key==="Enter") trySubmitPw(); });
@@ -2663,15 +2936,20 @@ function switchTab(tabName){
   document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active", p.id==="panel-"+tabName));
   /* [B] 숨어 있을 땐 폭을 잴 수 없어서, 열릴 때 한 번 다시 그립니다 */
   if(tabName==="schedule" && typeof renderScheduleTab === "function") renderScheduleTab();
+  /* 공유 변경 이력은 학생 관리 탭을 처음 열 때 불러옵니다 */
+  if(tabName==="students") ensureSharedLogs();
 }
 document.querySelectorAll(".tab-btn").forEach(btn=>{
   btn.addEventListener("click", ()=> switchTab(btn.dataset.tab));
 });
 
+/* 화면에 글자를 넣기 전 특수문자를 바꿉니다. 예전엔 따옴표(" ')를 안 바꿔서, 이름·학교에 따옴표가 들어가면
+   title="…" · value="…" 같은 속성이 깨지고 — 누구나 데이터를 쓸 수 있는 지금 구조에선 — 남의 화면에서
+   스크립트가 실행될 수도 있었습니다. 따옴표까지 바꾸고, 매번 화면 요소를 만들지 않아 더 빠릅니다. */
 function escapeHtml(str){
-  const div = document.createElement("div");
-  div.textContent = str ?? "";
-  return div.innerHTML;
+  return String(str ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function uniq(arr){ return [...new Set(arr.filter(Boolean))]; }
 function gradeSortIndex(g){ const i = GRADE_ORDER.indexOf(g); return i===-1 ? 999 : i; }
@@ -3046,6 +3324,10 @@ function schedPlan(){
     /* 일정이 없어도 범위(단원)만 적혀 있으면 그것만 채웁니다 */
     if(!r.start && !noExam && !r.units.length && !r.scope){ skipped.push({...r, school}); return; }
     const existing = findExam(school, grade, examName);
+    /* 이 카드가 새 학기로 넘어가는 경우 — 지난 학기 값(수학일 등)을 이어받지 않고, 표 내용을 전부 새로 씁니다 */
+    const termChange = !!(existing && existing.startDate && r.start &&
+      termKeyOfDate(existing.startDate) && termKeyOfDate(r.start) &&
+      termKeyOfDate(existing.startDate) !== termKeyOfDate(r.start));
     const want = {};
     if(noExam){
       want.notConducted = true;
@@ -3054,8 +3336,8 @@ function schedPlan(){
     } else if(r.start){
       want.startDate = r.start;
       want.endDate   = r.end || r.start;
-      /* 표에 수학시험일이 없으면 이미 넣어둔 값을 지우지 않습니다 */
-      want.mathDate  = r.math || existing?.mathDate || "";
+      /* 표에 수학시험일이 없으면 이미 넣어둔 값을 지우지 않습니다 (같은 학기일 때만) */
+      want.mathDate  = r.math || (termChange ? "" : existing?.mathDate) || "";
       want.notConducted = false;
       if(r.note) want.schoolNotice = r.note;
     } else if(r.note){
@@ -3068,7 +3350,7 @@ function schedPlan(){
     Object.keys(want).forEach(k=>{
       const cur = k === "units" ? unitsOf(existing).join("|") : (existing[k] || (k==="notConducted" ? false : ""));
       const nv  = k === "units" ? want.units.join("|") : want[k];
-      if(String(cur) !== String(nv)) payload[k] = want[k];
+      if(termChange || String(cur) !== String(nv)) payload[k] = want[k];
     });
     if(Object.keys(payload).length === 0){ same.push({ school, ...r }); return; }
     updates.push({ id: existing.id, school, before: existing, payload, note: r.note });
@@ -3121,6 +3403,17 @@ function renderSchedPlan(){
   </div>`;
 
   const list = (arr, render) => `<div class="imp-list">${arr.map(render).join("")}</div>`;
+  /* 적용하면 새 학기로 넘어가는 카드 — 미리 알려줍니다 (지난 학기 내용은 지워지지 않고 카드 안 기록으로 옮겨짐) */
+  const termMoves = plan.updates.filter(u=>{
+    const b = u.before || {}, p = u.payload || {};
+    if(!p.startDate) return false;
+    const oldK = termKeyOfDate(b.startDate), newK = termKeyOfDate(p.startDate);
+    return oldK && newK && oldK !== newK;
+  });
+  if(termMoves.length){
+    html += `<p class="imp-note"><b>새 학기로 넘어가는 카드 ${termMoves.length}장</b> — 지난 학기의 참석·점수·직보·범위는
+      지워지지 않고 카드 안 "지난 학기 기록"으로 옮긴 뒤 새로 시작합니다. (되돌리기 하면 원래대로 돌아와요)</p>`;
+  }
   /* 바뀐 것도 새로 만들 것도 없으면 — 업로드가 안 된 것처럼 보이지 않도록 분명히 알려줍니다 */
   if(!plan.updates.length && !plan.adds.length && !plan.bookChanges.length){
     html += `<p class="imp-note" style="font-weight:800; color:var(--rust);">
@@ -3280,7 +3573,7 @@ document.getElementById("schedImportApply").addEventListener("click", async (ev)
     for(const a of plan.adds){
       /* 기본값을 먼저 깔고 표에서 읽은 값으로 덮습니다 (순서가 바뀌면 범위가 지워집니다) */
       const id = await addExam({ printStatus:"unconfirmed", makeupDate:"", examScope:"", units:[],
-                                 ...a, savedAt: new Date().toISOString().slice(0,10) });
+                                 ...a, savedAt: localDateStr() });
       if(id) addedIds.push(id);
     }
     if(plan.bookChanges.length){
@@ -3290,10 +3583,16 @@ document.getElementById("schedImportApply").addEventListener("click", async (ev)
       await saveSetting("textbooks", next);
     }
     document.getElementById("schedImportModal").classList.remove("active");
-    showToast(`일정 ${plan.updates.length}곳 변경, ${plan.adds.length}곳 추가, 교과서 ${plan.bookChanges.length}곳 반영했어요.`, {
+    const movedTerm = termArchiveNotices.filter(x=> !x.restored);
+    termArchiveNotices = [];
+    if(movedTerm.length) logChange("지난 학기 기록 보관", movedTerm.slice(0,3).map(x=>x.label).join(", ") + (movedTerm.length > 3 ? " 외" : ""), movedTerm.length);
+    showToast(`일정 ${plan.updates.length}곳 변경, ${plan.adds.length}곳 추가, 교과서 ${plan.bookChanges.length}곳 반영했어요.` +
+      (movedTerm.length ? `\n새 학기로 넘어간 카드 ${movedTerm.length}장은 지난 학기 참석·점수·직보·범위를 카드 안 "지난 학기 기록"으로 옮겨뒀어요.` : ""), {
       type:"ok", duration:9000, actionLabel:"되돌리기",
       onAction: async ()=>{
-        for(const u of undoUpdates) await updateExamDoc(u.id, u.before);
+        /* 학기도 원래대로 — 보관해둔 기록을 다시 꺼내오고, 방금 만든 새 학기 칸은 기록으로 남기지 않습니다 */
+        for(const u of undoUpdates) await updateExamDoc(u.id, u.before, { discardCurrent: true });
+        termArchiveNotices = [];
         for(const id of addedIds) await removeExam(id);
         textbooks = beforeBooks;
         await saveSetting("textbooks", beforeBooks);
@@ -4419,7 +4718,7 @@ function renderClassImportPlan(plan, fileName){
   fileName = classImportFile;
   const total = plan.updates.length + plan.adds.length + plan.same.length + plan.ambiguous.length;
   document.getElementById("classImportMeta").textContent =
-    `${escapeHtml(fileName)} · 표에서 학생 ${total}명을 읽었어요`;
+    `${fileName} · 표에서 학생 ${total}명을 읽었어요`;
 
   let html = `<div class="imp-sum">
     <div class="imp-card upd"><div class="n">${plan.updates.filter(u=>!u.fillOnly).length}</div><div class="l">반·담임 바뀜</div></div>
@@ -4845,10 +5144,18 @@ document.getElementById("scoreImportApply").addEventListener("click", async (ev)
   const btn = ev.currentTarget;
   btn.disabled = true; btn.textContent = "적용 중...";
 
-  /* 되돌리기용으로 지금 점수를 그대로 떠 둡니다 */
-  const undo = [...plan.byExam.values()].map(v=> ({ id: v.exam.id, scores: { ...(v.exam.scores || {}) } }));
-  for(const v of plan.byExam.values()){
-    await updateExamDoc(v.exam.id, { scores: v.scores });
+  /* 바뀌는 학생 칸만 저장합니다 (점수 표 전체를 다시 쓰면, 그 사이 다른 선생님이 넣은 점수를 덮어쓸 수 있어서).
+     되돌리기도 그 학생 칸만 원래 값(없었으면 지우기)으로 돌립니다. */
+  const rows = [...plan.fill, ...plan.change];
+  const byExamPatch = new Map(), byExamUndo = new Map();
+  rows.forEach(r=>{
+    if(!byExamPatch.has(r.examId)){ byExamPatch.set(r.examId, {}); byExamUndo.set(r.examId, {}); }
+    byExamPatch.get(r.examId)[`scores.${r.id}`] = r.score;
+    byExamUndo.get(r.examId)[`scores.${r.id}`] =
+      (r.before === undefined || r.before === null || r.before === "") ? null : r.before;
+  });
+  for(const [examId, patch] of byExamPatch){
+    await updateExamDoc(examId, patch);
   }
   const n = plan.fill.length + plan.change.length;
   logChange("시험 점수 가져오기", `${scoreExamName} · ${scoreFileName}`, n);
@@ -4858,7 +5165,11 @@ document.getElementById("scoreImportApply").addEventListener("click", async (ev)
   showToast(`${scoreExamName} 점수 ${n}명분을 채웠어요.`, {
     type:"ok", actionLabel:"되돌리기",
     onAction: async ()=>{
-      for(const u of undo){ await updateExamDoc(u.id, { scores: u.scores }); }
+      for(const [examId, before] of byExamUndo){
+        const p = {};
+        Object.entries(before).forEach(([k,v])=>{ p[k] = (v === null) ? fieldDelete() : v; });
+        await updateExamDoc(examId, p);
+      }
       showToast("점수 가져오기를 되돌렸어요.", {type:"warn"});
     }
   });
@@ -5137,30 +5448,49 @@ document.getElementById("driveRefreshBtn").addEventListener("click", ()=> refres
 
 
 /* ---------- 시험 후 회고 ----------
-   시험 카드는 학교·학년·시험명 하나당 한 장이라 매년 다시 씁니다.
-   그래서 회고는 학년도별로 따로 담아둡니다: exam.retros = { "2026": {...}, "2025": {...} } */
+   시험 카드는 학교·학년·시험명 하나당 한 장이라 학기마다 다시 씁니다.
+   그래서 회고는 학기별로 따로 담아둡니다: exam.retros = { "2026-2": {...}, "2026-1": {...} }
+   (예전엔 학년도별 "2026"이라 1학기 중간·2학기 중간 회고가 같은 칸에 겹쳐 썼습니다 — 옛 키도 계속 읽습니다)
+   화면 비교용 숫자: 2026학년도 2학기 → 20262, 옛 키 "2026" → 20260 */
 const RETRO_TAGS = ["서술형 비중 높음","기출과 유사","교과서 중심","심화 문항 많음",
                     "계산량 많음","신유형 등장","난이도 상승","난이도 하락"];
 const RETRO_HELP = ["낮음","보통","높음"];
 
 function curSchoolYear(){ return schoolYearOf(today.getFullYear(), today.getMonth()); }
+/* 시험의 학기 번호 (2026학년도 2학기 → 20262). 날짜가 없으면 오늘 기준 학기 */
 function examSY(e){
-  if(e && e.startDate){ const d = toDate(e.startDate); return schoolYearOf(d.getFullYear(), d.getMonth()); }
-  return curSchoolYear();
+  const d = (e && e.startDate) ? toDate(e.startDate) : today;
+  return schoolYearOf(d.getFullYear(), d.getMonth()) * 10 + semesterOf(d.getMonth());
 }
+function termKeyFromN(n){ return (n % 10) ? `${Math.floor(n/10)}-${n % 10}` : String(Math.floor(n/10)); }
+function termNFromKey(k){
+  const m = String(k).match(/^(\d{4})(?:-([12]))?$/);
+  return m ? Number(m[1]) * 10 + (m[2] ? Number(m[2]) : 0) : null;
+}
+function termLabelN(n){ return (n % 10) ? `${Math.floor(n/10)}학년도 ${n % 10}학기` : `${Math.floor(n/10)}학년도`; }
 function retroFilled(r){
   return !!(r && ((r.tags && r.tags.length) || r.weak || r.memo || r.help));
 }
-function retroOf(e, sy){
-  const r = e && e.retros ? e.retros[String(sy)] : null;
-  return retroFilled(r) ? r : null;
+/* 회고 키 → 학기 번호. 옛 키("2026")는 적은 날짜(at)로 어느 학기 것인지 맞춥니다 */
+function retroKeyN(k, r){
+  const n = termNFromKey(k);
+  if(n === null || n % 10) return n;
+  if(r && /^\d{4}-\d{2}-\d{2}$/.test(r.at || "")){
+    const d = toDate(r.at);
+    const sy = schoolYearOf(d.getFullYear(), d.getMonth());
+    if(sy === Math.floor(n / 10)) return sy * 10 + semesterOf(d.getMonth());
+  }
+  return n;
 }
-/* 최신 학년도부터 */
+function retroOf(e, sy){
+  return retroEntries(e).find(r=> r.sy === sy) || null;
+}
+/* 최근 학기부터 */
 function retroEntries(e){
   const map = (e && e.retros) || {};
   return Object.keys(map)
-    .filter(k=> /^\d{4}$/.test(k) && retroFilled(map[k]))
-    .map(k=> ({sy:Number(k), ...map[k]}))
+    .filter(k=> termNFromKey(k) !== null && retroFilled(map[k]))
+    .map(k=> ({...map[k], sy: retroKeyN(k, map[k]), _key: k}))
     .sort((a,b)=> b.sy - a.sy);
 }
 function isExamOver(e){
@@ -5184,12 +5514,12 @@ function lastRetroBoxHtml(list){
   const top = list[0], rest = list.slice(1);
   const body = retroLine(top);
   return `<div class="lastyear">
-    <div class="ly-head"><span class="yr">${top.sy}학년도</span> 지난번엔 이랬습니다</div>
+    <div class="ly-head"><span class="yr">${termLabelN(top.sy)}</span> 지난번엔 이랬습니다</div>
     ${retroChipsHtml(top)}
     ${body ? `<p>${body}</p>` : ""}
     ${rest.length ? `<button type="button" class="retro-more">이전 회고 ${rest.length}건 더 보기</button>
       <div class="ly-rest">${rest.map(r=>`<div class="ly-one">
-        <div class="ly-head"><span class="yr">${r.sy}학년도</span></div>
+        <div class="ly-head"><span class="yr">${termLabelN(r.sy)}</span></div>
         ${retroChipsHtml(r)}${retroLine(r) ? `<p>${retroLine(r)}</p>` : ""}
       </div>`).join("")}</div>` : ""}
   </div>`;
@@ -5198,8 +5528,8 @@ function lastRetroBoxHtml(list){
 function retroBoxHtml(existing, sy){
   const r = retroOf(existing, sy) || {};
   const tags = r.tags || [];
-  return `<div class="retro-box" data-sy="${sy}">
-    <div class="retro-head">시험 후 회고 <span class="rsy">${sy}학년도</span>${r.at? `<span class="rat">${escapeHtml(r.at)} 기록</span>`:""}</div>
+  return `<div class="retro-box" data-sy="${termKeyFromN(sy)}">
+    <div class="retro-head">시험 후 회고 <span class="rsy">${termLabelN(sy)}</span>${r.at? `<span class="rat">${escapeHtml(r.at)} 기록</span>`:""}</div>
     <p class="retro-hint">기억이 살아있을 때 30초만 적어두면, 내년 같은 카드에 자동으로 다시 떠요.</p>
     <div class="retro-chips">${RETRO_TAGS.map(t=>
       `<button type="button" class="retro-chip ${tags.includes(t)?"on":""}">${t}</button>`).join("")}</div>
@@ -5225,8 +5555,11 @@ function collectRetros(container, existing){
     memo: box.querySelector('[data-field="retroMemo"]').value.trim(),
   };
   const retros = {...((existing && existing.retros) || {})};
+  /* 같은 학기를 가리키는 옛 키("2026")가 있으면 정리해서 중복을 막습니다 */
+  const targetN = termNFromKey(sy);
+  Object.keys(retros).forEach(k=>{ if(k !== sy && retroKeyN(k, retros[k]) === targetN) delete retros[k]; });
   if(retroFilled(entry)){
-    entry.at = new Date().toISOString().slice(0,10);
+    entry.at = localDateStr();
     retros[sy] = entry;
   } else {
     delete retros[sy];
@@ -5317,18 +5650,57 @@ function examCardHtml(school, grade, examName){
   `;
 }
 
-/* ---------- 변경 이력 (이 브라우저에 최근 200건) ---------- */
+/* ---------- 변경 이력 ----------
+   예전엔 이 브라우저에만 남아서 다른 선생님이 뭘 바꿨는지 볼 수 없었고, 누가 바꿨는지도 안 남았습니다.
+   이제 서버의 logs 모음에 같이 남기고(모든 선생님이 같은 이력을 봄), 이 기기 선생님 이름을 함께 적습니다.
+   서버에 못 쓰면(보안 규칙 등) 예전처럼 이 브라우저에만 남깁니다. 읽기는 학생 관리 탭을 열 때만 합니다(사용량 절약). */
 const HIST_KEY = "kladi_history";
 const HIST_KEEP = 200;
+const SHARED_LOG_LIMIT = 40;   /* 화면에 보이는 게 40줄이라 40건만 읽습니다 */
+let sharedLogs = null;          /* 서버 이력 (최근 60건). null = 아직 안 불러옴 */
+let sharedLogsFailed = false;   /* 서버 이력을 못 쓰거나 못 읽으면 true → 이 브라우저 기록으로 */
+let sharedLogsUnsub = null;
+
+function whoName(){ try{ return (localStorage.getItem("kladi_who") || "").trim(); }catch(e){ return ""; } }
+function openWhoModal(){
+  document.getElementById("whoInput").value = whoName();
+  document.getElementById("whoModal").classList.add("active");
+  setTimeout(()=> document.getElementById("whoInput").focus(), 50);
+}
+function closeWhoModal(){ document.getElementById("whoModal").classList.remove("active"); }
+document.getElementById("whoSave").addEventListener("click", ()=>{
+  const v = document.getElementById("whoInput").value.trim().slice(0, 20);
+  try{ if(v) localStorage.setItem("kladi_who", v); else localStorage.removeItem("kladi_who"); }catch(e){}
+  closeWhoModal(); renderHistory();
+  if(v) showToast(`이제 변경 이력에 "${v}"(으)로 남아요.`, {type:"ok"});
+});
+document.getElementById("whoInput").addEventListener("keydown", (e)=>{ if(e.key === "Enter") document.getElementById("whoSave").click(); });
+document.getElementById("whoSkip").addEventListener("click", ()=>{ try{ sessionStorage.setItem("kladi_who_skip","1"); }catch(e){} closeWhoModal(); });
+document.getElementById("whoClose").addEventListener("click", ()=>{ try{ sessionStorage.setItem("kladi_who_skip","1"); }catch(e){} closeWhoModal(); });
+document.getElementById("whoModal").addEventListener("click", (e)=>{ if(e.target.id === "whoModal") closeWhoModal(); });
 
 function readHistory(){
   try{ return JSON.parse(localStorage.getItem(HIST_KEY) || "[]"); }catch(e){ return []; }
 }
 function logChange(what, detail, count){
+  const entry = { at: new Date().toISOString(), what, detail: detail || "", count: count || 0, by: whoName() };
   const list = readHistory();
-  list.unshift({ at: new Date().toISOString(), what, detail: detail || "", count: count || 0 });
+  list.unshift(entry);
   try{ localStorage.setItem(HIST_KEY, JSON.stringify(list.slice(0, HIST_KEEP))); }catch(e){}
+  if(isConfigured && db && !sharedLogsFailed){
+    addDoc(collection(db, "logs"), entry).catch(err=>{
+      console.warn("공유 변경 이력을 쓰지 못했어요", err);
+      sharedLogsFailed = true; renderHistory();
+    });
+  }
   renderHistory();
+}
+/* 학생 관리 탭을 처음 열 때 서버 이력을 구독합니다 */
+function ensureSharedLogs(){
+  if(!isConfigured || !db || sharedLogsUnsub || sharedLogsFailed) return;
+  sharedLogsUnsub = onSnapshot(query(collection(db, "logs"), orderBy("at", "desc"), limitQ(SHARED_LOG_LIMIT)),
+    snap=>{ sharedLogs = snap.docs.map(d=> d.data()); renderHistory(); },
+    err=>{ console.warn("공유 변경 이력을 읽지 못했어요", err); sharedLogsFailed = true; renderHistory(); });
 }
 function histTime(iso){
   const d = new Date(iso);
@@ -5339,11 +5711,26 @@ function histTime(iso){
 function renderHistory(){
   const box = document.getElementById("histList");
   if(!box) return;
-  const list = readHistory();
+  const shared = isConfigured && !sharedLogsFailed && Array.isArray(sharedLogs);
+  const list = shared ? sharedLogs : readHistory();
+  const hint = document.getElementById("histHint");
+  const me = whoName();
+  if(hint){
+    hint.innerHTML = (shared
+      ? `모든 선생님의 최근 변경 ${SHARED_LOG_LIMIT}건`
+      : (isConfigured && sharedLogsFailed
+          ? `공유 이력을 쓸 수 없어 이 브라우저에만 남아요 (보안 설정 확인 필요)`
+          : `이 브라우저에 최근 ${HIST_KEEP}건이 남습니다`)) +
+      ` · 이 기기: <button type="button" class="who-link" id="whoLink">${me ? escapeHtml(me) : "이름 정하기"}</button>`;
+    document.getElementById("whoLink")?.addEventListener("click", openWhoModal);
+  }
+  const clearBtn = document.getElementById("histClear");
+  if(clearBtn) clearBtn.style.display = shared ? "none" : "";   /* 공유 이력은 한 사람이 지우지 못하게 */
   box.innerHTML = list.length === 0
     ? `<p class="imp-note">아직 기록이 없어요.</p>`
     : list.slice(0, 40).map(h=>`<div class="hist-row">
         <span class="t">${escapeHtml(histTime(h.at))}</span>
+        ${h.by ? `<span class="by">${escapeHtml(h.by)}</span>` : ""}
         <span class="w">${escapeHtml(h.what)}</span>
         <span class="d">${escapeHtml(h.detail)}</span>
         ${h.count ? `<span class="n">${h.count}건</span>` : ""}
@@ -5597,7 +5984,7 @@ const EXAM_FIELD_LABEL = {startDate:"시작일", endDate:"종료일", mathDate:"
 async function saveExamCard(cardEl, extra={}){
   const data = collectCardData(cardEl);
   const existing = findExam(data.school, data.grade, data.examName);
-  const savedAt = new Date().toISOString().slice(0,10);
+  const savedAt = localDateStr();
   const label = `${shortSchool(data.school)} ${data.grade} ${data.examName}`;
   if(existing){
     /* 안 채워진 칸(undefined)과 빈 값(""·false·[])을 같은 것으로 보고 비교합니다 —
@@ -5610,7 +5997,15 @@ async function saveExamCard(cardEl, extra={}){
       return (v || "").toString().trim();
     };
     const changed = Object.keys(data).filter(k=> EXAM_FIELD_LABEL[k] && jn(k, data[k]) !== jn(k, existing[k]));
-    await updateExamDoc(existing.id, {...data, ...extra, savedAt});
+    let payload = {...data, ...extra, savedAt};
+    /* 시작일을 다른 학기로 바꿔 저장하는 경우 — 입력칸에 남아 있던 지난 학기 값(범위·수학일·프린트 등)이
+       새 학기로 따라가지 않도록, 이번에 직접 바꾼 칸만 보냅니다. 나머지는 새 학기에 맞게 비워집니다. */
+    const oldK = termKeyOfDate(existing.startDate), newK = termKeyOfDate(data.startDate);
+    if(oldK && newK && oldK !== newK){
+      payload = { startDate: data.startDate, ...extra, savedAt };
+      changed.forEach(k=>{ if(k !== "retros") payload[k] = data[k]; });
+    }
+    await updateExamDoc(existing.id, payload);
     if(changed.length) logChange("시험 정보 수정", `${label} — ${changed.map(k=> EXAM_FIELD_LABEL[k]).join(", ")}`, 1);
   } else {
     await addExam({...data, makeupDate:"", ...extra, savedAt});
@@ -5660,6 +6055,7 @@ document.getElementById("examCardsGrid").addEventListener("click", async (e)=>{
     saveExamCard(card).then(()=>{
       card.classList.remove("dirty"); updateDirtyCount();
       showToast(`${title} 정보를 저장했어요.`, {type:"ok"});
+      flushTermArchiveNotice();
     });
   } else if(e.target.classList.contains("delete-exam-btn")){
     const {school, grade, examName} = card.dataset;
@@ -5680,7 +6076,7 @@ document.getElementById("examCardsGrid").addEventListener("click", async (e)=>{
   } else if(e.target.classList.contains("apply-makeup-btn")){
     const val = card.querySelector('[data-field="makeupDateInput"]').value;
     if(!val){ showToast("적용할 보강 날짜를 먼저 선택해주세요.", {type:"warn"}); return; }
-    saveExamCard(card, {makeupDate: val}).then(()=> showToast(`직전보강일을 ${val} 로 저장했어요.`, {type:"ok"}));
+    saveExamCard(card, {makeupDate: val}).then(()=>{ showToast(`직전보강일을 ${val} 로 저장했어요.`, {type:"ok"}); flushTermArchiveNotice(); });
   }
 });
 document.getElementById("examCardsGrid").addEventListener("change", (e)=>{
@@ -5751,6 +6147,7 @@ document.getElementById("saveAllExamBtn").addEventListener("click", async (ev)=>
     for(const c of cards){ await saveExamCard(c); c.classList.remove("dirty"); }
     updateDirtyCount();
     showToast(`${cards.length}개 카드를 저장했어요.`, {type:"ok"});
+    flushTermArchiveNotice();
   } finally {
     btn.disabled = false; btn.textContent = "이 학교 전체 저장";
   }
@@ -5813,6 +6210,8 @@ document.getElementById("calDow").innerHTML = dowNames
 
 function pad(n){ return String(n).padStart(2,"0"); }
 function dateKey(y,m,d){ return `${y}-${pad(m+1)}-${pad(d)}`; }
+/* 한국(이 컴퓨터) 날짜로 "YYYY-MM-DD". toISOString()은 세계 표준시라 밤 12시~오전 9시엔 하루 전 날짜가 나옵니다. */
+function localDateStr(d){ d = d || new Date(); return dateKey(d.getFullYear(), d.getMonth(), d.getDate()); }
 function toDate(key){ const [y,m,d]=key.split("-").map(Number); return new Date(y,m-1,d); }
 function weekdayShort(dateObj){ return ["일","월","화","수","목","금","토"][dateObj.getDay()]; }
 function fmtWithDow(key){ const d = toDate(key); return `${d.getMonth()+1}/${d.getDate()}(${weekdayShort(d)})`; }
@@ -6093,12 +6492,19 @@ document.querySelectorAll("#calViewToggle button").forEach(b=> b.addEventListene
   calView = b.dataset.view; renderCalendar();
 }));
 
+/* 이번 달 목록 보기에서 지난 날짜를 펼쳐 볼지 (기본은 접어서 오늘부터 보이게) */
+let calListShowPast = false;
+
 /* 이 달의 시험을 날짜별로 묶어서 목록으로 */
 function renderCalListView(){
   const box = document.getElementById("calList");
   const tk = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
   const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
   const ve = visibleExams();   /* 이 달을 그리는 동안은 한 번만 계산 */
+  /* 이번 달을 볼 때는 지난 날짜를 접어두고 오늘(또는 다음 시험 날)부터 보여줍니다 —
+     휴대폰에서 월말이면 오늘까지 한참 내려가야 했습니다 */
+  const isCurMonth = viewYear === today.getFullYear() && viewMonth === today.getMonth();
+  let pastDays = 0;
 
   let html = "";
   for(let d=1; d<=daysInMonth; d++){
@@ -6109,17 +6515,22 @@ function renderCalListView(){
     const dow = weekdayShort(dt);
     const dowCls = dow==="토" ? "sat" : dow==="일" ? "sun" : "";
     const isToday = key===tk, isPast = key < tk;
+    if(isCurMonth && isPast){ pastDays++; if(!calListShowPast) continue; }
     const holi = holidayOf(key);
     html += `<div class="cl-day ${isToday?"today":""} ${isPast?"past":""} ${holi?"holi":""}">
       <div class="cl-head">
         <span class="d">${viewMonth+1}월 ${d}일<span class="dow ${dowCls}">(${dow})</span>${holi?` <span class="hol-tag">${escapeHtml(holi)}</span>`:""}${isToday?' <span class="dday-sm now">오늘</span>':''}</span>
-        <span class="n">${list.length}건</span>
+        <span class="cl-head-right">
+          <span class="n">${list.length}건</span>
+          <button class="day-summary-btn" data-summary="${key}">요약</button>
+        </span>
       </div>
       <div class="cl-body">
         ${list.map(e=>{
           const count = calStudentsForExam(e).length;
-          const scope = e.examScope ? escapeHtml(e.examScope.split("\n")[0]).slice(0,34)
-                      : (unitsOf(e).length ? escapeHtml(unitsOf(e).join(" · ")).slice(0,40) : "시험 범위 미입력");
+          /* 먼저 자르고 나서 바꿉니다 (바꾼 뒤 자르면 &quot; 같은 게 중간에서 잘려 글자가 깨짐) */
+          const scope = e.examScope ? escapeHtml(e.examScope.split("\n")[0].slice(0,34))
+                      : (unitsOf(e).length ? escapeHtml(unitsOf(e).join(" · ").slice(0,40)) : "시험 범위 미입력");
           const isMath = !!e.mathDate && e.mathDate === key;
           return `<button class="cl-item ${gradeColor(e.grade)} ${isMath?"math":""}" data-exam="${e.id}">
             <span>${escapeHtml(shortSchool(e.school))} ${escapeHtml(e.grade||"")}${isMath?` <span class="mbadge">수학</span>`:""}
@@ -6130,8 +6541,24 @@ function renderCalListView(){
       </div>
     </div>`;
   }
-  box.innerHTML = html || `<div class="cl-empty">${viewYear}년 ${viewMonth+1}월에는 표시할 시험이 없어요.</div>`;
+  const pastBtn = pastDays
+    ? `<button class="cl-past-toggle" id="clPastToggle" type="button">${calListShowPast
+        ? `▴ 지난 날짜 접기`
+        : `▾ 이번 달 지난 날짜 ${pastDays}일 보기`}</button>`
+    : "";
+  const emptyMsg = pastDays && !calListShowPast
+    ? `<div class="cl-empty">오늘부터 이번 달 말까지는 표시할 시험이 없어요.</div>`
+    : `<div class="cl-empty">${viewYear}년 ${viewMonth+1}월에는 표시할 시험이 없어요.</div>`;
+  box.innerHTML = pastBtn + (html || emptyMsg);
+  document.getElementById("clPastToggle")?.addEventListener("click", ()=>{
+    calListShowPast = !calListShowPast; renderCalListView();
+  });
   box.querySelectorAll(".cl-item").forEach(b=> b.addEventListener("click", ()=> openDetailModal(b.dataset.exam, null)));
+  /* 목록 보기에도 달력 칸과 똑같이 "요약" 버튼을 둡니다 (그리드 보기에서만 되던 걸 목록 보기에도 확장) */
+  box.querySelectorAll(".day-summary-btn").forEach(b=> b.addEventListener("click", (ev)=>{
+    ev.stopPropagation();
+    openDaySummaryModal(b.dataset.summary);
+  }));
 }
 
 function renderCalendar(){
@@ -6613,7 +7040,7 @@ document.addEventListener("keydown", (e)=>{
 /* ---------- 엑셀 내보내기 ---------- */
 function exportRows(rows, sheetName, filePrefix){
   if(!rows.length){ showToast("내보낼 내용이 없어요.", {type:"warn"}); return; }
-  const stamp = new Date().toISOString().slice(0,10);
+  const stamp = localDateStr();
   try{
     if(typeof XLSX !== "undefined"){
       const ws = XLSX.utils.json_to_sheet(rows);
@@ -6814,7 +7241,7 @@ function renderScheduleTab(){
     (noScope ? ` · <span style="color:var(--rust);">범위 미입력 ${noScope}건</span>` : "");
   { const ptEl = document.getElementById("schedPrintTitle");
     if(ptEl) ptEl.innerHTML = `학교별 일정 — ${escapeHtml(seasonLabelOf(schedSeason))}${schedGrade? " · "+escapeHtml(schedGrade):""}` +
-      `<span class="sub"> · ${schools.length}개교 · 시험 ${list.length}건 · ${new Date().toISOString().slice(0,10)} 기준</span>`;
+      `<span class="sub"> · ${schools.length}개교 · 시험 ${list.length}건 · ${localDateStr()} 기준</span>`;
   }
 
   if(list.length===0){
@@ -6952,12 +7379,12 @@ function openRetroHistory(school){
 
   document.getElementById("retroHistTitle").textContent = `${school} 회고 이력`;
   document.getElementById("retroHistMeta").textContent =
-    rows.length ? `${rows.length}건 · 최근 학년도부터` : "";
+    rows.length ? `${rows.length}건 · 최근 학기부터` : "";
   document.getElementById("retroHistBody").innerHTML = rows.length
     ? `<div class="rh-list">${rows.map((r,i)=>`
         <div class="rh-item ${i>1?"old":""}">
           <div class="rh-top">
-            <span class="rh-yr">${r.sy} ${escapeHtml(r.examName||"")}</span>
+            <span class="rh-yr">${termLabelN(r.sy)} ${escapeHtml(r.examName||"")}</span>
             ${r.grade ? `<span class="rh-grade" style="background:${COLOR_HEX[gradeColor(r.grade)]}; border-color:${COLOR_BORDER[gradeColor(r.grade)]};">${escapeHtml(r.grade)}</span>` : ""}
           </div>
           ${retroChipsHtml(r)}
@@ -7822,8 +8249,12 @@ async function refreshAutoBakDirStatus(){
 
 /* 오늘치 백업을 고른 폴더에 파일로 씁니다. 폴더가 없거나 권한이 없으면 조용히 건너뜁니다
    (권한 재요청은 사용자가 직접 눌러야만 가능해서, 여기서는 묻지 않고 상태만 갱신합니다). */
-async function writeAutoBakToFolder(entry){
+/* 같은 날짜 파일은 이 창에서 한 번만 씁니다 — 예전엔 누가 뭘 저장할 때마다(화면이 새로 그려질 때마다)
+   같은 내용의 파일을 계속 다시 썼습니다. 폴더를 새로 연결했을 때만 force로 다시 씁니다. */
+let autoBakFolderWrittenFor = "";
+async function writeAutoBakToFolder(entry, force){
   if(!fsApiSupported()) return;
+  if(!force && entry && autoBakFolderWrittenFor === entry.date) return;
   const handle = await loadBakDirHandle();
   if(!handle) return;
   try{
@@ -7836,6 +8267,7 @@ async function writeAutoBakToFolder(entry){
       {app:"학원 관리 시스템", version:1, exportedAt:entry.at, students:entry.students, exams:entry.exams},
       null, 2));
     await writable.close();
+    autoBakFolderWrittenFor = entry.date;
   }catch(e){ console.warn("자동 백업을 폴더에 쓰지 못했어요", e); refreshAutoBakDirStatus(); }
 }
 
@@ -7845,8 +8277,8 @@ document.getElementById("autoBakDirBtn")?.addEventListener("click", async ()=>{
     const handle = await window.showDirectoryPicker({mode:"readwrite"});
     await saveBakDirHandle(handle);
     await refreshAutoBakDirStatus();
-    const today = readAutoBaks().find(b=> b.date === new Date().toISOString().slice(0,10));
-    if(today) await writeAutoBakToFolder(today);
+    const today = readAutoBaks().find(b=> b.date === localDateStr());
+    if(today) await writeAutoBakToFolder(today, true);
     showToast(`"${handle.name}" 폴더에 앞으로 매일 자동 백업 파일을 남길게요.`, {type:"ok"});
   }catch(e){
     if(e && e.name === "AbortError") return;   /* 폴더 선택창을 그냥 닫은 경우 */
@@ -7862,10 +8294,17 @@ document.getElementById("autoBakDirClear")?.addEventListener("click", async ()=>
 
 function saveAutoBackup(){
   if(!students.length) return;                       /* 아직 안 불러왔으면 건너뜁니다 */
-  const today = new Date().toISOString().slice(0,10);
+  /* 학생 명단과 시험 정보가 둘 다 도착한 뒤에만 — 예전엔 학생이 먼저 도착하면 그 순간 백업을 떠서
+     "시험 0건"짜리 백업이 그날의 자동 백업으로 남을 수 있었습니다 (그걸로 되돌리면 시험이 전부 지워짐) */
+  if(isConfigured && !(dataLoaded.students && dataLoaded.exams)) return;
+  if(restoreBusy) return;   /* 복원 도중의 반쯤 바뀐 상태는 백업으로 남기지 않습니다 */
+  const today = localDateStr();
   let list = readAutoBaks();
   const already = list.find(b=> b.date === today);
-  if(already) { renderAutoBaks(); refreshAutoBakDirStatus(); writeAutoBakToFolder(already); return; }
+  /* 오늘 것이 이미 있어도, 그게 시험 0건으로 잘못 떠진 것이면 지금 내용으로 다시 뜹니다 */
+  const broken = already && (!already.exams || !already.exams.length) && exams.length > 0;
+  if(already && !broken) { renderAutoBaks(); refreshAutoBakDirStatus(); writeAutoBakToFolder(already); return; }
+  if(broken){ list = list.filter(b=> b !== already); autoBakFolderWrittenFor = ""; }
   const entry = { date: today, at: new Date().toISOString(), students, exams };
   list.unshift(entry);
   list = list.slice(0, AUTO_BAK_KEEP);
@@ -7905,21 +8344,8 @@ function renderAutoBaks(){
     if(!guardEdit()) return;
     const b = readAutoBaks().find(x=> x.date === btn.dataset.date);
     if(!b) return;
-    const ok = await askConfirm(
-      `${b.date} 자동 백업으로 되돌립니다.\n\n` +
-      `백업 내용: 학생 ${b.students.length}명 · 시험 ${b.exams.length}건\n` +
-      `현재 내용: 학생 ${students.length}명 · 시험 ${exams.length}건\n\n` +
-      `지금 데이터는 모두 지워지고 백업 내용으로 바뀝니다. 계속할까요?`,
-      {title:"자동 백업으로 되돌리기", yes:"되돌리기", danger:true});
-    if(!ok) return;
-    const statusEl = document.getElementById("backupStatus");
-    statusEl.textContent = "되돌리는 중...";
-    await removeStudentsBulk(students.map(s=>s.id));
-    for(const x of exams.slice()){ await removeExam(x.id); }
-    await restoreStudentDocs(b.students);
-    for(const x of b.exams){ await restoreExamDoc(x); }
-    statusEl.textContent = "";
-    showToast(`${b.date} 자동 백업으로 되돌렸어요.`, {type:"ok", duration:6000});
+    /* 파일 복원과 같은 안전한 순서로 (복원 직전 파일 저장 → 덮어쓰기 → 남는 것만 삭제) */
+    await restoreFromBackupData({ students: b.students || [], exams: b.exams || [] }, `${b.date} 자동 백업`);
   }));
 }
 
@@ -7931,7 +8357,7 @@ function downloadBackupJson(stuList, examList, exportedAt, fileTag){
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `학원데이터_백업_${fileTag || new Date().toISOString().slice(0,10)}.json`;
+  a.download = `학원데이터_백업_${fileTag || localDateStr()}.json`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=> URL.revokeObjectURL(a.href), 1500);
 }
@@ -7950,35 +8376,113 @@ document.getElementById("restoreFileInput").addEventListener("change", (ev)=>{
   const statusEl = document.getElementById("backupStatus");
   const reader = new FileReader();
   reader.onload = async (e)=>{
+    let data;
     try{
-      const data = JSON.parse(e.target.result);
+      data = JSON.parse(e.target.result);
       if(!Array.isArray(data.students) || !Array.isArray(data.exams))
         throw new Error("형식이 올바르지 않습니다");
-      const when = data.exportedAt ? data.exportedAt.slice(0,10) : "날짜 미상";
-      if(!await askConfirm(
-        `${when} 백업으로 되돌립니다.\n\n` +
-        `백업 내용: 학생 ${data.students.length}명 · 시험 ${data.exams.length}건\n` +
-        `현재 내용: 학생 ${students.length}명 · 시험 ${exams.length}건\n\n` +
-        `지금 데이터는 모두 지워지고 백업 내용으로 바뀝니다. 계속할까요?`)) return;
-
-      statusEl.textContent = "복원 중...";
-      const oldStu = students.map(s=>({...s})), oldExam = exams.map(x=>({...x}));
-      await removeStudentsBulk(oldStu.map(s=>s.id));
-      for(const x of oldExam){ await removeExam(x.id); }
-      await restoreStudentDocs(data.students);
-      for(const x of data.exams){ await restoreExamDoc(x); }
-      statusEl.textContent = "";
-      showToast(`백업(${when})으로 복원했어요. 학생 ${data.students.length}명 · 시험 ${data.exams.length}건`, {type:"ok", duration:6000});
     }catch(err){
       console.error(err);
-      statusEl.textContent = "";
       showToast("백업 파일을 읽지 못했어요. 이 앱에서 내려받은 .json 파일인지 확인해주세요.", {type:"bad", duration:6000});
-    }finally{
       ev.target.value = "";
+      return;
     }
+    const d = data.exportedAt ? new Date(data.exportedAt) : null;
+    const when = (d && !isNaN(d)) ? localDateStr(d) : "날짜 미상";
+    await restoreFromBackupData(data, `${when} 백업`);
+    ev.target.value = "";
   };
   reader.readAsText(file);
 });
+
+/* 백업(파일이든 자동 백업이든)으로 되돌리기 — 두 버튼이 같은 안전한 순서를 씁니다.
+   ① 지금 데이터를 파일로 먼저 받아두고 ② 백업 내용을 먼저 덮어쓴 뒤 ③ 백업에 없는 것만 마지막에 지웁니다.
+   예전엔 "전부 지우기 → 다시 쓰기" 순서라, 도중에 인터넷이 끊기거나 창을 닫으면 반쯤 지워진 채로 남았습니다. */
+async function restoreFromBackupData(data, label){
+  const statusEl = document.getElementById("backupStatus");
+  if(isConfigured && (navigator.onLine === false || (connState.serverSynced && connState.fromCache))){
+    showToast("지금 인터넷이 끊겨 있어요. 연결된 뒤에 되돌려 주세요.", {type:"warn", duration:7000});
+    return false;
+  }
+  /* 백업에 학생이나 시험이 하나도 없는데 지금은 있으면 — 잘못된 백업일 가능성이 커서 한 번 더 크게 경고합니다 */
+  const suspicious = (!data.students.length && students.length) || (!data.exams.length && exams.length);
+  if(!await askConfirm(
+    `${label}으로 되돌립니다.\n\n` +
+    `백업 내용: 학생 ${data.students.length}명 · 시험 ${data.exams.length}건\n` +
+    `현재 내용: 학생 ${students.length}명 · 시험 ${exams.length}건\n\n` +
+    (suspicious ? `⚠ 이 백업에는 ${!data.exams.length ? "시험 정보가" : "학생이"} 하나도 없어요. 되돌리면 지금 있는 것이 모두 지워집니다. 정말 이 백업이 맞는지 확인해주세요.\n\n` : "") +
+    `시작하기 전에 지금 데이터를 파일로 먼저 받아둡니다(복원 직전 백업).\n` +
+    `그다음 백업 내용으로 바꾸고, 백업에 없는 학생·시험은 마지막에 지웁니다. 계속할까요?`,
+    {title: "백업으로 되돌리기", yes: "되돌리기", danger: true})) return false;
+
+  const n = new Date();
+  downloadBackupJson(students, exams, n.toISOString(),
+    `복원직전_${localDateStr(n)}_${String(n.getHours()).padStart(2,"0")}${String(n.getMinutes()).padStart(2,"0")}`);
+
+  const keepStu = new Set(data.students.map(s=> s.id).filter(Boolean));
+  const keepEx  = new Set(data.exams.map(x=> x.id).filter(Boolean));
+  const ops = [
+    ...data.students.map(s=> ({ kind:"set", coll:"students", item:s })),
+    ...data.exams.map(x=> ({ kind:"set", coll:"exams", item:x })),
+    ...students.filter(s=> !keepStu.has(s.id)).map(s=> ({ kind:"del", coll:"students", id:s.id })),
+    ...exams.filter(x=> !keepEx.has(x.id)).map(x=> ({ kind:"del", coll:"exams", id:x.id })),
+  ];
+  restoreBusy = true;
+  try{
+    await runRestoreOps(ops, (done, total)=>{ statusEl.textContent = `복원 중... ${done}/${total}`; });
+  }catch(err){
+    console.error(err);
+    statusEl.textContent = "";
+    showToast("복원 도중에 멈췄어요(인터넷을 확인해주세요). 데이터가 사라지진 않았어요 — 연결되면 같은 백업으로 한 번 더 되돌리면 이어서 맞춰집니다.",
+      {type:"bad", duration:12000});
+    return false;
+  }finally{ restoreBusy = false; }
+  statusEl.textContent = "";
+  logChange("백업 복원", `${label} (학생 ${data.students.length}명 · 시험 ${data.exams.length}건)`, data.students.length + data.exams.length);
+  showToast(`${label}으로 되돌렸어요. 학생 ${data.students.length}명 · 시험 ${data.exams.length}건\n복원 직전 데이터는 파일로 받아뒀어요.`, {type:"ok", duration:7000});
+  return true;
+}
+
+/* 복원 작업을 묶음(최대 400건)씩 한 번에 저장합니다. 한 묶음은 전부 되거나 전부 안 되거나 둘 중 하나라
+   중간 상태가 생기지 않고, 540건을 한 건씩 보내던 것보다 훨씬 빠릅니다. */
+async function runRestoreOps(ops, onProgress){
+  const total = ops.length;
+  let done = 0;
+  onProgress && onProgress(0, total);
+  if(!isConfigured){
+    ops.forEach(op=>{
+      const arr = op.coll === "students" ? students : exams;
+      if(op.kind === "set"){
+        const i = arr.findIndex(x=> x.id === op.item.id);
+        if(i >= 0) arr[i] = {...op.item}; else arr.push({...op.item});
+      } else {
+        const i = arr.findIndex(x=> x.id === op.id);
+        if(i >= 0) arr.splice(i, 1);
+      }
+    });
+    saveLocal("kladi_students", students); saveLocal("kladi_exams", exams);
+    onProgress && onProgress(total, total);
+    onDataChange();
+    return;
+  }
+  const CHUNK = 400;
+  for(let i = 0; i < ops.length; i += CHUNK){
+    const batch = writeBatch(db);
+    ops.slice(i, i + CHUNK).forEach(op=>{
+      if(op.kind === "set"){
+        const {id, ...rest} = op.item;
+        const ref = id ? doc(db, op.coll, id) : doc(collection(db, op.coll));
+        batch.set(ref, rest);
+      } else {
+        batch.delete(doc(db, op.coll, op.id));
+      }
+    });
+    try{ await batch.commit(); }
+    catch(e){ const err = new Error("restore stopped"); err.restorePartial = true; err.cause = e; throw err; }
+    done = Math.min(total, i + CHUNK);
+    onProgress && onProgress(done, total);
+  }
+}
 
 /* ---------- 학생 상세 모달 ---------- */
 let currentStudentId = null;
@@ -8039,7 +8543,7 @@ function openStudentModal(studentId, returnTo){
       : mine.map(e=>{
           const period = e.startDate===e.endDate ? fmtWithDow(e.startDate) : `${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)}`;
           const scope = e.examScope
-            ? escapeHtml(e.examScope.split("\n")[0]).slice(0,40) + (e.examScope.length>40?"…":"")
+            ? escapeHtml(e.examScope.split("\n")[0].slice(0,40)) + (e.examScope.length>40?"…":"")
             : `<span class="noscope">시험 범위 미입력</span>`;
           return `<button class="stu-exam-row ${e.endDate<tk?"past":""}" data-exam="${e.id}">
             <span>
@@ -8207,9 +8711,12 @@ function markDetailStatus(text){
   if(el) el.textContent = text || "";
 }
 
-/* 여러 번 눌러도 한 번에 모아서 저장합니다 */
+/* 여러 번 눌러도 한 번에 모아서 저장합니다 (마지막 입력 0.7초 뒤) */
 function queueDetailSave(examId, patch){
   detailBusy = true;
+  /* 0.7초 안에 다른 시험으로 넘어가면, 앞 시험에서 입력한 것부터 바로 저장합니다
+     (예전엔 새 시험 입력이 앞 시험의 대기 중인 입력을 덮어서 사라졌습니다) */
+  if(detailPending && detailPending.examId !== examId){ clearTimeout(detailSaveTimer); runDetailSave(); }
   detailPending = detailPending && detailPending.examId === examId
     ? { examId, attend: {...detailPending.attend, ...(patch.attend||{})},
                 scores: {...detailPending.scores, ...(patch.scores||{})},
@@ -8217,28 +8724,40 @@ function queueDetailSave(examId, patch){
     : { examId, attend: patch.attend || {}, scores: patch.scores || {}, mdates: patch.mdates || {} };
   markDetailStatus("저장 중...");
   clearTimeout(detailSaveTimer);
-  detailSaveTimer = setTimeout(async ()=>{
+  detailSaveTimer = setTimeout(runDetailSave, 700);
+}
+/* 기다리는 입력이 있으면 지금 바로 저장 (다른 앱으로 넘어가거나 창을 숨길 때) */
+function flushDetailSaveNow(){
+  if(!detailPending) return;
+  clearTimeout(detailSaveTimer);
+  runDetailSave();
+}
+async function runDetailSave(){
     const job = detailPending; detailPending = null;
     if(!job) { detailBusy = false; return; }
     const exam = exams.find(e=> e.id === job.examId);
     if(!exam){ detailBusy = false; return; }
-    const attend = {...attendOf(exam)}, scores = {...scoresOf(exam)}, mdates = {...mdatesOf(exam)};
-    Object.entries(job.attend).forEach(([k,v])=>{ if(v) attend[k] = true; else delete attend[k]; });
-    Object.entries(job.scores).forEach(([k,v])=>{ if(v === "" || v === null || v === undefined) delete scores[k]; else scores[k] = v; });
+    /* 이번에 손댄 학생 칸만 보냅니다 (표 전체를 다시 쓰지 않음 — 다른 선생님 입력 보호) */
+    const patch = {};
+    Object.entries(job.attend).forEach(([k,v])=>{ patch[`makeupAttend.${k}`] = v ? true : fieldDelete(); });
+    Object.entries(job.scores).forEach(([k,v])=>{
+      patch[`scores.${k}`] = (v === "" || v === null || v === undefined) ? fieldDelete() : v;
+    });
     Object.entries(job.mdates).forEach(([k,v])=>{
       const arr = Array.isArray(v) ? v.filter(en=> (en.date||"").trim() || (en.time||"").trim()) : [];
-      if(!arr.length) delete mdates[k]; else mdates[k] = arr;
+      patch[`makeupDates.${k}`] = arr.length ? arr : fieldDelete();
     });
+    if(!Object.keys(patch).length){ setTimeout(()=>{ detailBusy = false; }, 600); return; }
     try{
-      await updateExamDoc(job.examId, { makeupAttend: attend, scores, makeupDates: mdates });
+      await updateExamDoc(job.examId, patch);
       markDetailStatus("저장됨");
       setTimeout(()=> markDetailStatus(""), 1800);
     }catch(err){
       console.error(err);
       markDetailStatus("저장 실패");
+      showToast("참석·점수·직보를 저장하지 못했어요. 인터넷 연결을 확인한 뒤 다시 입력해주세요.", {type:"bad", duration:9000});
     }
     setTimeout(()=>{ detailBusy = false; }, 600);
-  }, 700);
 }
 
 function openDetailModal(examId, returnTo){
@@ -8298,7 +8817,8 @@ function openDetailModal(examId, returnTo){
         : `<div class="scope-box missing"><div class="st">시험 범위</div><div class="sv">아직 입력되지 않았어요</div></div>`) +
       (exam.schoolNotice
         ? `<div class="scope-box notice"><div class="st">학교 안내 사항</div><div class="sv">${escapeHtml(exam.schoolNotice)}</div></div>`
-        : "");
+        : "") +
+      termHistoryHtml(exam);
   } else {
   scopeBox.innerHTML =
     driveFilesHtml(exam, 3) +
@@ -8316,7 +8836,7 @@ function openDetailModal(examId, returnTo){
         <button class="mini-btn" id="goFillScope" style="margin-top:0;">시험정보 입력에서 열기 →</button>
         <span class="hint">여기서 고친 내용은 바로 저장됩니다.</span>
       </div>
-    </div>`;
+    </div>` + termHistoryHtml(exam);
 
   document.getElementById("goFillScope").addEventListener("click", ()=> jumpToExamInput(exam));
   document.getElementById("detailScopeSave").addEventListener("click", async (ev)=>{
@@ -8667,6 +9187,25 @@ document.getElementById("detailModal").addEventListener("click", (e)=>{
     currentDetailExamId = null; detailReturnTo = null;
     document.getElementById("detailBackBtn").classList.remove("show");
   }
+});
+
+/* 창을 켜둔 채 자정이 지나면 "오늘" 표시·D-day·진행중 표시·자동 백업이 어제 기준으로 남지 않게 새로 그립니다.
+   (today는 페이지를 연 순간의 날짜라, 밤새 켜두면 다음 날에도 어제를 "오늘"로 보고 있었습니다) */
+function checkDayRollover(){
+  const now = new Date();
+  if(now.toDateString() === today.toDateString()) return;
+  today.setTime(now.getTime());
+  if(firstLoadDone) onDataChange();
+}
+setInterval(checkDayRollover, 60 * 1000);
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) checkDayRollover(); });
+
+/* 휴대폰에서는 요약 카드를 접어두고, 버튼으로 펼칩니다 (컴퓨터 화면에서는 버튼이 안 보이고 카드가 항상 보임) */
+document.getElementById("summaryToggle").addEventListener("click", ()=>{
+  const row = document.getElementById("summaryRow");
+  const open = row.classList.toggle("open");
+  document.getElementById("summaryToggle").setAttribute("aria-expanded", open ? "true" : "false");
+  document.getElementById("summaryToggleHint").textContent = open ? "▴ 접기" : "▾";
 });
 
 loadDriveCache();
