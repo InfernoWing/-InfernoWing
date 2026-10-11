@@ -4995,7 +4995,7 @@ function parseScoreSheet(grid){
       if(raw === "") continue;
       const score = Number(raw);
       if(!isFinite(score)) continue;
-      out.push({ name, school, score: Math.max(0, Math.min(100, Math.round(score))) });
+      out.push({ name, school, score: Math.max(0, Math.min(100, Math.round(score*100)/100)) });   /* 87.5처럼 소수점은 그대로 (엑셀 계산 찌꺼기만 소수 둘째 자리에서 정리) */
     }
     return out;
   }
