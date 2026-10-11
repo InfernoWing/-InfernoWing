@@ -6,7 +6,6 @@
 <title>학원 관리 시스템</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
   /* 저장해 둔 화면 밝기를 그리기 전에 먼저 적용합니다 (깜빡임 방지) */
   (function(){
@@ -443,8 +442,7 @@
   .head-actions{position:absolute; top:0; right:0; display:flex; align-items:center; gap:8px;}
   .head-actions .mode-btn{position:static;}
   .theme-btn:hover{background:rgba(255,255,255,.14);}
-  html[data-theme="dark"] img,
-  html[data-theme="dark"] .no-invert{ filter:none; }
+  html[data-theme="dark"] img{ filter:none; }
 
   :root{
     --ink:var(--c128); --board:var(--c125); --board-dark:var(--c14);
@@ -571,21 +569,6 @@
   .checkbox-row input[type="checkbox"]:checked::after{ transform:translateX(16px); }
   .checkbox-row input[type="checkbox"]:hover{ border-color:var(--rust); }
   .checkbox-row input[type="checkbox"]:focus-visible{ outline:2px solid var(--rust); outline-offset:2px; }
-
-  .student-checks{
-    display:flex; flex-wrap:wrap; gap:8px; border:1.5px solid var(--c23); border-radius:9px;
-    padding:10px; max-height:160px; overflow-y:auto; background:var(--c4);
-  }
-  .student-checks label{
-    display:flex; align-items:center; gap:6px; font-weight:500; font-size:13px; color:var(--ink);
-    background:var(--c7); padding:6px 10px; border-radius:20px; cursor:pointer; margin:0;
-  }
-  .student-card{
-    display:flex; justify-content:space-between; align-items:center; padding:12px 14px;
-    border:1.5px solid var(--c5); border-radius:11px; margin-bottom:9px; background:var(--c4);
-  }
-  .student-card .name{font-weight:700; font-size:14.5px;}
-  .student-card .meta{color:var(--c2); font-size:12px; margin-top:2px;}
   .tag{ display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px; margin-right:5px; }
   .tag.school{background:var(--blue-dim); color:var(--blue);}
   .tag.teacher{background:var(--mustard-dim); color:var(--c9);}
@@ -908,13 +891,8 @@
     border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0;
   }
   @keyframes spin{to{transform:rotate(360deg);}}
-  .skeleton{background:linear-gradient(90deg,var(--c7) 25%,var(--c81) 37%,var(--c7) 63%);
-    background-size:400% 100%; animation:sk 1.2s ease infinite; border-radius:9px;}
-  @keyframes sk{0%{background-position:100% 50%;}100%{background-position:0 50%;}}
-  .sk-row{height:44px; margin-bottom:8px;}
 
   /* 학생 상세 창 */
-  .stu-head{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:4px;}
   .stu-tags{display:flex; gap:5px; flex-wrap:wrap; margin:10px 0 4px;}
   .stu-exam-row{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
     border:1.5px solid var(--c5); border-radius:10px; padding:10px 12px; margin-bottom:8px;
@@ -978,7 +956,7 @@
   .tl{position:relative;}
   .tl-row{display:grid; align-items:stretch; border-bottom:1px solid var(--c29);}
   .tl-row:last-child{border-bottom:none;}
-  .tl-name{padding:9px 12px; font-size:12.5px; font-weight:800; color:var(--ink);
+  .tl-name{padding:9px 12px; font-weight:800; color:var(--ink);
     background:var(--c4); position:sticky; left:0; z-index:3; border-right:1.5px solid var(--c5);
     display:flex; align-items:center; justify-content:space-between; gap:6px;}
   .tl-name .cnt{font-size:10.5px; font-weight:700; color:var(--c3);}
@@ -1060,9 +1038,6 @@
   .clean-opt.picked{background:var(--board); color:var(--chalk); border-color:var(--board);}
   .clean-opt .n{font-size:10.5px; opacity:.7; margin-left:4px;}
   .clean-note{font-size:11.5px; color:var(--c2); margin-top:7px; line-height:1.6;}
-  .dup-list{display:flex; flex-direction:column; gap:4px; margin-top:6px;}
-  .dup-row{font-size:12.5px; color:var(--c28);}
-  .dup-row b{color:var(--ink);}
 
   /* 동명이인 표시 */
   .tag.dup{background:var(--c153); color:var(--violet); cursor:help;}
@@ -1381,7 +1356,7 @@
   @media print{
     @page{size:A4; margin:12mm 10mm;}
     header.app-head, nav.tabs, #setupBanner, .filter-line, .print-hide,
-    .students-toolbar, .stu-idx, .bulkbar, .data-tools, .drive-box, .auto-bak,
+    .students-toolbar, .bulkbar, .data-tools, .drive-box, .auto-bak,
     .exam-side, .es-head, #recentSearch, .badge-info, .badge-warn,
     .panel-desc, .close-x, .brief-bar, .seg, .view-toggle{display:none !important;}
     section.panel{border:none; padding:0; box-shadow:none;}
@@ -1476,7 +1451,7 @@
     background:var(--c29); color:var(--c9); border-radius:5px; padding:1px 5px; flex:0 0 auto; margin-top:3px;}
   .mdate-list{display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;}
   .mdate-entry{display:flex; align-items:center; gap:3px; flex-wrap:wrap;}
-  .mdate-date, .mdate-time, .mdate-in{font-size:11px; font-weight:700; font-family:inherit;
+  .mdate-date, .mdate-time{font-size:11px; font-weight:700; font-family:inherit;
     padding:2px 4px; border:1px solid var(--c42); border-radius:6px;
     background:var(--paper-card); color:var(--ink); cursor:text; min-width:0;}
   .mdate-date{flex:1 1 104px; min-width:0;}
@@ -1526,13 +1501,6 @@
   .empty-state{ text-align:center; color:var(--c3); padding:30px 10px; font-size:13px; }
 
   /* ---------- 학생 관리 표 ---------- */
-  .daygroup-picker{display:flex; gap:6px;}
-  .daygroup-picker button{
-    border:1.5px solid var(--c23); background:var(--c1); padding:7px 14px; border-radius:8px;
-    font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer; color:var(--c6);
-  }
-  .daygroup-picker button.active{background:var(--board); color:var(--chalk); border-color:var(--board);}
-  .daygroup-picker.compact button{padding:5px 10px; font-size:11.5px;}
   .students-toolbar{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
   .students-toolbar .search-box{flex:1; min-width:180px;}
   .count-text{font-size:12px; color:var(--c2); font-weight:600; white-space:nowrap;}
@@ -3451,13 +3419,29 @@ document.getElementById("schedImportBtn").addEventListener("click", ()=>{
   if(editMode){ pick(); return; }
   requestEdit("일정을 가져오려면 수정 모드가 필요해요. 비밀번호를 넣어주세요.", pick);
 });
+/* 엑셀 라이브러리(약 880KB)는 처음 화면에선 안 쓰므로, 엑셀을 읽거나 내보낼 때 처음 한 번만 불러옵니다.
+   못 불러오면 false — 부르는 쪽에서 직접 읽기나 CSV로 대신합니다. */
+let xlsxLoading = null;
+function loadXlsx(){
+  if(typeof XLSX !== "undefined") return Promise.resolve(true);
+  if(!xlsxLoading){
+    xlsxLoading = new Promise(resolve=>{
+      const sc = document.createElement("script");
+      sc.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+      sc.onload = ()=> resolve(typeof XLSX !== "undefined");
+      sc.onerror = ()=>{ xlsxLoading = null; sc.remove(); resolve(false); };
+      document.head.appendChild(sc);
+    });
+  }
+  return xlsxLoading;
+}
 /* 엑셀 한 개를 시트 목록으로 — 색까지 읽는 직접 읽기가 1순위, 안 되면 라이브러리 */
 async function gridsOf(arrayBuffer){
   try{
     const sheets = await readXlsxRaw(arrayBuffer);
     if(sheets && sheets.length) return sheets;
   }catch(err){ console.warn("직접 읽기 실패, 엑셀 라이브러리로 다시 시도합니다", err); }
-  if(typeof XLSX !== "undefined"){
+  if(await loadXlsx()){
     const wb = XLSX.read(new Uint8Array(arrayBuffer), {type:"array"});
     return wb.SheetNames.map(nm=> ({ name: nm, fills: null,
       grid: XLSX.utils.sheet_to_json(wb.Sheets[nm], {header:1, defval:""}) }));
@@ -4355,6 +4339,7 @@ document.getElementById("excelFileInput").addEventListener("change", (e)=>{
   reader.onload = async (evt)=>{
     try{
       const data = new Uint8Array(evt.target.result);
+      if(!await loadXlsx()) throw new Error("엑셀 라이브러리를 불러오지 못했어요");
       const workbook = XLSX.read(data, {type:"array"});
       const firstSheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[firstSheetName];
@@ -5456,7 +5441,6 @@ const RETRO_TAGS = ["서술형 비중 높음","기출과 유사","교과서 중�
                     "계산량 많음","신유형 등장","난이도 상승","난이도 하락"];
 const RETRO_HELP = ["낮음","보통","높음"];
 
-function curSchoolYear(){ return schoolYearOf(today.getFullYear(), today.getMonth()); }
 /* 시험의 학기 번호 (2026학년도 2학기 → 20262). 날짜가 없으면 오늘 기준 학기 */
 function examSY(e){
   const d = (e && e.startDate) ? toDate(e.startDate) : today;
@@ -6162,7 +6146,7 @@ document.getElementById("examCardsGrid").addEventListener("click", async (e)=>{
   const ed = card.querySelector('[data-field="endDate"]').value;
   if(!sd || !ed){ showToast("시험 시작·종료 날짜를 먼저 입력해주세요.", {type:"warn"}); return; }
 
-  const {grade, examName} = card.dataset;
+  const {examName} = card.dataset;
   const targets = [...document.querySelectorAll("#examCardsGrid .exam-card")]
     .filter(c=> c!==card && c.dataset.examName===examName);
   if(targets.length===0){ showToast("적용할 다른 학년 카드가 없어요.", {type:"warn"}); return; }
@@ -6266,12 +6250,6 @@ const HOLIDAYS = {
   "2028-10-09":"한글날", "2028-12-25":"성탄절",
 };
 function holidayOf(key){ return HOLIDAYS[key] || ""; }
-/* 공휴일이거나 일요일이면 쉬는 날 */
-function isRedDay(key){
-  if(HOLIDAYS[key]) return true;
-  const d = toDate(key);
-  return d.getDay() === 0;
-}
 
 /* ---------- 캘린더 학교 검색 ----------
    "가락", "가락중", "ㄱㄹ" 처럼 이름 일부나 초성으로 찾을 수 있어요. */
@@ -6479,9 +6457,6 @@ function gradeColor(grade){ return GRADE_COLOR[grade] || "c7"; }
 /* 알약 안에서는 학교명을 줄여서 표시 (가락중학교 → 가락중) */
 function shortSchool(name){
   return (name||"").replace(/초등학교$/,"초").replace(/중학교$/,"중").replace(/고등학교$/,"고");
-}
-function shortExamName(name){
-  return (name||"").replace(/고사$/,"");
 }
 
 const MAX_PILLS = 3; // 한 칸에 최대 3개까지만 보여주고 나머지는 "+N개 더"
@@ -7038,11 +7013,11 @@ document.addEventListener("keydown", (e)=>{
 });
 
 /* ---------- 엑셀 내보내기 ---------- */
-function exportRows(rows, sheetName, filePrefix){
+async function exportRows(rows, sheetName, filePrefix){
   if(!rows.length){ showToast("내보낼 내용이 없어요.", {type:"warn"}); return; }
   const stamp = localDateStr();
   try{
-    if(typeof XLSX !== "undefined"){
+    if(await loadXlsx()){
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, sheetName);
@@ -8373,7 +8348,6 @@ document.getElementById("restoreFileInput").addEventListener("change", (ev)=>{
   if(!guardEdit()){ ev.target.value=""; return; }
   const file = ev.target.files[0];
   if(!file) return;
-  const statusEl = document.getElementById("backupStatus");
   const reader = new FileReader();
   reader.onload = async (e)=>{
     let data;
