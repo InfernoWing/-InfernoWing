@@ -2977,7 +2977,9 @@ function populateDropdowns(){
   fillSelect("calFilterTeacher", teachers, "전체 선생님");
 
   fillSelect("examSchoolSelect", schools, "학교 선택");
-  if(!currentExamSchool || !schools.includes(currentExamSchool)) currentExamSchool = schools[0] || "";
+  /* 처음 열 때는 왼쪽 학교 목록(재원생이 있는 학교, 가나다순)의 첫 학교로 엽니다 */
+  const listFirst = uniq(students.filter(s=> statusOf(s) !== "퇴원").map(s=> s.school)).sort((a,b)=> a.localeCompare(b,"ko"))[0];
+  if(!currentExamSchool || !schools.includes(currentExamSchool)) currentExamSchool = listFirst || schools[0] || "";
   document.getElementById("examSchoolSelect").value = currentExamSchool;
 }
 function fillSelect(id, values, placeholder){
@@ -3916,7 +3918,7 @@ function renderStudents(){
   const tbody = document.getElementById("studentTableBody");
   const emptyBox = document.getElementById("studentEmptyState");
 
-  const incompleteCount = students.filter(s=> !s.regularClass).length;
+  const incompleteCount = students.filter(s=> !s.regularClass && statusOf(s) !== "퇴원").length;
   const badge = document.getElementById("incompleteBadge");
   badge.textContent = `정규반 미배정 ${incompleteCount}명`;
   badge.classList.toggle("active", showIncompleteOnly);
@@ -5589,7 +5591,7 @@ function findExam(school, grade, examName){
 
 function examCardHtml(school, grade, examName){
   const existing = findExam(school, grade, examName);
-  const studentCount = students.filter(s=>s.school===school && s.grade===grade).length;
+  const studentCount = students.filter(s=>s.school===school && s.grade===grade && statusOf(s) !== "퇴원").length;
   const notConducted = existing?.notConducted || false;
   const sy = examSY(existing);
   const past = retroEntries(existing).filter(r=> r.sy < sy);   // 이번 학년도 것은 아래 입력칸에서 씁니다
@@ -5956,7 +5958,7 @@ function renderExamTab(){
   const schoolStudents = students.filter(s=>s.school===currentExamSchool);
   const grades = sortGrades(uniq(schoolStudents.map(s=>s.grade)));
 
-  summaryEl.textContent = `재원생 ${schoolStudents.length}명 · 학년 ${grades.length? grades.join(", ") : "미지정"}`;
+  summaryEl.textContent = `재원생 ${schoolStudents.filter(s=> statusOf(s) !== "퇴원").length}명 · 학년 ${grades.length? grades.join(", ") : "미지정"}`;
 
   if(grades.length===0){
     gridEl.innerHTML = `<div class="empty-state">이 학교 학생들의 학년이 아직 입력되지 않았어요. 학생 명단에서 학년을 채워주세요.</div>`;
@@ -7147,11 +7149,11 @@ function renderSummary(){
     <span class="sd">${noTeacher.length ? "학생 관리에서 채우기" : "모두 지정됨"}</span></button>`;
 
   /* 5) 정규반 미배정 */
-  const noClass = students.filter(s=> !s.regularClass);
+  const noClass = students.filter(s=> !s.regularClass && statusOf(s) !== "퇴원");
   const card5 = `<button class="stat-card ${noClass.length?"alert":"done"}" data-go="class-missing">
     <span class="sl">정규반 미배정</span>
     <span class="sv">${noClass.length}<span class="su">명</span></span>
-    <span class="sd">전체 ${students.length}명 중</span></button>`;
+    <span class="sd">재원생 ${students.filter(s=> statusOf(s) !== "퇴원").length}명 중</span></button>`;
 
   box.innerHTML = card1 + card2 + card4 + card5;
 
@@ -7175,7 +7177,7 @@ function renderSummary(){
       stuIdxTab = "teacher"; showIncompleteOnly = false;
       switchTab("students"); renderStudents();
     } else if(go==="class-missing"){
-      if(students.filter(s=>!s.regularClass).length===0){ showToast("모든 학생이 반에 배정되어 있어요.", {type:"ok"}); return; }
+      if(students.filter(s=>!s.regularClass && statusOf(s) !== "퇴원").length===0){ showToast("모든 학생이 반에 배정되어 있어요.", {type:"ok"}); return; }
       stuF = {cho:"", school:"", grade:"", teacher:null, regularClass:"", examClass:null};
       stuIdxTab = "class"; stuClassField = "regularClass"; showIncompleteOnly = false;
       switchTab("students"); renderStudents();
