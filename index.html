@@ -7711,7 +7711,8 @@ function examSummaryText(list0, opts){
   if(!list.length) return "직전보강이 잡힌 시험이 없습니다.";
   const many = list.length > 1;
   return list.map(e=>{
-    const period = (e.startDate===e.endDate)
+    const period = (!e.startDate || !e.endDate) ? "(미정)"
+      : (e.startDate===e.endDate)
       ? fmtWithDow(e.startDate)
       : `${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)}`;
     const head = `■ ${[e.school||"", e.grade||"", e.examName||""].filter(Boolean).join(" ")}`;
