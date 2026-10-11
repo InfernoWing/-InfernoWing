@@ -5971,6 +5971,8 @@ function renderExamTab(){
     });
   });
   gridEl.innerHTML = html;
+  /* 카드가 그려진 순간의 값을 기억해 둡니다 — 저장할 때 '내가 실제로 바꾼 칸'만 골라 보내기 위해서 */
+  gridEl.querySelectorAll(".exam-card").forEach(c=>{ try{ c.dataset.base = JSON.stringify(collectCardData(c)); }catch(e){} });
   checkAllMathDates();
 }
 
@@ -6014,19 +6016,25 @@ async function saveExamCard(cardEl, extra={}){
       if(k === "retros") return JSON.stringify(v || {});
       return (v || "").toString().trim();
     };
-    const changed = Object.keys(data).filter(k=> EXAM_FIELD_LABEL[k] && jn(k, data[k]) !== jn(k, existing[k]));
-    let payload = {...data, ...extra, savedAt};
-    /* 시작일을 다른 학기로 바꿔 저장하는 경우 — 입력칸에 남아 있던 지난 학기 값(범위·수학일·프린트 등)이
-       새 학기로 따라가지 않도록, 이번에 직접 바꾼 칸만 보냅니다. 나머지는 새 학기에 맞게 비워집니다. */
+    /* 카드가 그려졌을 때의 값과 비교해서, 내가 실제로 바꾼 칸만 찾습니다.
+       (지금 저장돼 있는 값과 비교하면, 그 사이 다른 선생님이 바꾼 칸까지 내가 바꾼 것으로 잡혀 되돌려 버립니다) */
+    let base = null;
+    try{ base = cardEl.dataset.base ? JSON.parse(cardEl.dataset.base) : null; }catch(e){ base = null; }
+    const ref = base || existing;
+    const changed = Object.keys(data).filter(k=> EXAM_FIELD_LABEL[k] && jn(k, data[k]) !== jn(k, ref[k]));
+    /* 바뀐 칸만 보냅니다. 시작일을 다른 학기로 바꿔 저장하는 경우에는 지난 학기 값(범위·수학일·프린트 등)이
+       새 학기로 따라가지 않도록 회고는 빼고, 나머지는 새 학기에 맞게 비워집니다. */
+    const payload = { ...extra, savedAt };
     const oldK = termKeyOfDate(existing.startDate), newK = termKeyOfDate(data.startDate);
-    if(oldK && newK && oldK !== newK){
-      payload = { startDate: data.startDate, ...extra, savedAt };
-      changed.forEach(k=>{ if(k !== "retros") payload[k] = data[k]; });
-    }
+    const termChanged = !!(oldK && newK && oldK !== newK);
+    if(termChanged) payload.startDate = data.startDate;
+    changed.forEach(k=>{ if(!(termChanged && k === "retros")) payload[k] = data[k]; });
     await updateExamDoc(existing.id, payload);
+    cardEl.dataset.base = JSON.stringify(data);      /* 저장했으니 지금 값이 새 기준 */
     if(changed.length) logChange("시험 정보 수정", `${label} — ${changed.map(k=> EXAM_FIELD_LABEL[k]).join(", ")}`, 1);
   } else {
     await addExam({...data, makeupDate:"", ...extra, savedAt});
+    cardEl.dataset.base = JSON.stringify(data);
     logChange("시험 정보 저장", label, 1);
   }
 }
