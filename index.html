@@ -8525,8 +8525,10 @@ function openStudentModal(studentId, returnTo){
       ? `<div class="empty-state">등록된 시험이 없어요. 학교·학년이 맞게 입력됐는지 확인해주세요.</div>`
       : mine.map(e=>{
           const period = e.startDate===e.endDate ? fmtWithDow(e.startDate) : `${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)}`;
-          const scope = e.examScope
-            ? escapeHtml(e.examScope.split("\n")[0].slice(0,40)) + (e.examScope.length>40?"…":"")
+          /* 단원 칩과 글을 함께 보여 줍니다 — 둘 다 없을 때만 '미입력' */
+          const scopeFull = [unitsOf(e).join(" · "), (e.examScope||"").split("\n")[0]].filter(Boolean).join(" · ");
+          const scope = hasScope(e)
+            ? escapeHtml(scopeFull.slice(0,40)) + (scopeFull.length>40?"…":"")
             : `<span class="noscope">시험 범위 미입력</span>`;
           return `<button class="stu-exam-row ${e.endDate<tk?"past":""}" data-exam="${e.id}">
             <span>
