@@ -2470,7 +2470,7 @@ async function initFirebase(){
     if(d && d.editPasswordHash) editPwHash = d.editPasswordHash;
     if(d && d.textbooks && JSON.stringify(d.textbooks) !== JSON.stringify(textbooks)){
       textbooks = d.textbooks; renderExamTabForce();
-      if(currentDetailExamId) openDetailModal(currentDetailExamId);
+      if(currentDetailExamId){ if(typingIn("#detailModal")) refreshWhenIdle = true; else openDetailModal(currentDetailExamId); }
     }
     if(d && (d.driveUrl !== driveUrl || d.driveToken !== driveToken)){
       driveUrl = d.driveUrl || ""; driveToken = d.driveToken || "";
@@ -2536,6 +2536,22 @@ window.addEventListener("beforeunload", (e)=>{
 /* 휴대폰에서 다른 앱으로 넘어가면 모아두던 입력을 바로 저장 (백그라운드에선 타이머가 멈출 수 있음) */
 document.addEventListener("visibilitychange", ()=>{ if(document.hidden) flushDetailSaveNow(); });
 
+/* 글을 쓰는 중인 칸(입력창)이 이 구역 안에 있는지 — 있으면 화면을 다시 그리지 않습니다
+   (다른 선생님이 저장하면 화면이 새로 그려지면서 쓰던 글이 사라지던 문제 방지) */
+function typingIn(sel){
+  const a = document.activeElement;
+  if(!a || !/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return false;
+  const box = document.querySelector(sel);
+  return !!(box && box.contains(a));
+}
+let refreshWhenIdle = false;   /* 쓰는 중이라 미뤄 둔 새로고침이 있는지 */
+function anyTyping(){ return typingIn("#studentTableBody") || typingIn("#studentModal") || typingIn("#detailModal"); }
+/* 입력칸에서 빠져나온 뒤 1초가 지나도 더 쓰고 있지 않으면, 미뤄 둔 최신 내용으로 한 번 갱신합니다 */
+document.addEventListener("focusout", ()=>{
+  if(!refreshWhenIdle) return;
+  setTimeout(()=>{ if(refreshWhenIdle && !anyTyping()){ refreshWhenIdle = false; onDataChange(); } }, 1000);
+});
+
 let firstLoadDone = false;
 let restoreBusy = false;   /* 백업 복원 중에는 자동 백업을 건너뜁니다 */
 const dataLoaded = { students: false, exams: false };   /* 서버에서 둘 다 받아온 뒤에만 자동 백업 */
@@ -2547,7 +2563,7 @@ function onDataChange(){
   }
   saveAutoBackup();
   renderHistory();
-  renderStudents();
+  if(typingIn("#studentTableBody")) refreshWhenIdle = true; else renderStudents();
   populateDropdowns();
   renderCalendar();
   renderExamTab();
@@ -2555,9 +2571,13 @@ function onDataChange(){
   renderScheduleTab();
   renderSummary();
   if(currentDayKey && document.getElementById("dayModal").classList.contains("active")) openDayModal(currentDayKey, true);
-  if(currentStudentId && document.getElementById("studentModal").classList.contains("active")) openStudentModal(currentStudentId);
+  if(currentStudentId && document.getElementById("studentModal").classList.contains("active")){
+    if(typingIn("#studentModal")) refreshWhenIdle = true; else openStudentModal(currentStudentId);
+  }
   /* 점수·참석을 손대는 중이면 창을 다시 그리지 않습니다 (입력하던 게 날아가지 않도록) */
-  if(currentDetailExamId && !detailBusy) openDetailModal(currentDetailExamId);
+  if(currentDetailExamId && !detailBusy){
+    if(typingIn("#detailModal")) refreshWhenIdle = true; else openDetailModal(currentDetailExamId);
+  }
 }
 
 async function addStudent(s){
