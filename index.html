@@ -8047,6 +8047,47 @@ function mergePayload(keep, drops){
   return payload;
 }
 
+/* 지워지는 학생의 점수·직보 날짜·참석을 남는 학생에게 옮깁니다.
+   남는 학생에게 이미 값이 있으면 그 값을 두고, 지워지는 쪽 값은 버립니다.
+   결과: [{examId, apply, undo}] 와 건수 요약 (apply/undo 의 "__DEL__" 은 칸 지우기) */
+const MERGE_DEL = "__DEL__";
+function mergeExamRecords(keepId, dropIds){
+  const hasVal = (field, v)=>{
+    if(v === undefined || v === null) return false;
+    if(field === "makeupDates") return mdateEntriesOf(v).some(en=> (en.date||"").trim() || (en.time||"").trim());
+    if(field === "makeupAttend") return !!v;
+    return String(v).trim() !== "";
+  };
+  const sum = { scores:0, makeupDates:0, makeupAttend:0, kept:0 };
+  const jobs = [];
+  exams.forEach(e=>{
+    const apply = {}, undo = {};
+    ["scores","makeupDates","makeupAttend"].forEach(field=>{
+      const map = e[field] || {};
+      const src = dropIds.find(id=> hasVal(field, map[id]));
+      dropIds.forEach(id=>{
+        if(map[id] === undefined) return;
+        apply[`${field}.${id}`] = MERGE_DEL;
+        undo[`${field}.${id}`] = map[id];
+      });
+      if(!src) return;
+      if(hasVal(field, map[keepId])){ sum.kept++; return; }
+      apply[`${field}.${keepId}`] = map[src];
+      undo[`${field}.${keepId}`] = map[keepId] === undefined ? MERGE_DEL : map[keepId];
+      sum[field]++;
+    });
+    if(Object.keys(apply).length) jobs.push({ examId: e.id, apply, undo });
+  });
+  return { jobs, sum };
+}
+async function applyMergeExamJobs(jobs, which){
+  for(const j of jobs){
+    const patch = {};
+    Object.entries(j[which]).forEach(([k,v])=>{ patch[k] = v === MERGE_DEL ? fieldDelete() : v; });
+    await updateExamDoc(j.examId, patch);
+  }
+}
+
 function renderCleanup(){
   const variants = findSchoolVariants();
   const groups = mergeGroups();
@@ -8121,6 +8162,14 @@ function renderCleanup(){
     if(!g) return;
     const keep = g.list[0], drops = g.list.slice(1);
     const payload = mergePayload(keep, drops);
+    const rec = mergeExamRecords(keep.id, drops.map(d=> d.id));
+    const recParts = [];
+    if(rec.sum.scores) recParts.push(`점수 ${rec.sum.scores}건`);
+    if(rec.sum.makeupDates) recParts.push(`직보 날짜 ${rec.sum.makeupDates}건`);
+    if(rec.sum.makeupAttend) recParts.push(`직보 참석 ${rec.sum.makeupAttend}건`);
+    const recLine = recParts.length
+      ? `옮기는 기록: ${recParts.join(", ")}` + (rec.sum.kept ? ` (남기는 학생에게 이미 있는 ${rec.sum.kept}건은 그대로 둠)` : "") + `\n\n`
+      : (rec.sum.kept ? `남기는 학생에게 이미 기록이 있어 옮길 점수·직보는 없어요.\n\n` : "");
     const ok = await askConfirm(
       `${keep.name} (${shortSchool(keep.school)}) 에 합칩니다.\n\n` +
       `남기는 학생: ${keep.name}\n` +
@@ -8128,6 +8177,7 @@ function renderCleanup(){
       (Object.keys(payload).length
         ? `채워지는 칸: ${Object.keys(payload).map(f=> MERGE_LABEL[f]||f).join(", ")}\n\n`
         : `채울 칸은 없고 중복만 지웁니다.\n\n`) +
+      recLine +
       `계속할까요?`,
       {title:"학생 합치기", yes:"합치기"});
     if(!ok) return;
@@ -8135,13 +8185,15 @@ function renderCleanup(){
     const before = [{ id: keep.id, payload: Object.fromEntries(Object.keys(payload).map(f=> [f, keep[f] || ""])) }];
     const removed = drops.map(d=>({ ...d }));
     if(Object.keys(payload).length) await updateStudentDoc(keep.id, payload);
-    await removeStudentsBulk(drops.map(d=> d.id));
+    await applyMergeExamJobs(rec.jobs, "apply");      /* 점수·직보·참석을 먼저 옮기고 */
+    await removeStudentsBulk(drops.map(d=> d.id));    /* 그다음 지워지는 학생을 지웁니다 */
     renderCleanup();
     showToast(`${keep.name} 학생으로 합쳤어요. (${drops.length}건 정리)`, {
       type:"ok", duration:8000, actionLabel:"되돌리기",
       onAction: async ()=>{
         await restoreStudentFields(before);
         await restoreStudentDocs(removed);
+        await applyMergeExamJobs(rec.jobs, "undo");
         renderCleanup();
         showToast("합치기를 되돌렸어요.", {type:"warn"});
       }
