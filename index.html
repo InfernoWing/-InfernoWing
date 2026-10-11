@@ -1848,6 +1848,12 @@
         <label>학교로 보기</label>
         <select id="scopeSchoolFilter"><option value="">전체 학교</option></select>
       </div>
+      <div class="filter-toggles">
+        <span class="checkbox-row">
+          <input type="checkbox" id="scopeHideEmpty" checked>
+          <label style="margin:0;">학생 없는 시험 숨기기</label>
+        </span>
+      </div>
     </div>
 
     <div class="filter-line" id="scopeGradeFilters"></div>
@@ -7074,7 +7080,8 @@ function upcomingExams(){
 function renderSummary(){
   const box = document.getElementById("summaryRow");
   const tk = todayKey();
-  const up = upcomingExams();
+  /* 학생이 한 명도 없는 시험(예: 중2·중3 카드)은 세지 않습니다 */
+  const up = upcomingExams().filter(e=> studentsForExam(e).length > 0);
 
   /* 1) 다가오는 시험 */
   let card1;
@@ -7126,7 +7133,7 @@ function renderSummary(){
       goToMonth(d.getFullYear(), d.getMonth());
       document.getElementById("calGrid").scrollIntoView({behavior:"smooth", block:"center"});
     } else if(go==="scope-missing"){
-      const list = upcomingExams().filter(e=> !hasScope(e));
+      const list = upcomingExams().filter(e=> !hasScope(e) && studentsForExam(e).length > 0);
       if(list.length===0){ showToast("시험 범위가 모두 입력되어 있어요.", {type:"ok"}); return; }
       scopeSeason = seasonKeyOf(list[0]);
       scopeGrade = "";
@@ -7461,7 +7468,8 @@ function renderScopeTab(){
   sel.innerHTML = seasons.map(k=>`<option value="${escapeHtml(k)}">${escapeHtml(seasonLabelOf(k))}</option>`).join("");
   sel.value = scopeSeason;
 
-  let rows = exams.filter(e=> seasonKeyOf(e)===scopeSeason);
+  const scopeHideEmpty = document.getElementById("scopeHideEmpty").checked;
+  let rows = exams.filter(e=> seasonKeyOf(e)===scopeSeason && (!scopeHideEmpty || studentsForExam(e).length > 0));
 
   // 학교 필터 채우기
   const schoolSel = document.getElementById("scopeSchoolFilter");
@@ -7531,6 +7539,7 @@ document.getElementById("scopeSeasonSelect").addEventListener("change", (e)=>{
   renderScopeTab();
 });
 document.getElementById("scopeSchoolFilter").addEventListener("change", renderScopeTab);
+document.getElementById("scopeHideEmpty").addEventListener("change", renderScopeTab);
 document.getElementById("scopePrintBtn").addEventListener("click", ()=> window.print());
 document.getElementById("scopeExportBtn").addEventListener("click", ()=>{
   const rows = [...document.querySelectorAll("#scopeTable tbody tr")].map(tr=>{
