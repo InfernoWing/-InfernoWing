@@ -8737,7 +8737,9 @@ function textbookHtml(school, grade){
 const REGULAR_MANAGES_FROM = "2026-10-16";
 function regularManagesNow(){ return todayKey() >= REGULAR_MANAGES_FROM; }
 function mgmtTeacherOf(s){ return regularManagesNow() ? regularTeacherOf(s) : examTeacherOf(s); }
-let teacherBasis = regularManagesNow() ? "regular" : (localStorage.getItem("kladi_tbasis") || "exam");   // exam | regular
+/* 시험 상세 창의 '담임 기준'은 이제 정규반이 기본입니다. 직접 눌러 바꾸면 그 브라우저에서 기억합니다
+   (예전에 저장해 둔 '내신대비 반' 선택은 쓰지 않도록 새 이름으로 기억합니다) */
+let teacherBasis = (()=>{ try{ return localStorage.getItem("kladi_tbasis2") || "regular"; }catch(e){ return "regular"; } })();   // exam | regular
 /* 예전 데이터는 담임 칸 하나만 있었어요. 그때 값은 내신대비 담임으로 봅니다
    (정규 담임이 따로 들어와 있으면 끌어오지 않습니다). */
 function examTeacherOf(s){
@@ -8752,7 +8754,7 @@ function teacherOf(s, basis){
 }
 function setTeacherBasis(v){
   teacherBasis = v;
-  try{ localStorage.setItem("kladi_tbasis", v); }catch(e){}
+  try{ localStorage.setItem("kladi_tbasis2", v); }catch(e){}
   if(currentDetailExamId) openDetailModal(currentDetailExamId);
 }
 
