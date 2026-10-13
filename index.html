@@ -5819,12 +5819,12 @@ function renderBrief(){
     .forEach(b=> b.classList.toggle("active", b.dataset.d === briefDay));
 
   const all = students.filter(s=> statusOf(s) === "재원" && dayGroupOf(s) === briefDay);
-  const teachers = uniq(all.map(s=> examTeacherOf(s)).filter(Boolean)).sort((a,b)=> a.localeCompare(b,"ko"));
+  const teachers = uniq(all.map(s=> mgmtTeacherOf(s)).filter(Boolean)).sort((a,b)=> a.localeCompare(b,"ko"));
   const sel = document.getElementById("briefTeacher");
   sel.innerHTML = `<option value="">전체 선생님</option>` +
     teachers.map(t=> `<option value="${escapeHtml(t)}" ${t===briefTeacherPick?"selected":""}>${escapeHtml(t)}</option>`).join("");
 
-  const list = briefTeacherPick ? all.filter(s=> examTeacherOf(s) === briefTeacherPick) : all;
+  const list = briefTeacherPick ? all.filter(s=> mgmtTeacherOf(s) === briefTeacherPick) : all;
   const withExam = list.map(s=>{
     const e = nextExamOf(s);
     const tk = todayKey();
@@ -6360,7 +6360,7 @@ function visibleExams(){
     if(makeupOnly && !examHasMakeup(e)) return false;  /* 직전보충이 걸린 시험만 */
     if(calSchoolQ && !schoolBoxMatchesExam(e, calSchoolQ)) return false;
     if(hideEmpty && studentsForExam(e).length === 0) return false;
-    if(teacherFilter && !studentsForExam(e).some(s=> examTeacherOf(s)===teacherFilter)) return false;
+    if(teacherFilter && !studentsForExam(e).some(s=> mgmtTeacherOf(s)===teacherFilter)) return false;
     return true;
   });
 }
@@ -6368,7 +6368,7 @@ function visibleExams(){
 function calStudentsForExam(e){
   const teacherFilter = (document.getElementById("calFilterTeacher")?.value || "").trim();
   const ss = studentsForExam(e);
-  return teacherFilter ? ss.filter(s=> examTeacherOf(s)===teacherFilter) : ss;
+  return teacherFilter ? ss.filter(s=> mgmtTeacherOf(s)===teacherFilter) : ss;
 }
 function sortExams(list){
   return [...list].sort((a,b)=>
@@ -6872,7 +6872,7 @@ function openDayModal(key, keepFilters){
   const studentsOf = (e)=>{
     const ss = studentsForExam(e);
     return calTeacher
-      ? ss.filter(s=> examTeacherOf(s) === calTeacher)
+      ? ss.filter(s=> mgmtTeacherOf(s) === calTeacher)
       : ss;
   };
   const stuBlock = (e)=>{
@@ -6963,7 +6963,7 @@ function daySummaryExamText(key, list){
     bySchool.push(`${label} · ${ss.length}명${isMath ? " · 수학" : ""}`);
     total += ss.length;
     ss.forEach(s=>{
-      const t = examTeacherOf(s) || "담임 미지정";
+      const t = mgmtTeacherOf(s) || "담임 미지정";
       if(!teacherTotal[t]) teacherTotal[t] = { count:0, bySchool:{} };
       teacherTotal[t].count++;
       teacherTotal[t].bySchool[label] = (teacherTotal[t].bySchool[label] || 0) + 1;
@@ -7003,7 +7003,7 @@ function daySummaryMakeupText(key, list){
       const time = g.time ? timeText(g.time) : "";
       g.names.forEach(nm=>{
         const st = students.find(x=> x.name === nm && x.school === e.school);
-        const t = st ? (examTeacherOf(st) || "담임 미지정") : "담임 미지정";
+        const t = st ? (mgmtTeacherOf(st) || "담임 미지정") : "담임 미지정";
         if(calTeacher && t !== calTeacher) return;
         if(!teacherMap.has(t)) teacherMap.set(t, []);
         teacherMap.get(t).push({ name: nm, label, time });
@@ -7783,7 +7783,7 @@ function examSummaryText(list0, opts){
     const roster = studentsForExam(e);
     if(opts.count){
       const by = {};
-      roster.forEach(st=>{ const t = examTeacherOf(st) || "담임 미지정"; by[t] = (by[t]||0)+1; });
+      roster.forEach(st=>{ const t = mgmtTeacherOf(st) || "담임 미지정"; by[t] = (by[t]||0)+1; });
       const brk = Object.entries(by).sort((a,b)=> b[1]-a[1])
         .map(([t,n])=> `${t}${t==="담임 미지정"?"":"T"} ${n}`).join(" · ");
       lines.push(`· 대상      ${roster.length}명${brk?`  (${brk})`:""}`);
@@ -7807,7 +7807,7 @@ function examSummaryText(list0, opts){
 
     if(opts.roster && roster.length){
       const by = {};
-      roster.forEach(st=>{ const t = examTeacherOf(st) || "담임 미지정"; (by[t] = by[t] || []).push(st.name||""); });
+      roster.forEach(st=>{ const t = mgmtTeacherOf(st) || "담임 미지정"; (by[t] = by[t] || []).push(st.name||""); });
       lines.push(`· 담당학생`);
       Object.entries(by).sort((a,b)=> b[1].length-a[1].length).forEach(([t,names])=>{
         lines.push(`   ${t}${t==="담임 미지정"?"":"T"} (${names.length}명)`);
@@ -8731,7 +8731,14 @@ function textbookHtml(school, grade){
 
 /* ---------- 담임 기준 (내신대비 반 담임 / 정규반 담임) ----------
    학생 한 명에게 담임이 둘일 수 있어서, 어느 쪽을 기준으로 묶을지 고릅니다. */
-let teacherBasis = localStorage.getItem("kladi_tbasis") || "exam";   // exam | regular
+/* 해마다 10월 16일부터 다음 해 2월 말까지는 내신대비반이 끝나고 정규반 담임이 내신을 관리합니다.
+   이 기간에는 '선생님별 보기'·직보 명단·요약 복사·오늘 수업 등에서 정규반 담임 기준으로 묶습니다. */
+function regularManagesNow(){
+  const m = today.getMonth() + 1, d = today.getDate();
+  return (m === 10 && d >= 16) || m >= 11 || m <= 2;
+}
+function mgmtTeacherOf(s){ return regularManagesNow() ? regularTeacherOf(s) : examTeacherOf(s); }
+let teacherBasis = regularManagesNow() ? "regular" : (localStorage.getItem("kladi_tbasis") || "exam");   // exam | regular
 /* 예전 데이터는 담임 칸 하나만 있었어요. 그때 값은 내신대비 담임으로 봅니다
    (정규 담임이 따로 들어와 있으면 끌어오지 않습니다). */
 function examTeacherOf(s){
@@ -8987,7 +8994,7 @@ function openDetailModal(examId, returnTo){
   const calTeacher = (document.getElementById("calFilterTeacher")?.value || "").trim();
   const everyone = studentsForExam(exam);
   const relevant = (calTeacher && !detailShowAll)
-    ? everyone.filter(s=> examTeacherOf(s) === calTeacher)
+    ? everyone.filter(s=> mgmtTeacherOf(s) === calTeacher)
     : everyone;
   const byTeacher = {};
   relevant.forEach(s=>{
