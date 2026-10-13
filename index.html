@@ -8731,12 +8731,11 @@ function textbookHtml(school, grade){
 
 /* ---------- 담임 기준 (내신대비 반 담임 / 정규반 담임) ----------
    학생 한 명에게 담임이 둘일 수 있어서, 어느 쪽을 기준으로 묶을지 고릅니다. */
-/* 해마다 10월 16일부터 다음 해 2월 말까지는 내신대비반이 끝나고 정규반 담임이 내신을 관리합니다.
-   이 기간에는 '선생님별 보기'·직보 명단·요약 복사·오늘 수업 등에서 정규반 담임 기준으로 묶습니다. */
-function regularManagesNow(){
-  const m = today.getMonth() + 1, d = today.getDate();
-  return (m === 10 && d >= 16) || m >= 11 || m <= 2;
-}
+/* 2026년 10월 16일부터는 내신대비반이 끝나고 정규반 담임이 내신을 관리합니다.
+   그날부터 '선생님별 보기'·직보 명단·요약 복사·오늘 수업 등에서 정규반 담임 기준으로 묶습니다.
+   (다시 내신대비반 담임 기준으로 돌아가는 날은 아직 정하지 않았습니다) */
+const REGULAR_MANAGES_FROM = "2026-10-16";
+function regularManagesNow(){ return todayKey() >= REGULAR_MANAGES_FROM; }
 function mgmtTeacherOf(s){ return regularManagesNow() ? regularTeacherOf(s) : examTeacherOf(s); }
 let teacherBasis = regularManagesNow() ? "regular" : (localStorage.getItem("kladi_tbasis") || "exam");   // exam | regular
 /* 예전 데이터는 담임 칸 하나만 있었어요. 그때 값은 내신대비 담임으로 봅니다
