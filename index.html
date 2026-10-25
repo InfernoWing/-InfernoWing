@@ -793,6 +793,14 @@
   .cl-item .mbadge{background:var(--pc); color:var(--on-pc); border-radius:5px; font-size:9.5px;
     font-weight:800; padding:1px 5px; margin-left:2px;}
   .cal-legend .sw.tb-dash{background:transparent; border:1.5px dashed var(--tb0-bd);}
+  .cal-legend .lg-btn{background:none; border:1px solid transparent; border-radius:999px; padding:4px 9px 4px 7px;
+    font:inherit; font-weight:700; color:var(--c6); cursor:pointer; min-height:30px;}
+  .cal-legend .lg-btn:hover{border-color:var(--c12);}
+  .cal-legend .lg-btn.on{border-color:var(--ink); background:var(--paper-card); color:var(--ink); box-shadow:0 0 0 1px var(--ink);}
+  .cal-legend .lg-clear{background:var(--board); color:var(--chalk); border:none; border-radius:999px; padding:5px 12px;
+    font:inherit; font-weight:700; cursor:pointer; min-height:30px;}
+  .cal-legend .lg-hint{font-weight:600; opacity:.85;}
+  @media (max-width:700px){ .cal-legend{gap:2px 4px;} .cal-legend .lg-btn{padding:3px 7px 3px 5px;} .cal-legend .lg-hint{display:none;} }
   .meta-math{font-weight:800; color:var(--rust);}
   .math-lb{color:var(--rust) !important; font-weight:800 !important;}
   input.math-date{border-color:var(--c104);}
@@ -6338,6 +6346,8 @@ function holidayOf(key){ return HOLIDAYS[key] || ""; }
 /* ---------- 캘린더 학교 검색 ----------
    "가락", "가락중", "ㄱㄹ" 처럼 이름 일부나 초성으로 찾을 수 있어요. */
 let calSchoolQ = "";
+/* 교과서별 보기: 범례에서 교과서를 누르면 그 교과서 학교만 (빈 값 = 전체) */
+let calTbFilter = "";
 let expandedDays = new Set();      /* '+N개 더' 로 펼쳐 둔 날짜 */
 /* 브라우저 자동완성이 검색칸에 저장된 아이디·토큰을 넣어 버리는 일이 있어,
    화면이 뜬 뒤 잠깐 동안 '사용자가 치지 않은 값'은 지웁니다. */
@@ -6388,7 +6398,8 @@ function examMakeupDatesOf(e){
 }
 /* 이 시험에 직전보충이 하나라도 걸려 있는지 */
 function examHasMakeup(e){ return examMakeupDatesOf(e).size > 0; }
-function visibleExams(){
+function visibleExams(opts){
+  const ignoreTb = !!(opts && opts.ignoreTb);
   const teacherFilter = document.getElementById("calFilterTeacher").value;
   const hideEmpty = document.getElementById("hideEmptyExams").checked;
   const mathOnly = mathOnlyOn();
@@ -6401,6 +6412,7 @@ function visibleExams(){
     if(mathOnly && !e.mathDate) return false;          /* 수학 날짜가 없으면 뺍니다 */
     if(makeupOnly && !examHasMakeup(e)) return false;  /* 직전보충이 걸린 시험만 */
     if(calSchoolQ && !schoolBoxMatchesExam(e, calSchoolQ)) return false;
+    if(calTbFilter && !ignoreTb && tbGroupOf(e).cls !== calTbFilter) return false;
     if(hideEmpty && studentsForExam(e).length === 0) return false;
     if(teacherFilter && !studentsForExam(e).some(s=> mgmtTeacherOf(s)===teacherFilter)) return false;
     return true;
@@ -6658,8 +6670,8 @@ function renderCalendar(){
   document.querySelectorAll("#calViewToggle button").forEach(b=> b.classList.toggle("active", b.dataset.view===calView));
   document.getElementById("calGridWrap").style.display = calView==="grid" ? "" : "none";
   document.getElementById("calList").style.display = calView==="list" ? "flex" : "none";
-  document.getElementById("calLegend").style.display = calView==="grid" ? "flex" : "none";
-  if(calView==="list"){ renderCalListView(); return; }
+  document.getElementById("calLegend").style.display = "flex";   /* 범례는 교과서 거르기 단추라 목록 보기에도 둡니다 */
+  if(calView==="list"){ renderCalListView(); renderCalLegend(null, false); return; }
 
   const grid = document.getElementById("calGrid");
 
@@ -6737,19 +6749,29 @@ function renderCalendar(){
 function renderCalLegend(ve, sawMath){
   const box = document.getElementById("calLegend");
   const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
-  const list = ve || visibleExams();
+  /* 거르기를 켜도 다른 교과서로 바로 바꿀 수 있게, 범례는 거르기 전 목록으로 만듭니다 */
+  const list = calTbFilter ? visibleExams({ignoreTb:true}) : (ve || visibleExams());
   const seen = new Set();
   for(let d=1; d<=daysInMonth; d++){
     visibleExamsForDate(dateKey(viewYear, viewMonth, d), list).forEach(e=> seen.add(tbGroupOf(e).cls));
   }
+  if(calTbFilter) seen.add(calTbFilter);
   if(seen.size===0){ box.innerHTML = ""; return; }
   const order = [...TB_GROUPS, { cls:"tx", label:"그 밖의 교과서" }, { cls:"t0", label:"교과서 미등록" }];
-  box.innerHTML = `<span>교과서별 색</span>` + order.filter(g=> seen.has(g.cls)).map(g=>
-    g.cls==="t0"
-      ? `<span class="lg"><span class="sw tb-dash"></span>${escapeHtml(g.label)}</span>`
-      : `<span class="lg"><span class="sw" style="background:var(--tb${g.cls.slice(1)}-c); border-color:var(--tb${g.cls.slice(1)}-c);"></span>${escapeHtml(g.label)}</span>`
-  ).join("") + `<span style="margin-left:4px;">· 흐린 알약은 이미 끝난 시험</span>`
+  box.innerHTML = `<span>교과서별 색 <span class="lg-hint">(누르면 그 교과서 학교만)</span></span>` + order.filter(g=> seen.has(g.cls)).map(g=>{
+    const sw = g.cls==="t0" ? `<span class="sw tb-dash"></span>`
+      : `<span class="sw" style="background:var(--tb${g.cls.slice(1)}-c); border-color:var(--tb${g.cls.slice(1)}-c);"></span>`;
+    const on = calTbFilter === g.cls;
+    return `<button type="button" class="lg lg-btn ${on?"on":""}" data-tb="${g.cls}" aria-pressed="${on}" title="${on?"다시 누르면 전체 보기":escapeHtml(g.label)+" 학교만 보기"}">${sw}${escapeHtml(g.label)}</button>`;
+  }).join("")
+    + (calTbFilter ? `<button type="button" class="lg-clear" data-tb="">전체 보기</button>` : "")
+    + `<span style="margin-left:4px;">· 흐린 알약은 이미 끝난 시험</span>`
     + (sawMath ? `<span style="margin-left:4px;">· 진하게 채운 알약은 수학 시험일</span>` : "");
+  box.querySelectorAll("[data-tb]").forEach(b=> b.addEventListener("click", ()=>{
+    calTbFilter = (b.dataset.tb && calTbFilter !== b.dataset.tb) ? b.dataset.tb : "";
+    expandedDays.clear();
+    renderCalendar();
+  }));
 }
 function goToMonth(y,m){ viewYear=y; viewMonth=m; renderCalendar(); }
 function shiftMonth(delta){
