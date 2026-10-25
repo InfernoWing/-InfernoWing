@@ -767,11 +767,12 @@
   .exam-pill.t7, .cl-item.t7{--pb:var(--tb7-bg); --pd:var(--tb7-bd); --pt:var(--tb7-tx); --pc:var(--tb7-c);}
   .exam-pill.tx, .cl-item.tx{--pb:var(--tbx-bg); --pd:var(--tbx-bd); --pt:var(--tbx-tx); --pc:var(--tbx-c);}
   .exam-pill.t0, .cl-item.t0{--pb:var(--tb0-bg); --pd:var(--tb0-bd); --pt:var(--tb0-tx); --pc:var(--tb0-c); border-style:dashed;}
-  /* 수학 시험이 아닌 날은 색을 연하게 — 진하게 채운 수학 시험일 알약이 더 눈에 띄도록 (글자색은 그대로라 잘 읽힘) */
-  .exam-pill[class*=" t"]:not(.math), .cl-item[class*=" t"]:not(.math){
+  /* 수학 시험이 아닌 날은 색을 연하게 — 진하게 채운 수학 시험일 알약이 더 눈에 띄도록 (글자색은 그대로라 잘 읽힘).
+     이미 끝난 시험(.past)은 예전처럼 원래 색을 흐리게만 합니다 */
+  .exam-pill[class*=" t"]:not(.math):not(.past), .cl-item[class*=" t"]:not(.math){
     background:color-mix(in srgb, var(--pb) 45%, var(--paper-card));
     border-color:color-mix(in srgb, var(--pd) 55%, var(--paper-card));}
-  .exam-pill[class*=" t"]:not(.math) .count{background:color-mix(in srgb, var(--pc) 16%, var(--paper-card)); color:var(--pt);}
+  .exam-pill[class*=" t"]:not(.math):not(.past) .count{background:color-mix(in srgb, var(--pc) 16%, var(--paper-card)); color:var(--pt);}
   .cl-item[class*=" t"]:not(.math) .cnt{background:color-mix(in srgb, var(--pc) 16%, var(--paper-card)); color:var(--pt);}
   .exam-pill:hover{filter:brightness(0.97); border-color:var(--pc);}
   .exam-pill .label{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
