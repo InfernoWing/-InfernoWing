@@ -444,8 +444,7 @@
   html[data-theme="dark"] .dday-sm.now{color:#14301f;}
   html[data-theme="dark"] .dday-sm.soon{color:#3a1d14;}
   html[data-theme="dark"] .retro-head .rsy{color:#2a2514;}
-  html[data-theme="dark"] .es-item{color:#1e1d18;}
-  html[data-theme="dark"] .es-item:hover{color:var(--ink);}
+  /* 학교 목록 바탕이 이제 화면 바탕색이라 어두운 화면에서도 기본 글자색(--ink) 그대로 씁니다 */
 
   html{color-scheme:light;}
   /* 어두운 화면에서 학생 카드의 작은 글씨가 묻히지 않게 밝기를 올립니다 */
@@ -1172,23 +1171,23 @@
 
   /* B-1 시험정보 입력 — 학교 목록 옆에 두기 */
   .exam-layout{display:grid; grid-template-columns:210px 1fr; gap:16px; align-items:start;}
-  .exam-side{position:sticky; top:12px; background:var(--c2); border:1px solid var(--c14);
+  .exam-side{position:sticky; top:12px; background:var(--paper-card); border:1px solid var(--c12);
     border-radius:12px; overflow:hidden; max-height:72vh; display:flex; flex-direction:column;}
-  .es-head{display:flex; align-items:center; gap:6px; padding:9px 11px; border-bottom:1px solid var(--c14);
-    font-size:11.5px; font-weight:800; color:var(--c8);}
+  .es-head{display:flex; align-items:center; gap:6px; padding:9px 11px; border-bottom:1px solid var(--c12);
+    font-size:11.5px; font-weight:800; color:var(--c40); background:var(--c15);}
   .es-filter{margin-left:auto; font-size:10.5px; font-weight:800; padding:3px 8px; border-radius:999px;
-    border:1px solid var(--c14); background:transparent; color:var(--c8); cursor:pointer;}
+    border:1px solid var(--c12); background:var(--paper-card); color:var(--ink); cursor:pointer;}
   .es-filter.on{background:var(--mustard); border-color:var(--mustard); color:var(--c27);}
   .es-list{overflow-y:auto; padding:5px;}
   .es-item{display:flex; align-items:center; gap:7px; width:100%; text-align:left; cursor:pointer;
     padding:7px 9px; border:none; background:transparent; border-radius:8px; font-size:12.5px; font-weight:700;
     color:var(--ink);}
-  .es-item:hover{background:var(--c14);}
+  .es-item:hover{background:var(--c15);}
   .es-item.on{background:var(--board); color:var(--chalk);}
-  .es-item .dot{width:7px; height:7px; border-radius:50%; flex:0 0 auto; background:var(--c14);}
+  .es-item .dot{width:7px; height:7px; border-radius:50%; flex:0 0 auto; background:var(--c12);}
   .es-item .dot.ok{background:var(--green);}
   .es-item .dot.todo{background:var(--rust);}
-  .es-item .dot.none{background:var(--c14);}
+  .es-item .dot.none{background:var(--c12);}
   .es-item .n{margin-left:auto; font-size:10.5px; font-weight:700; opacity:.7;}
   @media (max-width:860px){
     .exam-layout{grid-template-columns:1fr;}
