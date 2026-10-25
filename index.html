@@ -3482,7 +3482,14 @@ function unitMarker(grid, fills, hr, cols){
     }
   let base = "", best = -1;
   for(const k in count) if(count[k] > best){ best = count[k]; base = k; }
-  const marked = new Set(Object.keys(count).filter(k=> k !== base && count[k] > 0));
+  /* 줄 전체(단원 칸 모두)를 같은 색으로 칠한 것은 "단원 표시"가 아니라 줄 칠하기입니다
+     (예: 시험이 없거나 아직 공지 전인 학교를 회색으로). 어떤 줄에서 일부 칸에만 쓰인 색만 단원 표시로 봅니다. */
+  const partial = new Set();
+  for(let r = hr + 2; r < grid.length; r++){
+    const fs = cols.map(u=> ((fills[r] || [])[u.c] || "").toUpperCase());
+    if(new Set(fs).size > 1) fs.forEach(f=> partial.add(f));
+  }
+  const marked = new Set(Object.keys(count).filter(k=> k !== base && count[k] > 0 && partial.has(k)));
   if(marked.size === 0) return ()=> false;
   return (r, c)=> marked.has((((fills[r] || [])[c]) || "").toUpperCase());
 }
