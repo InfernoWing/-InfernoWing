@@ -3312,8 +3312,17 @@ async function readXlsxRaw(arrayBuffer){
       const type = pf ? pf.getAttribute("patternType") : null;
       fills.push((type === "solid" && fg) ? (fg.getAttribute("rgb") || ("theme" + fg.getAttribute("theme"))) : "");
     }
+    /* 한셀로 저장한 파일은 칸 서식 대부분이 <mc:AlternateContent>(Choice/Fallback)로 한 번 감싸져 있습니다.
+       감싼 것을 건너뛰면 서식 순번이 밀려 칸 색을 못 읽고(색칠한 단원이 전부 빠짐), 그래서 감싼 것 안의 xf도 순서대로 셉니다. */
     const xfs = xall(sd, "cellXfs")[0];
-    if(xfs) for(const xf of xkids(xfs, "xf")){
+    if(xfs) for(const ch of xfs.children){
+      let xf = null;
+      if(ch.localName === "xf") xf = ch;
+      else if(ch.localName === "AlternateContent"){
+        const fb = xfind(ch, "Fallback"), cho = xfind(ch, "Choice");
+        xf = (fb && xfind(fb, "xf")) || (cho && xfind(cho, "xf"));
+      }
+      if(!xf) continue;
       const i = +(xf.getAttribute("fillId") || 0);
       xfFill.push(fills[i] || "");
     }
