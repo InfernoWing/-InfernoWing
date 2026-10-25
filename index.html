@@ -190,9 +190,30 @@
     --c169:#ffd9cd;
     --c170:#ffffff1a;
     --math-c:#2f6fed;
+    /* 교과서별 색: 1 천재(김화경) 2 천재(김동재) 3 비상 4 미래엔 5 동아 6 엔이능률 7 교학사, x 그 밖, 0 미등록 */
+    --on-pc:#ffffff;
+    --tb1-c:#24683f; --tb1-bg:#ddefe1; --tb1-bd:#b5dbc0; --tb1-tx:#24683f;
+    --tb2-c:#5f6a12; --tb2-bg:#eef1cf; --tb2-bd:#d6dc9f; --tb2-tx:#5f6a12;
+    --tb3-c:#2d5b8e; --tb3-bg:#dfe9f5; --tb3-bd:#b9cfe8; --tb3-tx:#2d5b8e;
+    --tb4-c:#6b46a0; --tb4-bg:#ece4f6; --tb4-bd:#d3c4ea; --tb4-tx:#6b46a0;
+    --tb5-c:#a63a52; --tb5-bg:#f9e2e7; --tb5-bd:#efbfca; --tb5-tx:#a63a52;
+    --tb6-c:#9a4f12; --tb6-bg:#fae7d4; --tb6-bd:#efc9a4; --tb6-tx:#9a4f12;
+    --tb7-c:#4f5b66; --tb7-bg:#e6eaee; --tb7-bd:#c9d1d8; --tb7-tx:#4f5b66;
+    --tbx-c:#5f5a4c; --tbx-bg:#efece4; --tbx-bd:#d6d0c0; --tbx-tx:#5f5a4c;
+    --tb0-c:#6b675c; --tb0-bg:#ffffff; --tb0-bd:#8a8579; --tb0-tx:#4a463d;
   }
   html[data-theme="dark"]{
     --math-c:#5b8dff;
+    --on-pc:#121512;
+    --tb1-c:#7fc79a; --tb1-bg:#1e3a29; --tb1-bd:#2f5a3f; --tb1-tx:#a7dcb9;
+    --tb2-c:#bcc560; --tb2-bg:#333816; --tb2-bd:#4d5422; --tb2-tx:#d6dd8f;
+    --tb3-c:#82aee6; --tb3-bg:#1d3049; --tb3-bd:#2d4a6e; --tb3-tx:#a9c8ee;
+    --tb4-c:#b393e6; --tb4-bg:#2f2445; --tb4-bd:#483768; --tb4-tx:#cfb9f0;
+    --tb5-c:#e88aa0; --tb5-bg:#42202a; --tb5-bd:#66323f; --tb5-tx:#f1b3c1;
+    --tb6-c:#e3a465; --tb6-bg:#3f2a15; --tb6-bd:#64431f; --tb6-tx:#f0c592;
+    --tb7-c:#a7b3be; --tb7-bg:#2a3036; --tb7-bd:#414a53; --tb7-tx:#c9d2da;
+    --tbx-c:#bdb6a4; --tbx-bg:#33302a; --tbx-bd:#4a463d; --tbx-tx:#d6d0c0;
+    --tb0-c:#a9a497; --tb0-bg:transparent; --tb0-bd:#8a8579; --tb0-tx:#d6d0c0;
     --c1:#212121;
     --c2:#b3aea6;
     --c3:#bcb7a9;
@@ -728,6 +749,17 @@
   .exam-pill.c5{--pb:var(--c61); --pd:var(--c64); --pt:var(--c43); --pc:var(--c44);}
   .exam-pill.c6{--pb:var(--c57); --pd:var(--c66); --pt:var(--c52); --pc:var(--c70);}
   .exam-pill.c7{--pb:var(--c46); --pd:var(--c53); --pt:var(--c59); --pc:var(--c2);}
+  /* 교과서별 알약 색 (캘린더) — 같은 교과서 학교끼리 같은 색. 학년은 알약 글자로 구분합니다.
+     --pc: 진한 색(인원 배지·수학 시험일 알약), --on-pc: 그 위에 올리는 글자색 */
+  .exam-pill.t1, .cl-item.t1{--pb:var(--tb1-bg); --pd:var(--tb1-bd); --pt:var(--tb1-tx); --pc:var(--tb1-c);}
+  .exam-pill.t2, .cl-item.t2{--pb:var(--tb2-bg); --pd:var(--tb2-bd); --pt:var(--tb2-tx); --pc:var(--tb2-c);}
+  .exam-pill.t3, .cl-item.t3{--pb:var(--tb3-bg); --pd:var(--tb3-bd); --pt:var(--tb3-tx); --pc:var(--tb3-c);}
+  .exam-pill.t4, .cl-item.t4{--pb:var(--tb4-bg); --pd:var(--tb4-bd); --pt:var(--tb4-tx); --pc:var(--tb4-c);}
+  .exam-pill.t5, .cl-item.t5{--pb:var(--tb5-bg); --pd:var(--tb5-bd); --pt:var(--tb5-tx); --pc:var(--tb5-c);}
+  .exam-pill.t6, .cl-item.t6{--pb:var(--tb6-bg); --pd:var(--tb6-bd); --pt:var(--tb6-tx); --pc:var(--tb6-c);}
+  .exam-pill.t7, .cl-item.t7{--pb:var(--tb7-bg); --pd:var(--tb7-bd); --pt:var(--tb7-tx); --pc:var(--tb7-c);}
+  .exam-pill.tx, .cl-item.tx{--pb:var(--tbx-bg); --pd:var(--tbx-bd); --pt:var(--tbx-tx); --pc:var(--tbx-c);}
+  .exam-pill.t0, .cl-item.t0{--pb:var(--tb0-bg); --pd:var(--tb0-bd); --pt:var(--tb0-tx); --pc:var(--tb0-c); border-style:dashed;}
   .exam-pill:hover{filter:brightness(0.97); border-color:var(--pc);}
   .exam-pill .label{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
   .exam-pill .count{
@@ -742,15 +774,17 @@
     font-size:10.5px; font-weight:700; cursor:pointer; padding:1px 2px; text-decoration:underline;
     text-underline-offset:2px; flex:0 0 auto;}
   .cal-cell .day-summary-btn:hover{color:var(--math-c);}
-  /* 수학 시험일 — 진하게 + 배지 (오늘 표시 주황색과 헷갈리지 않도록 파란색 고정) */
-  .exam-pill.math{border-color:var(--math-c); border-width:1.5px; font-weight:800;
-    box-shadow:inset 3px 0 0 var(--math-c);}
+  /* 수학 시험일 — 그 교과서 색으로 꽉 채운 진한 알약 + "수학" 배지 (오늘 표시 주황색과도 구분됨) */
+  .exam-pill.math{background:var(--pc); border-color:var(--pc); color:var(--on-pc); font-weight:800;}
+  .exam-pill.math .count{background:var(--on-pc); color:var(--pc);}
   .exam-pill.math.past{opacity:.6;}
-  .exam-pill .mbadge{background:var(--math-c); color:var(--c1); border-radius:5px; font-size:9px;
+  .exam-pill .mbadge{background:var(--pc); color:var(--on-pc); border-radius:5px; font-size:9px;
     font-weight:800; padding:1px 4px; flex-shrink:0; letter-spacing:.02em;}
-  .cl-item.math{border-color:var(--math-c); box-shadow:inset 3px 0 0 var(--math-c);}
-  .cl-item .mbadge{background:var(--math-c); color:var(--c1); border-radius:5px; font-size:9.5px;
+  .exam-pill.math .mbadge{background:var(--on-pc); color:var(--pc);}
+  .cl-item.math{border-color:var(--pc); box-shadow:inset 4px 0 0 var(--pc);}
+  .cl-item .mbadge{background:var(--pc); color:var(--on-pc); border-radius:5px; font-size:9.5px;
     font-weight:800; padding:1px 5px; margin-left:2px;}
+  .cal-legend .sw.tb-dash{background:transparent; border:1.5px dashed var(--tb0-bd);}
   .meta-math{font-weight:800; color:var(--rust);}
   .math-lb{color:var(--rust) !important; font-weight:800 !important;}
   input.math-date{border-color:var(--c104);}
@@ -6508,6 +6542,23 @@ const COLOR_HEX = {c1:"#f7e6b8", c2:"#dbe7f1", c3:"#e7dff3", c4:"#dcefe3", c5:"#
 const COLOR_BORDER = {c1:"#eed69a", c2:"#c3d6e6", c3:"#d3c7e8", c4:"#c2e0d0", c5:"#eec8bc", c6:"#bcdcdc", c7:"#d7d2c3"};
 function gradeColor(grade){ return GRADE_COLOR[grade] || "c7"; }
 
+/* 캘린더 알약 색 = 교과서. 학교·학년마다 저장된 교과서 이름에서 출판사(천재는 저자까지)를 찾아 색을 정합니다.
+   이름이 조금 달라도("천재교육 김화경" 등) 찾히도록 낱말로 맞춥니다. */
+const TB_GROUPS = [
+  { cls:"t1", label:"천재(김화경)", test:t=> /김화경/.test(t) || (/천재/.test(t) && !/김동재/.test(t)) },
+  { cls:"t2", label:"천재(김동재)", test:t=> /김동재/.test(t) },
+  { cls:"t3", label:"비상",       test:t=> /비상/.test(t) },
+  { cls:"t4", label:"미래엔",     test:t=> /미래엔/.test(t) },
+  { cls:"t5", label:"동아",       test:t=> /동아/.test(t) },
+  { cls:"t6", label:"엔이능률",   test:t=> /능률|NE/i.test(t) },
+  { cls:"t7", label:"교학사",     test:t=> /교학사/.test(t) },
+];
+function tbGroupOf(e){
+  const t = textbookOf(e.school, e.grade);
+  if(!t) return { cls:"t0", label:"교과서 미등록" };
+  return TB_GROUPS.find(g=> g.test(t)) || { cls:"tx", label:"그 밖의 교과서" };
+}
+
 /* 알약 안에서는 학교명을 줄여서 표시 (가락중학교 → 가락중) */
 function shortSchool(name){
   return (name||"").replace(/초등학교$/,"초").replace(/중학교$/,"중").replace(/고등학교$/,"고");
@@ -6561,7 +6612,7 @@ function renderCalListView(){
           const scope = e.examScope ? escapeHtml(e.examScope.split("\n")[0].slice(0,34))
                       : (unitsOf(e).length ? escapeHtml(unitsOf(e).join(" · ").slice(0,40)) : "시험 범위 미입력");
           const isMath = !!e.mathDate && e.mathDate === key;
-          return `<button class="cl-item ${gradeColor(e.grade)} ${isMath?"math":""}" data-exam="${e.id}">
+          return `<button class="cl-item ${tbGroupOf(e).cls} ${isMath?"math":""}" data-exam="${e.id}">
             <span>${escapeHtml(shortSchool(e.school))} ${escapeHtml(e.grade||"")}${isMath?` <span class="mbadge">수학</span>`:""}
               <span class="sub">${scope}</span></span>
             <span class="cnt">${count}명</span>
@@ -6635,7 +6686,7 @@ function renderCalendar(){
       const isMath = !!e.mathDate && e.mathDate === key;
       if(isMath) sawMathPill = true;
       const tip = `${escapeHtml(full)} · ${count}명` + (e.mathDate ? ` · 수학 ${escapeHtml(fmtWithDow(e.mathDate))}` : "");
-      return `<div class="exam-pill ${gradeColor(e.grade)} ${state} ${isMath?"math":""}" data-exam="${e.id}" title="${tip}"><span class="label">${escapeHtml(label)}</span>${isMath?`<span class="mbadge">수학</span>`:""}<span class="count">${count}</span></div>`;
+      return `<div class="exam-pill ${tbGroupOf(e).cls} ${state} ${isMath?"math":""}" data-exam="${e.id}" title="${tip}"><span class="label">${escapeHtml(label)}</span>${isMath?`<span class="mbadge">수학</span>`:""}<span class="count">${count}</span></div>`;
     }).join("");
     const moreHtml = restCount>0
       ? `<button class="more-pill" data-more="${key}">+${restCount}개 더</button>`
@@ -6673,24 +6724,24 @@ function renderCalendar(){
   renderCalLegend(ve, sawMathPill);
 }
 
-/* 이 달에 나온 학년만 색상 범례로 표시. ve(선택): renderCalendar()가 이미 구해둔 목록 재사용
-   sawMath: 이 달에 파란색 "수학" 표시가 하나라도 있으면 범례에 설명을 한 줄 붙입니다 */
+/* 이 달에 나온 교과서만 색상 범례로 표시. ve(선택): renderCalendar()가 이미 구해둔 목록 재사용
+   sawMath: 이 달에 "수학" 알약(진하게 채운 알약)이 하나라도 있으면 범례에 설명을 한 줄 붙입니다 */
 function renderCalLegend(ve, sawMath){
   const box = document.getElementById("calLegend");
   const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
   const list = ve || visibleExams();
-  const seen = [];
+  const seen = new Set();
   for(let d=1; d<=daysInMonth; d++){
-    visibleExamsForDate(dateKey(viewYear, viewMonth, d), list).forEach(e=>{
-      if(e.grade && !seen.includes(e.grade)) seen.push(e.grade);
-    });
+    visibleExamsForDate(dateKey(viewYear, viewMonth, d), list).forEach(e=> seen.add(tbGroupOf(e).cls));
   }
-  if(seen.length===0){ box.innerHTML = ""; return; }
-  box.innerHTML = `<span>학년 색상</span>` + sortGrades(seen).map(g=>{
-    const c = gradeColor(g);
-    return `<span class="lg"><span class="sw" style="background:${COLOR_HEX[c]}; border-color:${COLOR_BORDER[c]};"></span>${escapeHtml(g)}</span>`;
-  }).join("") + `<span style="margin-left:4px;">· 흐린 알약은 이미 끝난 시험</span>`
-    + (sawMath ? `<span class="lg"><span class="sw" style="background:var(--math-c); border-color:var(--math-c);"></span>파란 테두리는 수학 시험일</span>` : "");
+  if(seen.size===0){ box.innerHTML = ""; return; }
+  const order = [...TB_GROUPS, { cls:"tx", label:"그 밖의 교과서" }, { cls:"t0", label:"교과서 미등록" }];
+  box.innerHTML = `<span>교과서별 색</span>` + order.filter(g=> seen.has(g.cls)).map(g=>
+    g.cls==="t0"
+      ? `<span class="lg"><span class="sw tb-dash"></span>${escapeHtml(g.label)}</span>`
+      : `<span class="lg"><span class="sw" style="background:var(--tb${g.cls.slice(1)}-c); border-color:var(--tb${g.cls.slice(1)}-c);"></span>${escapeHtml(g.label)}</span>`
+  ).join("") + `<span style="margin-left:4px;">· 흐린 알약은 이미 끝난 시험</span>`
+    + (sawMath ? `<span style="margin-left:4px;">· 진하게 채운 알약은 수학 시험일</span>` : "");
 }
 function goToMonth(y,m){ viewYear=y; viewMonth=m; renderCalendar(); }
 function shiftMonth(delta){
