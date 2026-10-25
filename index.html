@@ -3321,15 +3321,52 @@ const UNIT_LIST = [
   {ab:"입체",  name:"입체도형"},
   {ab:"통계",  name:"통계"},
 ];
+/* 학년·학기별 단원 버튼 — 시험 카드의 날짜(없으면 오늘)로 1학기/2학기를 정합니다.
+   중1 2학기는 학교별 일정표에서 쓰던 그대로(위 UNIT_LIST), 나머지는 2022 개정 교과서 단원 기준.
+   학교마다 앞 학기 끝 단원을 다음 학기 중간에 보는 일이 있어, 학기 첫머리에 앞 단원을 함께 둡니다. */
+const UNIT_SETS = {
+  "중1-1": [
+    {ab:"소인수", name:"소인수분해"}, {ab:"정/유", name:"정수와 유리수"}, {ab:"문/식", name:"문자의 사용과 식"},
+    {ab:"일방", name:"일차방정식"}, {ab:"좌/그", name:"좌표평면과 그래프"}, {ab:"정/반", name:"정비례와 반비례"},
+  ],
+  "중1-2": UNIT_LIST,
+  "중2-1": [
+    {ab:"순환", name:"유리수와 순환소수"}, {ab:"식계", name:"식의 계산"}, {ab:"부등", name:"일차부등식"},
+    {ab:"연립", name:"연립일차방정식"}, {ab:"일함", name:"일차함수와 그래프"}, {ab:"함/방", name:"일차함수와 일차방정식"},
+  ],
+  "중2-2": [
+    {ab:"일함", name:"일차함수와 그래프"}, {ab:"함/방", name:"일차함수와 일차방정식"}, {ab:"삼성", name:"삼각형의 성질"},
+    {ab:"사성", name:"사각형의 성질"}, {ab:"닮음", name:"도형의 닮음"}, {ab:"피타", name:"피타고라스 정리"}, {ab:"확률", name:"경우의 수와 확률"},
+  ],
+  "중3-1": [
+    {ab:"제곱근", name:"제곱근과 실수"}, {ab:"근호", name:"근호를 포함한 식의 계산"}, {ab:"곱셈", name:"다항식의 곱셈"},
+    {ab:"인수", name:"인수분해"}, {ab:"이방", name:"이차방정식"}, {ab:"이함", name:"이차함수와 그래프"},
+  ],
+  "중3-2": [
+    {ab:"이함", name:"이차함수와 그래프"}, {ab:"삼각비", name:"삼각비"}, {ab:"원성", name:"원의 성질"},
+    {ab:"산포", name:"대푯값과 산포도"}, {ab:"상관", name:"상관관계"},
+  ],
+};
+function unitListFor(grade, startDate){
+  const k = termKeyOfDate(startDate || "");
+  const sem = k ? k.split("-")[1] : String(semesterOf(today.getMonth()));
+  return UNIT_SETS[`${grade}-${sem}`] || [];
+}
 const UNIT_BY_AB = {};
-UNIT_LIST.forEach(u=>{ UNIT_BY_AB[normLabel(u.ab)] = u.name; UNIT_BY_AB[normLabel(u.name)] = u.name; });
+Object.values(UNIT_SETS).forEach(list=> list.forEach(u=>{
+  if(!UNIT_BY_AB[normLabel(u.ab)]) UNIT_BY_AB[normLabel(u.ab)] = u.name;
+  UNIT_BY_AB[normLabel(u.name)] = u.name;
+}));
 function unitsOf(e){ return Array.isArray(e && e.units) ? e.units : []; }
 /* 단원 칩만 골라둬도 "범위 입력됨"으로 봅니다 */
 function hasScope(e){ return !!((e && e.examScope) || unitsOf(e).length); }
-function unitChipsHtml(existing){
-  const on = unitsOf(existing);
-  return `<div class="unit-chips">${UNIT_LIST.map(u=>
-    `<button type="button" class="unit-chip ${on.includes(u.name)?"on":""}" data-u="${escapeHtml(u.name)}" title="${escapeHtml(u.ab)}">${escapeHtml(u.name)}</button>`).join("")}</div>`;
+function unitChipsHtml(existing, grade, startDate, keepOn){
+  const on = keepOn || unitsOf(existing);
+  const list = unitListFor(grade || existing?.grade, startDate !== undefined ? startDate : existing?.startDate);
+  /* 이미 골라둔 단원이 이 학기 목록에 없어도(학기가 바뀐 카드 등) 버튼을 남겨 둡니다 — 저장할 때 빠지지 않게 */
+  const extra = on.filter(n=> !list.some(u=> u.name === n)).map(n=> ({ab:"", name:n}));
+  return `<div class="unit-chips">${[...list, ...extra].map(u=>
+    `<button type="button" class="unit-chip ${on.includes(u.name)?"on":""}" data-u="${escapeHtml(u.name)}" title="${escapeHtml(u.ab||u.name)}">${escapeHtml(u.name)}</button>`).join("")}</div>`;
 }
 function unitTagsHtml(e){
   const on = unitsOf(e);
@@ -5773,7 +5810,7 @@ function examCardHtml(school, grade, examName){
           <span>시험 범위</span>
           <button type="button" class="copy-prev-btn">지난 시험에서 가져오기</button>
         </label>
-        ${unitChipsHtml(existing)}
+        ${unitChipsHtml(existing, grade)}
         <textarea data-field="examScope" placeholder="예: 수학(상) 2단원 전체 ~ 3-1, 교과서 유인물 포함">${escapeHtml(existing?.examScope||"")}</textarea>
       </div>
       <div>
@@ -6249,6 +6286,15 @@ document.getElementById("examCardsGrid").addEventListener("change", (e)=>{
   }
   if(e.target.matches('[data-field="notConducted"]')){
     e.target.closest(".exam-card").querySelector(".reason-box").classList.toggle("show", e.target.checked);
+  }
+  /* 시작일을 바꿔 학기가 달라지면 단원 버튼도 그 학기 것으로 바꿉니다 (골라둔 것은 그대로) */
+  if(e.target.matches('[data-field="startDate"]')){
+    const card = e.target.closest(".exam-card");
+    const box = card && card.querySelector(".unit-chips");
+    if(box){
+      const on = [...box.querySelectorAll(".unit-chip.on")].map(b=> b.dataset.u);
+      box.outerHTML = unitChipsHtml(null, card.dataset.grade, e.target.value, on);
+    }
   }
   markDirty(e.target);
 });
