@@ -7364,19 +7364,24 @@ document.getElementById("daySummaryCopyBtn").addEventListener("click", async ()=
   try{ await navigator.clipboard.writeText(ta.value); showToast("복사했어요.", {type:"ok"}); }
   catch(e){ ta.select(); document.execCommand("copy"); showToast("복사했어요.", {type:"ok"}); }
 });
+/* Esc — 맨 위에 떠 있는 창 하나만 닫습니다.
+   예전엔 확인창이 떠 있을 때 Esc를 누르면 뒤의 창(데이터 정리·시험 상세 등)까지 한꺼번에 닫혔습니다. */
 document.addEventListener("keydown", (e)=>{
-  if(e.key==="Escape"){
-    closeMonthPicker();
-    closeCopyModal();
-    closeStudentModal();
-    closeDayModal();
-    document.getElementById("detailModal").classList.remove("active");
-    currentDetailExamId = null;
-    /* 나머지 팝업창도 Esc로 닫히게 (비밀번호창, 안내창, 가져오기창 등) */
-    document.querySelectorAll(".overlay.active").forEach(o=>{
-      if(o.id !== "askModal") o.classList.remove("active");
-    });
-  }
+  if(e.key !== "Escape") return;
+  const ask = document.getElementById("askModal");
+  if(ask && ask.classList.contains("active")) return;          /* 확인창은 자기 Esc 처리로 그것만 닫힘 */
+  const mp = document.getElementById("monthPicker");
+  if(mp && mp.classList.contains("open")){ closeMonthPicker(); return; }
+  const open = [...document.querySelectorAll(".overlay.active")];
+  if(!open.length){ closeMonthPicker(); return; }
+  const z = el=> parseInt(getComputedStyle(el).zIndex, 10) || 0;
+  let top = open[0];
+  open.forEach(o=>{ if(z(o) >= z(top)) top = o; });             /* 같은 층이면 나중 것(위에 그려진 것) */
+  if(top.id === "detailModal"){ top.classList.remove("active"); currentDetailExamId = null; }
+  else if(top.id === "studentModal") closeStudentModal();
+  else if(top.id === "dayModal") closeDayModal();
+  else if(top.id === "copyModal") closeCopyModal();
+  else top.classList.remove("active");
 });
 
 /* ---------- 엑셀 내보내기 ---------- */
