@@ -3187,7 +3187,8 @@ let showNoTeacherOnly = false;       // 담임 미지정(정규·내신 담임 �
    한쪽만 있으면 담임이 있는 것으로 봅니다 */
 function hasNoTeacher(s){ return !examTeacherOf(s) && !regularTeacherOf(s); }
 /* 내신대비 반을 운영 중인지 — 재원생 중 한 명이라도 내신반이 있으면 운영 중.
-   운영하지 않을 때는 "내신 담임 미지정"·"내신반 미배정" 경고를 띄우지 않습니다 */
+   운영하지 않을 때는 학생 관리의 "내신반 미배정" 거르기 단추를 숨깁니다.
+   (내신 담임·내신반이 비어 있다는 표시는 기간과 상관없이 띄우지 않습니다 — 내신반 담임은 원래 없을 때도 있음) */
 function examClassesInUse(){ return students.some(s=> statusOf(s) !== "퇴원" && (s.examClass || "").trim()); }
 let stuStatusOn = new Set(["재원","휴원"]);   // 기본은 퇴원생 숨김
 let stuView = (window.innerWidth <= 820) ? "card" : "table";   // 좁은 화면은 카드로 시작
@@ -4253,12 +4254,12 @@ function renderStudents(){
         <td data-c="grade">${s.grade? `<span class="tag grade clickable" data-jump="grade" data-v="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:"—"}</td>
         <td data-c="examTeacher">${examTeacherOf(s)
               ? `<span class="tag teacher clickable" data-jump="examTeacher" data-v="${escapeHtml(examTeacherOf(s))}">${escapeHtml(examTeacherOf(s))}T</span>`
-              : (exInUse ? `<span class="tag none clickable" data-jump="examTeacher" data-v="">미지정</span>` : `<span class="muted">—</span>`)}</td>
+              : `<span class="muted">—</span>`}</td>
         <td data-c="regularTeacher">${regularTeacherOf(s)
               ? `<span class="tag rteacher clickable" data-jump="regularTeacher" data-v="${escapeHtml(regularTeacherOf(s))}">${escapeHtml(regularTeacherOf(s))}T</span>`
               : `<span class="tag none clickable" data-jump="regularTeacher" data-v="">미지정</span>`}</td>
         <td data-c="regularClass"><span class="clickable" data-jump="regularClass" data-v="${escapeHtml(s.regularClass||"")}">${clsTag(s.regularClass)}</span></td>
-        <td data-c="examClass">${(s.examClass || exInUse) ? `<span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span>` : `<span class="muted">—</span>`}</td>
+        <td data-c="examClass">${s.examClass ? `<span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span>` : `<span class="muted">—</span>`}</td>
         <td data-c="status"><span class="tag st-${statusOf(s)}">${statusOf(s)}</span></td>
         <td class="act edit-only" data-c="act">
           <button class="icon-btn edit-btn" data-id="${s.id}">수정</button>
@@ -4292,12 +4293,12 @@ function renderStudents(){
           ${s.grade? `<span class="tag grade clickable" data-jump="grade" data-v="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:""}
           ${examTeacherOf(s)
             ? `<span class="tag teacher clickable" data-jump="examTeacher" data-v="${escapeHtml(examTeacherOf(s))}" title="내신 담임">내신 ${escapeHtml(examTeacherOf(s))}T</span>`
-            : (exInUse ? `<span class="tag none clickable" data-jump="examTeacher" data-v="">내신 담임 미지정</span>` : "")}
+            : ""}
           ${regularTeacherOf(s)
             ? `<span class="tag rteacher clickable" data-jump="regularTeacher" data-v="${escapeHtml(regularTeacherOf(s))}" title="정규 담임">정규 ${escapeHtml(regularTeacherOf(s))}T</span>`
             : `<span class="tag none clickable" data-jump="regularTeacher" data-v="">정규 담임 미지정</span>`}
           <span class="clickable" data-jump="regularClass" data-v="${escapeHtml(s.regularClass||"")}">${clsTag(s.regularClass)}</span>
-          ${(s.examClass || exInUse) ? `<span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span>` : ""}
+          ${s.examClass ? `<span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span>` : ""}
         </div>
         <div class="sc-actions edit-only">
           <button class="icon-btn edit-btn" data-id="${s.id}">수정</button>
@@ -8932,11 +8933,11 @@ function openStudentModal(studentId, returnTo){
 
   document.getElementById("stuTags").innerHTML =
     `<span class="tag st-${statusOf(s)}">${statusOf(s)}</span>` +
-    (examTeacherOf(s) ? `<span class="tag teacher">내신 ${escapeHtml(examTeacherOf(s))}T</span>` : (examClassesInUse() ? `<span class="tag none">내신 담임 미지정</span>` : "")) +
+    (examTeacherOf(s) ? `<span class="tag teacher">내신 ${escapeHtml(examTeacherOf(s))}T</span>` : "") +
     (regularTeacherOf(s) ? `<span class="tag rteacher">정규 ${escapeHtml(regularTeacherOf(s))}T</span>` : `<span class="tag none">정규 담임 미지정</span>`) +
     (s.regularAssistant ? `<span class="tag rteacher">정규 부 ${escapeHtml(s.regularAssistant)}T</span>` : ``) +
     (s.regularClass ? `<span class="tag cls">정규반 ${escapeHtml(s.regularClass)}</span>` : `<span class="tag none">정규반 미배정</span>`) +
-    (s.examClass ? `<span class="tag cls">내신반 ${escapeHtml(s.examClass)}</span>` : (examClassesInUse() ? `<span class="tag none">내신반 미배정</span>` : ""));
+    (s.examClass ? `<span class="tag cls">내신반 ${escapeHtml(s.examClass)}</span>` : "");
 
   /* 이 학생이 치르는 시험 (학교+학년 일치) */
   const tk = todayKey();
@@ -9392,7 +9393,7 @@ function openDetailModal(examId, returnTo){
   };
   const teaLine = (kind, v, cn, active) =>
     `<span class="cl ${cn} ${v?"":"none"} ${active?"cur":""}"><i>${kind}</i>${v ? escapeHtml(v) : "미지정"}</span>`;
-  const exUse = examClassesInUse();   /* 내신대비 반이 없는 기간엔 학생 카드의 '내신담임/내신반 미배정' 줄을 뺍니다 */
+  /* 내신반 담임은 원래 없을 때도 있어서, 비어 있으면 '미지정/미배정' 대신 그 줄을 아예 뺍니다 */
   const chipHtml = (s)=>{
     const rA = assistantOf(s);
     const att = !!attend[s.id];
@@ -9418,8 +9419,8 @@ function openDetailModal(examId, returnTo){
             </span>`).join("");
         })()}${editMode?`<button type="button" class="mdate-add" title="직보 일정 추가">+ 추가</button>`:""}</span>
       </span>
-      ${(exUse || examTeacherOf(s)) ? teaLine("내신담임", examTeacherOf(s), "tea", teacherBasis==="exam") : ""}
-      ${(exUse || (s.examClass||"").trim()) ? line("내신반", (s.examClass||"").trim(), "ex") : ""}
+      ${examTeacherOf(s) ? teaLine("내신담임", examTeacherOf(s), "tea", teacherBasis==="exam") : ""}
+      ${(s.examClass||"").trim() ? line("내신반", (s.examClass||"").trim(), "ex") : ""}
       ${teaLine("정규담임", regularTeacherOf(s), "tg", teacherBasis==="regular")}
       ${rA ? teaLine("정규부담임", rA, "tv", false) : ""}
       ${line("정규반", (s.regularClass||"").trim(), "rg")}
