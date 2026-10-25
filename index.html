@@ -800,6 +800,18 @@
   .cal-legend .lg-clear{background:var(--board); color:var(--chalk); border:none; border-radius:999px; padding:5px 12px;
     font:inherit; font-weight:700; cursor:pointer; min-height:30px;}
   .cal-legend .lg-hint{font-weight:600; opacity:.85;}
+
+  /* 점수 변화 */
+  .chip-prev{display:block; font-size:11px; font-weight:600; color:var(--c2); margin:-1px 0 3px;}
+  .sd-diff{font-weight:800; font-size:11px; white-space:nowrap;}
+  .sd-diff.up{color:var(--green);} .sd-diff.down{color:var(--c2);} .sd-diff.same{color:var(--c2);}
+  .sd-diff.drop{color:var(--rust); background:var(--c18); border-radius:5px; padding:0 4px;}
+  .score-drop{margin:8px 0 2px; padding:8px 12px; border-radius:10px; background:var(--c18); color:var(--rust); font-size:12.5px; font-weight:700; line-height:1.7;}
+  .score-drop .sd-name{background:none; border:none; padding:0; font:inherit; color:inherit; text-decoration:underline; cursor:pointer;}
+  .score-trend{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; margin:2px 0 6px;}
+  .score-trend .st-item{display:inline-flex; flex-direction:column; align-items:center; padding:5px 10px; border:1px solid var(--c12); border-radius:10px; background:var(--paper-card); min-width:56px;}
+  .score-trend .st-item i{font-style:normal; font-size:10.5px; font-weight:700; color:var(--c2);}
+  .score-trend .st-item b{font-size:16px;}
   /* 시험 범위 탭 — 교과서별로 묶을 때 제목 줄 */
   .scope-table tr.tb-group td{background:var(--pb, var(--c15)); color:var(--pt, var(--ink)); font-weight:800; font-size:13px; padding:9px 12px;}
   .scope-table tr.tb-group.t1{--pb:var(--tb1-bg); --pt:var(--tb1-tx);} .scope-table tr.tb-group.t2{--pb:var(--tb2-bg); --pt:var(--tb2-tx);}
@@ -2775,6 +2787,63 @@ function withTermArchive(ex, payload, opts){
   return out;
 }
 let termArchiveNotices = [];   /* 방금 학기 보관이 일어난 카드들 — 저장이 끝나면 한 번에 알려줍니다 */
+/* ---------- 점수 변화 ----------
+   점수는 시험 카드(학교·학년·중간/기말)마다 들어 있고, 지난 학기 점수는 카드 안 history에 보관돼 있습니다.
+   학생 한 명의 점수를 모든 카드에서 모아 학기·시험 순서로 늘어놓고, 바로 앞 시험과 비교합니다. */
+const SCORE_DROP_WARN = 10;   /* 이만큼(점) 이상 떨어지면 빨간색으로 알려줍니다 */
+function examOrderOf(termK, examName){
+  const tn = termNFromKey(termK);
+  return (tn === null ? 1e6 : tn) * 10 + (examName === "기말고사" ? 1 : 0);
+}
+function shortExamLabel(termK, examName){
+  const n = termNFromKey(termK);
+  const t = n === null ? "" : `${Math.floor(n/10) % 100}-${n % 10} `;
+  return t + String(examName || "").replace(/고사$/, "");
+}
+function scoreRecordsOf(sid){
+  const out = [];
+  const push = (termK, e, v, examId) => {
+    if(v === undefined || v === null || v === "") return;
+    const n = Number(v); if(isNaN(n)) return;
+    out.push({ termK, order: examOrderOf(termK, e.examName), label: shortExamLabel(termK, e.examName),
+               full: `${termK ? termLabelK(termK) + " " : ""}${e.examName || ""}`, score: n, examId });
+  };
+  exams.forEach(e=>{
+    if(e.scores && typeof e.scores === "object") push(termKeyOfDate(e.startDate), e, e.scores[sid], e.id);
+    const h = (e.history && typeof e.history === "object") ? e.history : {};
+    Object.keys(h).forEach(k=>{ const t = h[k] || {}; if(t.scores && typeof t.scores === "object") push(k, e, t.scores[sid], null); });
+  });
+  return out.sort((a,b)=> a.order - b.order);
+}
+/* 이 시험 바로 앞에 본 시험의 점수 (없으면 null) */
+function prevScoreOf(sid, exam){
+  const cur = examOrderOf(termKeyOfDate(exam.startDate), exam.examName);
+  const prev = scoreRecordsOf(sid).filter(r=> r.examId !== exam.id && r.order < cur);
+  return prev.length ? prev[prev.length - 1] : null;
+}
+function scoreDiffHtml(prev, cur){
+  if(!prev) return "";
+  const has = cur !== undefined && cur !== null && String(cur).trim() !== "" && !isNaN(Number(cur));
+  if(!has) return `<span class="sd-prev">지난 ${escapeHtml(prev.label)} ${escapeHtml(String(prev.score))}점</span>`;
+  const d = Math.round((Number(cur) - prev.score) * 10) / 10;
+  const cls = d <= -SCORE_DROP_WARN ? "drop" : (d < 0 ? "down" : (d > 0 ? "up" : "same"));
+  const mark = d > 0 ? `▲${d}` : (d < 0 ? `▼${-d}` : "그대로");
+  return `<span class="sd-prev">지난 ${escapeHtml(prev.label)} ${escapeHtml(String(prev.score))}점</span> <span class="sd-diff ${cls}">${mark}</span>`;
+}
+/* 학생 상세 창에 붙는 "점수 변화" 줄 */
+function scoreTrendHtml(sid){
+  const rec = scoreRecordsOf(sid);
+  if(!rec.length) return "";
+  return `<div class="section-label">점수 변화</div><div class="score-trend">` + rec.map((r,i)=>{
+    let arrow = "";
+    if(i > 0){
+      const d = Math.round((r.score - rec[i-1].score) * 10) / 10;
+      const cls = d <= -SCORE_DROP_WARN ? "drop" : (d < 0 ? "down" : (d > 0 ? "up" : "same"));
+      arrow = `<span class="sd-diff ${cls}">${d > 0 ? "▲"+d : (d < 0 ? "▼"+(-d) : "그대로")}</span>`;
+    }
+    return `${arrow}<span class="st-item" title="${escapeHtml(r.full)}"><i>${escapeHtml(r.label)}</i><b>${escapeHtml(String(r.score))}</b></span>`;
+  }).join("") + `</div>`;
+}
 /* 시험 상세 창 아래 "지난 학기 기록" — 보관된 학기마다 한 줄, 누르면 범위·점수가 펼쳐집니다 */
 function termHistoryHtml(exam){
   const h = (exam && exam.history && typeof exam.history === "object") ? exam.history : {};
@@ -8753,6 +8822,7 @@ function openStudentModal(studentId, returnTo){
           </button>`;
         }).join("")
   );
+  box.insertAdjacentHTML("beforeend", scoreTrendHtml(s.id));
   box.querySelectorAll(".stu-exam-row").forEach(r=> r.addEventListener("click", ()=>{
     const backId = currentStudentId;
     closeStudentModal();
@@ -9143,6 +9213,17 @@ function openDetailModal(examId, returnTo){
         <span class="mb-save" id="detailSaveState"></span>
       </div>
     </div>
+    ${(()=>{
+      /* 지난 시험보다 많이 떨어진 학생 — 상담할 학생을 고르기 쉽게 */
+      const drops = relevant.map(s=>{
+        const cur = scores[s.id]; if(cur === undefined || cur === null || cur === "" || isNaN(Number(cur))) return null;
+        const pv = prevScoreOf(s.id, exam); if(!pv) return null;
+        const d = Number(cur) - pv.score;
+        return d <= -SCORE_DROP_WARN ? { s, pv, cur:Number(cur), d } : null;
+      }).filter(Boolean).sort((a,b)=> a.d - b.d);
+      return drops.length ? `<div class="score-drop">지난 시험보다 ${SCORE_DROP_WARN}점 이상 떨어진 학생 <b>${drops.length}명</b> — ${
+        drops.map(x=> `<button type="button" class="sd-name" data-open-student="${escapeHtml(x.s.id)}">${escapeHtml(x.s.name)}</button> ${x.pv.score}→${x.cur}`).join(" · ")}</div>` : "";
+    })()}
     ${editMode ? `<p class="mb-hint">학생 카드를 누르면 <b>직전보충 참석</b>으로 표시됩니다. 점수는 칸에 바로 적으면 저장돼요.</p>` : ""}
     <div class="tbasis-row">
       <span class="section-label" style="margin:0;">담당 선생님별 학생 ${relevant.length}명${
@@ -9177,6 +9258,7 @@ function openDetailModal(examId, returnTo){
         <input class="score-in" type="number" min="0" max="100" inputmode="numeric"
                placeholder="점수" value="${sc===undefined||sc===null?"":escapeHtml(String(sc))}" ${editMode?"":"disabled"}>
       </span>
+      ${(()=>{ const pv = prevScoreOf(s.id, exam); return pv ? `<span class="chip-prev" data-prev="${escapeHtml(String(pv.score))}" data-prev-label="${escapeHtml(pv.label)}">${scoreDiffHtml(pv, sc)}</span>` : ""; })()}
       <span class="chip-mdate" data-sid="${escapeHtml(s.id)}">
         <i>직보</i>
         <span class="mdate-list">${(()=>{
@@ -9376,6 +9458,8 @@ function wireDetailTgBoxOnce(tgBox){
     }
     const cnt = document.getElementById("scoreCount");
     if(cnt) cnt.textContent = [...tgBox.querySelectorAll(".score-in")].filter(x=> x.value.trim() !== "").length;
+    const pvEl = inp.closest(".assign-chip")?.querySelector(".chip-prev");
+    if(pvEl) pvEl.innerHTML = scoreDiffHtml({ score:Number(pvEl.dataset.prev), label:pvEl.dataset.prevLabel }, inp.value);
     queueDetailSave(currentDetailExamId, { scores: { [sid]: v } });
   });
   const isChipInput = el => el.classList.contains("score-in") || el.classList.contains("mdate-date") || el.classList.contains("mdate-time");
