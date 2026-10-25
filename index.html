@@ -3182,6 +3182,13 @@ let showIncompleteOnly = false;   // 정규반 미배정만 보기
 let showSameNameOnly = false;    // 이름이 겹치는 학생만 보기
 let showMergeOnly = false;       // 이름 뒤 숫자만 다른 "합칠 후보"만 보기
 let showExamIncompleteOnly = false;  // 시험대비(내신) 반 미배정만 보기
+let showNoTeacherOnly = false;       // 담임 미지정(정규·내신 담임 둘 다 없음)만 보기
+/* 담임 미지정 = 정규 담임도 내신 담임도 없는 학생. 정규 기간엔 내신대비 반이 없을 수 있어서,
+   한쪽만 있으면 담임이 있는 것으로 봅니다 */
+function hasNoTeacher(s){ return !examTeacherOf(s) && !regularTeacherOf(s); }
+/* 내신대비 반을 운영 중인지 — 재원생 중 한 명이라도 내신반이 있으면 운영 중.
+   운영하지 않을 때는 "내신 담임 미지정"·"내신반 미배정" 경고를 띄우지 않습니다 */
+function examClassesInUse(){ return students.some(s=> statusOf(s) !== "퇴원" && (s.examClass || "").trim()); }
 let stuStatusOn = new Set(["재원","휴원"]);   // 기본은 퇴원생 숨김
 let stuView = (window.innerWidth <= 820) ? "card" : "table";   // 좁은 화면은 카드로 시작
 document.querySelectorAll("#stuViewToggle button").forEach(b=> b.addEventListener("click", ()=>{
@@ -3934,6 +3941,7 @@ function filteredStudents(){
     if(stuF.examClass!==null && (s.examClass||"")!==stuF.examClass) return false;
     if(showIncompleteOnly && s.regularClass) return false;
     if(showExamIncompleteOnly && s.examClass) return false;
+    if(showNoTeacherOnly && !hasNoTeacher(s)) return false;
     if(showSameNameOnly && (sameNameCounts()[(s.name||"").trim()]||0) < 2) return false;
     if(showMergeOnly && !mergeSuspects().some(x=> x.id === s.id)) return false;
     if(searchTerm){
@@ -4018,7 +4026,7 @@ function renderRecent(){
 function stuHasFilter(){
   const statusChanged = !(stuStatusOn.size===2 && stuStatusOn.has("재원") && stuStatusOn.has("휴원"));
   return !!(statusChanged || stuF.cho || stuF.school || stuF.grade || stuF.teacher!==null ||
-    stuF.regularClass!==null || stuF.examClass!==null || showIncompleteOnly || showExamIncompleteOnly || showSameNameOnly || showMergeOnly ||
+    stuF.regularClass!==null || stuF.examClass!==null || showIncompleteOnly || showExamIncompleteOnly || showNoTeacherOnly || showSameNameOnly || showMergeOnly ||
     document.getElementById("studentSearch").value.trim());
 }
 
@@ -4118,6 +4126,7 @@ function renderCrumbs(){
   if(stuF.examClass!==null) items.push({label: stuF.examClass? `내신반 ${stuF.examClass}` : "내신반 미배정", k:"examClass"});
   if(showIncompleteOnly) items.push({label:"정규반 미배정", k:"incomplete"});
   if(showExamIncompleteOnly) items.push({label:"내신반 미배정", k:"examincomplete"});
+  if(showNoTeacherOnly) items.push({label:"담임 미지정 (정규·내신 모두 없음)", k:"noteacher"});
   if(showSameNameOnly) items.push({label:"동명이인만", k:"samename"});
   if(showMergeOnly) items.push({label:"합칠 후보만", k:"merge"});
   const stDefault = stuStatusOn.size===2 && stuStatusOn.has("재원") && stuStatusOn.has("휴원");
@@ -4134,6 +4143,7 @@ function renderCrumbs(){
     else if(k==="grade") stuF.grade="";
     else if(k==="incomplete") showIncompleteOnly=false;
     else if(k==="examincomplete") showExamIncompleteOnly=false;
+    else if(k==="noteacher") showNoTeacherOnly=false;
     else if(k==="samename") showSameNameOnly=false;
     else if(k==="merge") showMergeOnly=false;
     else if(k==="status") stuStatusOn = new Set(["재원","휴원"]);
@@ -4169,6 +4179,8 @@ function renderStudents(){
   const exBadge = document.getElementById("examIncompleteBadge");
   exBadge.textContent = `내신반 미배정 ${exIncomplete}명`;
   exBadge.classList.toggle("active", showExamIncompleteOnly);
+  const exInUse = examClassesInUse();
+  exBadge.style.display = (exInUse || showExamIncompleteOnly) ? "" : "none";   /* 내신대비 반이 없는 기간엔 숨김 */
 
   /* 동명이인 배지 */
   const nameCounts = sameNameCounts();
@@ -4241,12 +4253,12 @@ function renderStudents(){
         <td data-c="grade">${s.grade? `<span class="tag grade clickable" data-jump="grade" data-v="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:"—"}</td>
         <td data-c="examTeacher">${examTeacherOf(s)
               ? `<span class="tag teacher clickable" data-jump="examTeacher" data-v="${escapeHtml(examTeacherOf(s))}">${escapeHtml(examTeacherOf(s))}T</span>`
-              : `<span class="tag none clickable" data-jump="examTeacher" data-v="">미지정</span>`}</td>
+              : (exInUse ? `<span class="tag none clickable" data-jump="examTeacher" data-v="">미지정</span>` : `<span class="muted">—</span>`)}</td>
         <td data-c="regularTeacher">${regularTeacherOf(s)
               ? `<span class="tag rteacher clickable" data-jump="regularTeacher" data-v="${escapeHtml(regularTeacherOf(s))}">${escapeHtml(regularTeacherOf(s))}T</span>`
               : `<span class="tag none clickable" data-jump="regularTeacher" data-v="">미지정</span>`}</td>
         <td data-c="regularClass"><span class="clickable" data-jump="regularClass" data-v="${escapeHtml(s.regularClass||"")}">${clsTag(s.regularClass)}</span></td>
-        <td data-c="examClass"><span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span></td>
+        <td data-c="examClass">${(s.examClass || exInUse) ? `<span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span>` : `<span class="muted">—</span>`}</td>
         <td data-c="status"><span class="tag st-${statusOf(s)}">${statusOf(s)}</span></td>
         <td class="act edit-only" data-c="act">
           <button class="icon-btn edit-btn" data-id="${s.id}">수정</button>
@@ -4280,12 +4292,12 @@ function renderStudents(){
           ${s.grade? `<span class="tag grade clickable" data-jump="grade" data-v="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:""}
           ${examTeacherOf(s)
             ? `<span class="tag teacher clickable" data-jump="examTeacher" data-v="${escapeHtml(examTeacherOf(s))}" title="내신 담임">내신 ${escapeHtml(examTeacherOf(s))}T</span>`
-            : `<span class="tag none clickable" data-jump="examTeacher" data-v="">내신 담임 미지정</span>`}
+            : (exInUse ? `<span class="tag none clickable" data-jump="examTeacher" data-v="">내신 담임 미지정</span>` : "")}
           ${regularTeacherOf(s)
             ? `<span class="tag rteacher clickable" data-jump="regularTeacher" data-v="${escapeHtml(regularTeacherOf(s))}" title="정규 담임">정규 ${escapeHtml(regularTeacherOf(s))}T</span>`
             : `<span class="tag none clickable" data-jump="regularTeacher" data-v="">정규 담임 미지정</span>`}
           <span class="clickable" data-jump="regularClass" data-v="${escapeHtml(s.regularClass||"")}">${clsTag(s.regularClass)}</span>
-          <span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span>
+          ${(s.examClass || exInUse) ? `<span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span>` : ""}
         </div>
         <div class="sc-actions edit-only">
           <button class="icon-btn edit-btn" data-id="${s.id}">수정</button>
@@ -4563,6 +4575,7 @@ document.getElementById("clearFilterBtn").addEventListener("click", ()=>{
   showSameNameOnly = false;
   showMergeOnly = false;
   showExamIncompleteOnly = false;
+  showNoTeacherOnly = false;
   stuStatusOn = new Set(["재원","휴원"]);
   renderStudents();
 });
@@ -6032,6 +6045,7 @@ function printFilterText(){
   if(stuF.examClass) bits.push("내신 " + stuF.examClass);
   if(showIncompleteOnly) bits.push("정규반 미배정");
   if(showExamIncompleteOnly) bits.push("내신반 미배정");
+  if(showNoTeacherOnly) bits.push("담임 미지정");
   if(showMergeOnly) bits.push("합칠 후보");
   const q = document.getElementById("studentSearch").value.trim();
   if(q) bits.push(`검색 "${q}"`);
@@ -7448,7 +7462,7 @@ function renderSummary(){
     <span class="sd">${noScope.length ? escapeHtml(uniq(noScope.map(e=>shortSchool(e.school))).slice(0,3).join(", ")) + (uniq(noScope.map(e=>e.school)).length>3?" 외":"") : "모두 입력됨"}</span></button>`;
 
   /* 4) 담임 미지정 */
-  const noTeacher = students.filter(s=> !examTeacherOf(s) && !regularTeacherOf(s));
+  const noTeacher = students.filter(s=> statusOf(s) !== "퇴원" && hasNoTeacher(s));
   const card4 = `<button class="stat-card ${noTeacher.length?"alert":"done"}" data-go="teacher-missing">
     <span class="sl">담임 미지정</span>
     <span class="sv">${noTeacher.length}<span class="su">명</span></span>
@@ -7478,9 +7492,9 @@ function renderSummary(){
       switchTab("scope");
       renderScopeTab();
     } else if(go==="teacher-missing"){
-      if(students.filter(s=> !examTeacherOf(s) && !regularTeacherOf(s)).length===0){ showToast("담임이 모두 지정되어 있어요.", {type:"ok"}); return; }
-      stuF = {cho:"", school:"", grade:"", teacher:"", regularClass:null, examClass:null};
-      stuIdxTab = "teacher"; showIncompleteOnly = false;
+      if(students.filter(s=> statusOf(s) !== "퇴원" && hasNoTeacher(s)).length===0){ showToast("담임이 모두 지정되어 있어요.", {type:"ok"}); return; }
+      stuF = {cho:"", school:"", grade:"", teacher:null, regularClass:null, examClass:null};
+      showIncompleteOnly = false; showExamIncompleteOnly = false; showNoTeacherOnly = true;
       switchTab("students"); renderStudents();
     } else if(go==="class-missing"){
       if(students.filter(s=>!s.regularClass && statusOf(s) !== "퇴원").length===0){ showToast("모든 학생이 반에 배정되어 있어요.", {type:"ok"}); return; }
@@ -8918,11 +8932,11 @@ function openStudentModal(studentId, returnTo){
 
   document.getElementById("stuTags").innerHTML =
     `<span class="tag st-${statusOf(s)}">${statusOf(s)}</span>` +
-    (examTeacherOf(s) ? `<span class="tag teacher">내신 ${escapeHtml(examTeacherOf(s))}T</span>` : `<span class="tag none">내신 담임 미지정</span>`) +
+    (examTeacherOf(s) ? `<span class="tag teacher">내신 ${escapeHtml(examTeacherOf(s))}T</span>` : (examClassesInUse() ? `<span class="tag none">내신 담임 미지정</span>` : "")) +
     (regularTeacherOf(s) ? `<span class="tag rteacher">정규 ${escapeHtml(regularTeacherOf(s))}T</span>` : `<span class="tag none">정규 담임 미지정</span>`) +
     (s.regularAssistant ? `<span class="tag rteacher">정규 부 ${escapeHtml(s.regularAssistant)}T</span>` : ``) +
     (s.regularClass ? `<span class="tag cls">정규반 ${escapeHtml(s.regularClass)}</span>` : `<span class="tag none">정규반 미배정</span>`) +
-    (s.examClass ? `<span class="tag cls">내신반 ${escapeHtml(s.examClass)}</span>` : `<span class="tag none">내신반 미배정</span>`);
+    (s.examClass ? `<span class="tag cls">내신반 ${escapeHtml(s.examClass)}</span>` : (examClassesInUse() ? `<span class="tag none">내신반 미배정</span>` : ""));
 
   /* 이 학생이 치르는 시험 (학교+학년 일치) */
   const tk = todayKey();
@@ -9313,16 +9327,16 @@ function openDetailModal(examId, returnTo){
     : everyone;
   const byTeacher = {};
   relevant.forEach(s=>{
-    const teacher = teacherOf(s);
-    if(!teacher) return;                       // 미지정은 아래에서 따로 묶습니다
+    /* 고른 담임 기준 쪽이 비어 있으면 다른 쪽 담임으로 묶습니다 (정규 기간엔 내신대비 반이 없을 수 있어서) */
+    const teacher = teacherOf(s) || teacherOf(s, teacherBasis === "regular" ? "exam" : "regular");
+    if(!teacher) return;                       // 둘 다 없으면 아래 '담임 미지정'으로
     if(!byTeacher[teacher]) byTeacher[teacher]=[];
     byTeacher[teacher].push(s);
   });
   const teacherNames = Object.keys(byTeacher).sort((a,b)=> a.localeCompare(b, "ko"));
 
-  /* 담임 미지정은 어느 쪽이 비었는지 따로 봅니다 — 담임 기준과 상관없이 둘 다 표시 */
-  const missingExam    = relevant.filter(s=> !examTeacherOf(s));
-  const missingRegular = relevant.filter(s=> !regularTeacherOf(s));
+  /* 담임 미지정 = 정규·내신 담임이 둘 다 없는 학생만 */
+  const missingBoth = relevant.filter(hasNoTeacher);
 
   const attend = attendOf(exam), scores = scoresOf(exam), mdates = mdatesOf(exam);
   const mdateN = relevant.filter(s=> mdateEntriesOf(mdates[s.id]).some(en=> (en.date||"").trim())).length;
@@ -9378,6 +9392,7 @@ function openDetailModal(examId, returnTo){
   };
   const teaLine = (kind, v, cn, active) =>
     `<span class="cl ${cn} ${v?"":"none"} ${active?"cur":""}"><i>${kind}</i>${v ? escapeHtml(v) : "미지정"}</span>`;
+  const exUse = examClassesInUse();   /* 내신대비 반이 없는 기간엔 학생 카드의 '내신담임/내신반 미배정' 줄을 뺍니다 */
   const chipHtml = (s)=>{
     const rA = assistantOf(s);
     const att = !!attend[s.id];
@@ -9403,8 +9418,8 @@ function openDetailModal(examId, returnTo){
             </span>`).join("");
         })()}${editMode?`<button type="button" class="mdate-add" title="직보 일정 추가">+ 추가</button>`:""}</span>
       </span>
-      ${teaLine("내신담임", examTeacherOf(s), "tea", teacherBasis==="exam")}
-      ${line("내신반", (s.examClass||"").trim(), "ex")}
+      ${(exUse || examTeacherOf(s)) ? teaLine("내신담임", examTeacherOf(s), "tea", teacherBasis==="exam") : ""}
+      ${(exUse || (s.examClass||"").trim()) ? line("내신반", (s.examClass||"").trim(), "ex") : ""}
       ${teaLine("정규담임", regularTeacherOf(s), "tg", teacherBasis==="regular")}
       ${rA ? teaLine("정규부담임", rA, "tv", false) : ""}
       ${line("정규반", (s.regularClass||"").trim(), "rg")}
@@ -9423,10 +9438,8 @@ function openDetailModal(examId, returnTo){
         : "이 학교·학년에 해당하는 학생이 없어요."}</div>`;
   } else {
     bodyHtml += teacherNames.map(t=> groupHtml(`${escapeHtml(t)}T`, byTeacher[t])).join("");
-    /* 담임 기준과 상관없이 빈자리를 항상 따로 보여줍니다 */
-    bodyHtml += groupHtml("내신 담임 미지정", missingExam, "missing ex");
-    bodyHtml += groupHtml("정규반 담임 미지정", missingRegular, "missing rg");
-    if(!teacherNames.length && !missingExam.length && !missingRegular.length)
+    bodyHtml += groupHtml("담임 미지정", missingBoth, "missing");
+    if(!teacherNames.length && !missingBoth.length)
       bodyHtml += `<div class="empty-state">담당 선생님 정보가 없어요.</div>`;
   }
   const tgBox = document.getElementById("detailTeacherGroups");
