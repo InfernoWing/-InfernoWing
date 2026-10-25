@@ -492,7 +492,7 @@
 
   header.app-head{
     background:var(--board); color:var(--chalk); padding:16px 20px 14px;
-    position:relative; overflow:hidden; border-bottom:6px solid var(--mustard);
+    position:relative; overflow:hidden; border-bottom:4px solid var(--mustard);
   }
   header.app-head::before{
     content:""; position:absolute; inset:0;
@@ -509,29 +509,34 @@
   @media print{ .panel-title{display:block !important;} }
   .panel > .panel-desc{margin-top:0;}
 
-  nav.tabs{ max-width:1120px; margin:18px auto 0; padding:0 20px; display:flex; gap:8px; }
+  /* 탭: 둥근 단추를 나란히 (A안) — 흐리게(투명도) 하던 것 대신 또렷한 글자 + 테두리 */
+  nav.tabs{ max-width:1120px; margin:18px auto 14px; padding:0 20px; display:flex; gap:8px; }
   nav.tabs button{
-    flex:1; background:var(--paper-card); border:2px solid var(--line); border-bottom:none;
+    flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; min-height:44px;
+    background:var(--paper-card); border:1px solid var(--c12);
     color:var(--ink); font-family:inherit; font-weight:700; font-size:14px;
-    padding:11px 8px; border-radius:10px 10px 0 0; cursor:pointer; opacity:.55; transition:.15s;
+    padding:0 22px; border-radius:999px; cursor:pointer; transition:.15s;
   }
-  nav.tabs button.active{ opacity:1; background:var(--board); color:var(--chalk); border-color:var(--board); }
-  nav.tabs button:hover{opacity:.85;}
+  nav.tabs button.active{ background:var(--board); color:var(--chalk); border-color:var(--board); }
+  nav.tabs button:not(.active):hover{border-color:var(--board);}
+  html[data-theme="dark"] nav.tabs button.active{background:var(--mustard); color:#2a1d05; border-color:var(--mustard);}
+  html[data-theme="dark"] nav.tabs button:not(.active):hover{border-color:var(--mustard);}
   nav.tabs .tl-short{display:none;}
   /* 휴대폰: 탭 이름이 중간에서 끊겨 두 줄("시험정/보 입력")이 되던 것 → 짧은 이름으로 한 줄 고정,
      그래도 넘치면 옆으로 밀 수 있게. 상단 설명 문구와 요약 카드는 접어서 캘린더가 바로 보이게. */
   @media (max-width:700px){
     nav.tabs{ padding:0 12px; gap:5px; overflow-x:auto; scrollbar-width:none; }
     nav.tabs::-webkit-scrollbar{display:none;}
-    nav.tabs button{ flex:1 0 auto; white-space:nowrap; font-size:13.5px; padding:10px 10px; }
+    nav.tabs{ margin-bottom:10px; }
+    nav.tabs button{ flex:0 0 auto; white-space:nowrap; font-size:13.5px; padding:0 16px; }
     nav.tabs .tl-long{display:none;}
     nav.tabs .tl-short{display:inline;}
   }
 
   main{ max-width:1120px; margin:0 auto; padding:0 20px 60px; }
   section.panel{
-    background:var(--paper-card); border:2px solid var(--line);
-    border-radius:0 0 var(--radius) var(--radius); padding:22px; display:none;
+    background:var(--paper-card); border:1px solid var(--c12);
+    border-radius:16px; padding:22px; display:none;
   }
   section.panel.active{display:block;}
   .panel-head-row{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:4px;}
@@ -710,7 +715,7 @@
   .cal-dow{ text-align:center; font-size:11.5px; font-weight:700; color:var(--c122); padding-bottom:4px; }
   .cal-dow.sat{color:var(--blue);} .cal-dow.sun{color:var(--rust);}
   .cal-cell{
-    min-height:96px; border:1.5px solid var(--c5); border-radius:9px; padding:6px;
+    min-height:104px; border:1px solid var(--c5); border-radius:10px; padding:7px;
     position:relative; background:var(--c4); display:flex; flex-direction:column;
   }
   .cal-cell.empty{background:transparent; border:none;}
@@ -718,6 +723,9 @@
     display:flex; align-items:baseline; gap:5px;}
   .cal-cell.today{border-color:var(--mustard); background:var(--c141);}
   .cal-cell.today .num{color:var(--rust);}
+  /* 오늘: 날짜 숫자를 주황 동그라미로 (A안) */
+  .cal-cell .dnum{display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; border-radius:11px;}
+  .cal-cell.today .dnum{background:var(--mustard); color:#2a1d05; padding:0 5px; margin:-2px 0 0 -3px;}
   .cal-cell.sat .num{color:var(--blue);}
   .cal-cell.sun .num{color:var(--rust);}
   /* 공휴일 */
@@ -6698,7 +6706,7 @@ function renderCalendar(){
 
     const isPast = key < dateKey(today.getFullYear(), today.getMonth(), today.getDate());
     html += `<div class="cal-cell ${isToday?"today":""} ${isPast?"past":""} ${dowClass} ${holi?"holi":""} ${openCell&&dayExams.length>MAX_PILLS?"open":""}" data-date="${key}"${holi?` title="${escapeHtml(holi)}"`:""}>
-      <div class="num">${d}${holi?`<span class="hol">${escapeHtml(holi)}</span>`:""}${summaryHtml}</div>
+      <div class="num"><span class="dnum">${d}</span>${holi?`<span class="hol">${escapeHtml(holi)}</span>`:""}${summaryHtml}</div>
       <div class="pills">${pillsHtml}${moreHtml}</div>
     </div>`;
   }
