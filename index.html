@@ -800,6 +800,15 @@
   .cal-legend .lg-clear{background:var(--board); color:var(--chalk); border:none; border-radius:999px; padding:5px 12px;
     font:inherit; font-weight:700; cursor:pointer; min-height:30px;}
   .cal-legend .lg-hint{font-weight:600; opacity:.85;}
+  /* 시험 범위 탭 — 교과서별로 묶을 때 제목 줄 */
+  .scope-table tr.tb-group td{background:var(--pb, var(--c15)); color:var(--pt, var(--ink)); font-weight:800; font-size:13px; padding:9px 12px;}
+  .scope-table tr.tb-group.t1{--pb:var(--tb1-bg); --pt:var(--tb1-tx);} .scope-table tr.tb-group.t2{--pb:var(--tb2-bg); --pt:var(--tb2-tx);}
+  .scope-table tr.tb-group.t3{--pb:var(--tb3-bg); --pt:var(--tb3-tx);} .scope-table tr.tb-group.t4{--pb:var(--tb4-bg); --pt:var(--tb4-tx);}
+  .scope-table tr.tb-group.t5{--pb:var(--tb5-bg); --pt:var(--tb5-tx);} .scope-table tr.tb-group.t6{--pb:var(--tb6-bg); --pt:var(--tb6-tx);}
+  .scope-table tr.tb-group.t7{--pb:var(--tb7-bg); --pt:var(--tb7-tx);} .scope-table tr.tb-group.tx{--pb:var(--tbx-bg); --pt:var(--tbx-tx);}
+  .scope-table tr.tb-group .tbg-sw{display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:7px; vertical-align:-1px;}
+  .scope-table tr.tb-group .tbg-sw.tb-dash{border:1.5px dashed var(--tb0-bd);}
+  .scope-table tr.tb-group .tbg-n{font-weight:700; opacity:.85; margin-left:4px;}
   @media (max-width:700px){ .cal-legend{gap:2px 4px;} .cal-legend .lg-btn{padding:3px 7px 3px 5px;} .cal-legend .lg-hint{display:none;} }
   .meta-math{font-weight:800; color:var(--rust);}
   .math-lb{color:var(--rust) !important; font-weight:800 !important;}
@@ -1911,6 +1920,10 @@
         <span class="checkbox-row">
           <input type="checkbox" id="scopeHideEmpty" checked>
           <label style="margin:0;">학생 없는 시험 숨기기</label>
+        </span>
+        <span class="checkbox-row">
+          <input type="checkbox" id="scopeByTextbook">
+          <label style="margin:0;" title="같은 교과서를 쓰는 학교끼리 모아서 범위를 나란히 봅니다">교과서별로 묶기</label>
         </span>
       </div>
     </div>
@@ -7616,7 +7629,10 @@ function renderScopeTab(){
   if(schoolSel.value) rows = rows.filter(e=> e.school===schoolSel.value);
   if(scopeGrade) rows = rows.filter(e=> e.grade===scopeGrade);
   if(scopeOnlyMissing) rows = rows.filter(e=> !hasScope(e) && !e.notConducted);
-  rows.sort((a,b)=> (a.school||"").localeCompare(b.school||"") || gradeSortIndex(a.grade)-gradeSortIndex(b.grade));
+  const byTb = document.getElementById("scopeByTextbook").checked;
+  const tbOrder = cls=> { const i = TB_GROUPS.findIndex(g=> g.cls===cls); return i>=0 ? i : (cls==="tx" ? 90 : 99); };
+  rows.sort((a,b)=> (byTb ? tbOrder(tbGroupOf(a).cls) - tbOrder(tbGroupOf(b).cls) : 0) ||
+    (a.school||"").localeCompare(b.school||"") || gradeSortIndex(a.grade)-gradeSortIndex(b.grade));
 
   const emptyBox = document.getElementById("scopeEmptyState");
   const table = document.getElementById("scopeTable");
@@ -7630,7 +7646,17 @@ function renderScopeTab(){
     <thead><tr>
       <th>학교</th><th>학년</th><th>인원</th><th>시험 기간</th><th>시험 범위</th><th>학교 안내</th><th>프린트</th>
     </tr></thead>
-    <tbody>${rows.map(e=>{
+    <tbody>${rows.map((e,i)=>{
+      /* 교과서별로 묶기: 교과서가 바뀌는 줄 앞에 제목 줄 */
+      let groupRow = "";
+      if(byTb){
+        const g = tbGroupOf(e);
+        if(i===0 || tbGroupOf(rows[i-1]).cls !== g.cls){
+          const n = rows.filter(x=> tbGroupOf(x).cls===g.cls).length;
+          const sw = g.cls==="t0" ? `<span class="tbg-sw tb-dash"></span>` : `<span class="tbg-sw" style="background:var(--tb${g.cls.slice(1)}-c);"></span>`;
+          groupRow = `<tr class="tb-group ${g.cls}"><td colspan="7">${sw}${escapeHtml(g.label)} <span class="tbg-n">${n}곳</span></td></tr>`;
+        }
+      }
       const count = studentsForExam(e).length;
       const period = (!e.startDate || !e.endDate) ? `<span class="muted">미정</span>`
         : (e.startDate===e.endDate ? fmtWithDow(e.startDate) : `${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)}`);
@@ -7642,7 +7668,7 @@ function renderScopeTab(){
       const print = e.printStatus==="confirmed"
         ? `<span style="color:var(--green); font-weight:700; white-space:nowrap;">확인</span>`
         : `<span style="color:var(--rust); font-weight:700; white-space:nowrap;">미확인</span>`;
-      return `<tr class="${(!hasScope(e) && !e.notConducted)?"missing":""}" data-exam-id="${e.id}">
+      return groupRow + `<tr class="${(!hasScope(e) && !e.notConducted)?"missing":""}" data-exam-id="${e.id}">
         <td class="school">${escapeHtml(shortSchool(e.school))}</td>
         <td>${escapeHtml(e.grade||"")}</td>
         <td>${count}명</td>
@@ -7660,9 +7686,15 @@ document.getElementById("scopeSeasonSelect").addEventListener("change", (e)=>{
 });
 document.getElementById("scopeSchoolFilter").addEventListener("change", renderScopeTab);
 document.getElementById("scopeHideEmpty").addEventListener("change", renderScopeTab);
+/* 교과서별로 묶기 — 이 브라우저에서 켜고 끈 상태를 기억합니다 */
+(function(){
+  const cb = document.getElementById("scopeByTextbook");
+  try{ cb.checked = localStorage.getItem("kladi_scopetb") === "1"; }catch(e){}
+  cb.addEventListener("change", ()=>{ try{ localStorage.setItem("kladi_scopetb", cb.checked ? "1" : "0"); }catch(e){} renderScopeTab(); });
+})();
 document.getElementById("scopePrintBtn").addEventListener("click", ()=> window.print());
 document.getElementById("scopeExportBtn").addEventListener("click", ()=>{
-  const rows = [...document.querySelectorAll("#scopeTable tbody tr")].map(tr=>{
+  const rows = [...document.querySelectorAll("#scopeTable tbody tr[data-exam-id]")].map(tr=>{
     const c = tr.cells;
     return {
       "학교": c[0].textContent.trim(), "학년": c[1].textContent.trim(), "인원": c[2].textContent.trim(),
@@ -8016,7 +8048,7 @@ document.getElementById("copyDoBtn").addEventListener("click", async ()=>{
 
 /* 시험 범위 탭 — 지금 보고 있는 목록 그대로 복사 */
 document.getElementById("scopeCopyBtn").addEventListener("click", ()=>{
-  const ids = [...document.querySelectorAll("#scopeTable tbody tr")].map(tr=> tr.dataset.examId);
+  const ids = [...document.querySelectorAll("#scopeTable tbody tr[data-exam-id]")].map(tr=> tr.dataset.examId);
   const list = ids.map(id=> exams.find(e=>e.id===id)).filter(Boolean);
   openCopyModal(list, seasonLabelOf(scopeSeason));
 });
