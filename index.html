@@ -801,6 +801,21 @@
     font:inherit; font-weight:700; cursor:pointer; min-height:30px;}
   .cal-legend .lg-hint{font-weight:600; opacity:.85;}
 
+
+  /* 휴대폰 학생 탭 — 단추·거르기를 접어서 첫 학생이 바로 보이게 */
+  .phone-only{display:none !important;}
+  .filter-fold-btn{width:100%; min-height:44px; margin:10px 0 4px; border:1px dashed var(--c12); border-radius:10px;
+    background:var(--paper-card); color:var(--ink); font:inherit; font-size:13px; font-weight:700; cursor:pointer;}
+  @media (max-width:700px){
+    .phone-only{display:inline-flex !important; align-items:center; justify-content:center;}
+    .filter-fold-btn.phone-only{display:flex !important;}
+    #panel-students > .panel-desc{display:none;}
+    .stu-tools:not(.open) > .btn:not(#stuToolsToggle):not(#stuAddToggle){display:none !important;}
+    #panel-students:not(.filters-open) #stuStatusFilters,
+    #panel-students:not(.filters-open) #stuGradeFilters,
+    #panel-students:not(.filters-open) #stuChoBar,
+    #panel-students:not(.filters-open) .idx-panel{display:none !important;}
+  }
   /* 점수 변화 */
   .chip-prev{display:block; font-size:11px; font-weight:600; color:var(--c2); margin:-1px 0 3px;}
   .sd-diff{font-weight:800; font-size:11px; white-space:nowrap;}
@@ -1960,8 +1975,9 @@
       <option value="중1"><option value="중2"><option value="중3">
       <option value="고1"><option value="고2"><option value="고3">
     </datalist>
-    <div class="btn-row" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+    <div class="btn-row stu-tools" id="stuTools" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
       <button class="btn secondary edit-only" id="stuAddToggle">+ 새 학생 직접 입력</button>
+      <button class="btn secondary phone-only" id="stuToolsToggle" type="button" aria-expanded="false" aria-controls="stuTools">⋯ 더 보기</button>
       <button class="btn secondary edit-only" id="excelUploadBtn">📄 엑셀로 일괄 등록</button>
       <button class="btn secondary edit-only" id="classImportBtn" title="반별 현황표 엑셀에서 반·담임을 읽어옵니다">📋 반 배정 가져오기</button>
       <input type="file" id="classImportInput" accept=".xlsx,.xls" style="display:none;">
@@ -2038,6 +2054,7 @@
       <button class="badge-info warn" id="mergeBadge" style="display:none;" title="같은 학교에 이름 뒤 숫자만 다른 학생이 있어요. 한 명이 둘로 갈라진 것일 수 있습니다.">합칠 후보 0명</button>
     </div>
 
+    <button class="filter-fold-btn phone-only" id="stuFilterToggle" type="button" aria-expanded="false">▾ 상태·학년·이름·학교/담임/반 거르기 펼치기</button>
     <div class="filter-line" id="stuStatusFilters"></div>
     <div class="filter-line" id="stuGradeFilters"></div>
     <div class="cho-bar" id="stuChoBar"></div>
@@ -4130,7 +4147,8 @@ function renderStudents(){
     emptyBox.innerHTML = `<div class="empty-state">이 조건에 맞는 학생이 없어요.</div>`;
   } else {
     emptyBox.innerHTML = "";
-    tbody.innerHTML = list.map((s,i)=>{
+    /* 카드 보기일 땐 안 보이는 표를 그리지 않습니다 (휴대폰에서 요소가 2만 개 넘게 생겨 느려지던 것) */
+    tbody.innerHTML = stuView==="card" ? "" : list.map((s,i)=>{
       if(s.id === editingStudentId){
         return `
           <tr class="editing">
@@ -4521,6 +4539,20 @@ document.getElementById("addStudentBtn").addEventListener("click", async ()=>{
 /* ---------- 엑셀 일괄 업로드 ---------- */
 document.getElementById("excelUploadBtn").addEventListener("click", ()=>{
   document.getElementById("excelFileInput").click();
+});
+
+/* 휴대폰 학생 탭: "더 보기"(등록·가져오기·내보내기)와 "거르기 펼치기" */
+document.getElementById("stuToolsToggle").addEventListener("click", (e)=>{
+  const box = document.getElementById("stuTools");
+  const open = box.classList.toggle("open");
+  e.currentTarget.setAttribute("aria-expanded", open);
+  e.currentTarget.textContent = open ? "⋯ 접기" : "⋯ 더 보기";
+});
+document.getElementById("stuFilterToggle").addEventListener("click", (e)=>{
+  const panel = document.getElementById("panel-students");
+  const open = panel.classList.toggle("filters-open");
+  e.currentTarget.setAttribute("aria-expanded", open);
+  e.currentTarget.textContent = open ? "▴ 거르기 접기" : "▾ 상태·학년·이름·학교/담임/반 거르기 펼치기";
 });
 document.getElementById("excelDownloadBtn").addEventListener("click", ()=>{
   const rows = filteredStudents().map(s=>({
