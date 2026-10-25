@@ -1193,6 +1193,9 @@
   .es-item .dot.todo{background:var(--rust);}
   .es-item .dot.none{background:var(--c12);}
   .es-item .n{margin-left:auto; font-size:10.5px; font-weight:700; opacity:.7;}
+  .es-filter{white-space:nowrap; flex:0 0 auto;}
+  .es-item .nobook{font-size:10px; font-weight:800; color:var(--rust); border:1px solid currentColor; border-radius:999px; padding:0 5px; line-height:15px;}
+  .es-item.on .nobook{color:#ffd9cd;}
   @media (max-width:860px){
     .exam-layout{grid-template-columns:1fr;}
     .exam-side{position:static; max-height:none;}
@@ -6192,16 +6195,21 @@ function renderExamSchoolList(){
   const box = document.getElementById("examSchoolList");
   if(!box) return;
   const schools = uniq(students.filter(s=> statusOf(s) !== "퇴원").map(s=> s.school).filter(Boolean)).sort((a,b)=> a.localeCompare(b,"ko"));
-  const rows = schools.map(sc=> ({ sc, ...examSchoolState(sc) }));
+  /* 교과서 미등록: 재원생이 있는 학년 중 하나라도 교과서가 비어 있으면 표시 (학년 올리기 뒤 새 학년 교과서 넣을 때 쓰임) */
+  const noBook = sc=> uniq(students.filter(s=> s.school === sc && statusOf(s) !== "퇴원").map(s=> s.grade))
+    .filter(g=> !textbookOf(sc, g));
+  const rows = schools.map(sc=> ({ sc, ...examSchoolState(sc), noBook: noBook(sc) }));
   const shown = examOnlyTodo ? rows.filter(r=> r.state !== "ok") : rows;
   const todoN = rows.filter(r=> r.state === "todo").length;
+  const bookN = rows.filter(r=> r.noBook.length).length;
   document.getElementById("examSideCount").textContent =
-    `학교 ${rows.length}곳` + (todoN ? ` · 남은 곳 ${todoN}` : " · 모두 입력됨");
+    `학교 ${rows.length}곳` + (todoN ? ` · 남은 곳 ${todoN}` : " · 모두 입력됨") + (bookN ? ` · 교과서 없음 ${bookN}` : "");
   document.getElementById("examOnlyTodo").classList.toggle("on", examOnlyTodo);
   box.innerHTML = shown.length === 0
     ? `<p class="imp-note" style="padding:8px 10px;">해당하는 학교가 없어요.</p>`
     : shown.map(r=>`<button class="es-item ${r.sc===currentExamSchool?"on":""}" data-sc="${escapeHtml(r.sc)}">
-        <span class="dot ${r.state}"></span>${escapeHtml(shortSchool(r.sc))}
+        <span class="dot ${r.state}"></span>${escapeHtml(shortSchool(r.sc))}${r.noBook.length
+          ? ` <span class="nobook" title="${escapeHtml(r.noBook.join(", "))} 교과서가 아직 없어요">교과서?</span>` : ""}
         <span class="n">${r.total ? r.filled + "/" + r.total : r.count + "명"}</span></button>`).join("");
   box.querySelectorAll(".es-item").forEach(b=> b.addEventListener("click", ()=> goExamSchool(b.dataset.sc)));
 }
