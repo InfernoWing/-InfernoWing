@@ -1160,15 +1160,17 @@
   .brief-bar select{min-width:130px;}
   .brief-grp{margin-bottom:16px;}
   .brief-grp h5{margin:0 0 7px; font-size:12.5px; font-weight:900; display:flex; align-items:center; gap:7px;}
-  .brief-grp h5 .cnt{font-weight:700; font-size:11px; color:var(--c8);}
+  .brief-grp h5 .cnt{font-weight:700; font-size:11px; color:var(--c40);}
   .brief-row{display:flex; align-items:center; gap:9px; padding:6px 9px; border-radius:9px; font-size:12.5px;}
-  .brief-row:nth-child(odd){background:var(--c2);}
+  .brief-row:nth-child(odd){background:var(--c15);}   /* 줄무늬: 진한 회갈색 → 연한 베이지 */
   .brief-row .nm{font-weight:800; min-width:66px;}
-  .brief-row .sch{font-size:11.5px; color:var(--c8); min-width:62px;}
-  .brief-row .cls{font-size:11px; color:var(--c8);}
+  .brief-row .sch{font-size:11.5px; color:var(--c40); min-width:62px;}
+  .brief-row .cls{font-size:11px; color:var(--c40);}
   .brief-row .rest{margin-left:auto; display:flex; align-items:center; gap:7px;}
-  .brief-row .scope{font-size:11px; color:var(--c8); max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .brief-row .scope{font-size:11px; color:var(--c40); max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .brief-row .noscope{color:var(--rust); font-weight:700;}
+  html[data-theme="dark"] .brief-grp h5 .cnt, html[data-theme="dark"] .brief-row .sch,
+  html[data-theme="dark"] .brief-row .cls, html[data-theme="dark"] .brief-row .scope{color:#c9c2ac;}
 
   /* B-1 시험정보 입력 — 학교 목록 옆에 두기 */
   .exam-layout{display:grid; grid-template-columns:210px 1fr; gap:16px; align-items:start;}
