@@ -1518,7 +1518,7 @@
   .teacher-group.missing .tname{color:var(--rust);}
   .teacher-group.missing.rg{border-left-color:var(--c95); background:var(--c124);}
   .teacher-group.missing.rg .tname{color:var(--c36);}
-  /* 직전보충 · 점수 */
+  /* 직보 · 점수 */
   .makeup-bar{display:flex; flex-wrap:wrap; align-items:center; gap:10px; justify-content:space-between;
     background:var(--c33); border:1px solid var(--c42); border-radius:11px; padding:9px 12px; margin:14px 0 6px;}
   .mb-left{display:flex; align-items:center; gap:7px; flex-wrap:wrap;}
@@ -1539,7 +1539,7 @@
   .score-in{margin-left:auto; width:52px; font-size:12px; font-weight:800; padding:2px 5px;
     text-align:center; border:1px solid var(--c42); border-radius:6px; background:var(--paper-card); color:var(--ink);}
   .score-in::-webkit-outer-spin-button, .score-in::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
-  /* 학생별 직전보충 날짜 (한 학생에 여러 건 가능) */
+  /* 학생별 직보 날짜 (한 학생에 여러 건 가능) */
   .chip-mdate{display:flex; align-items:flex-start; gap:5px; width:100%; margin:1px 0 3px;}
   .chip-mdate i{font-style:normal; font-size:9.5px; font-weight:800; letter-spacing:.02em;
     background:var(--c29); color:var(--c9); border-radius:5px; padding:1px 5px; flex:0 0 auto; margin-top:3px;}
@@ -1821,7 +1821,7 @@
         </span>
         <span class="checkbox-row">
           <input type="checkbox" id="makeupOnly">
-          <label style="margin:0;" title="직전보충 일정이 걸린 시험만 보여줍니다 (시험 전체 일정 또는 학생별 직보 날짜)">직보만 보기</label>
+          <label style="margin:0;" title="직보 일정이 걸린 시험만 보여줍니다 (시험 전체 일정 또는 학생별 직보 날짜)">직보만 보기</label>
         </span>
       </div>
     </div>
@@ -2024,7 +2024,7 @@
         <input type="text" id="stuRegularAssistant" placeholder="예: 이소영" list="teacherList">
       </div>
       <div>
-        <label>시험대비 반</label>
+        <label>내신반</label>
         <input type="text" id="stuExamClass" placeholder="나중에 채워도 돼요" list="examClassList">
       </div>
     </div>
@@ -2070,7 +2070,7 @@
         </div>
         <div class="sub-toggle" id="stuSubToggle" style="display:none;">
           <button data-cf="regularClass" class="active">정규반</button>
-          <button data-cf="examClass">시험대비</button>
+          <button data-cf="examClass">내신반</button>
         </div>
         <div class="sub-toggle" id="stuTeaToggle" style="display:none;">
           <button data-tk="exam" class="active">내신 담임</button>
@@ -2094,7 +2094,7 @@
                 <th class="sortable" data-sort="examTeacher">내신 담임</th>
                 <th class="sortable" data-sort="regularTeacher">정규 담임</th>
                 <th class="sortable" data-sort="regularClass">정규반</th>
-                <th class="sortable" data-sort="examClass">시험대비 반</th>
+                <th class="sortable" data-sort="examClass">내신반</th>
                 <th class="sortable" data-sort="status">상태</th>
                 <th class="act"></th>
               </tr>
@@ -2116,7 +2116,7 @@
         <option value="grade">학년</option>
         <option value="school">학교</option>
         <option value="regularClass">정규반</option>
-        <option value="examClass">시험대비 반</option>
+        <option value="examClass">내신반</option>
         <option value="status">재원 상태</option>
       </select>
       <span id="stuBulkValueWrap"></span>
@@ -2328,7 +2328,7 @@
     <div class="imp-target">
       <span class="lbl">이 표는</span>
       <div class="seg" id="impTarget">
-        <button data-f="examClass" class="on">시험대비 반</button>
+        <button data-f="examClass" class="on">내신반</button>
         <button data-f="regularClass">정규반</button>
       </div>
       <span class="hint" id="impTargetHint"></span>
@@ -2392,7 +2392,7 @@
 
     <div class="stu-quick edit-only" id="stuQuick">
       <div class="sq-grp">
-        <span class="sq-tag ex">내신대비</span>
+        <span class="sq-tag ex">내신반</span>
         <div class="sq-row">
           <div><label class="small">담임</label><input type="text" id="sqTeacher" list="teacherList" placeholder="예: 강지성"></div>
           <div><label class="small">반</label><input type="text" id="sqExam" list="examClassList" placeholder="예: 내신A"></div>
@@ -2438,7 +2438,7 @@
     <textarea class="copy-area" id="daySummaryText" readonly spellcheck="false" style="min-height:260px;"></textarea>
     <div class="copy-actions">
       <button class="btn" id="daySummaryCopyBtn">📋 복사하기</button>
-      <span class="hint">직보만 보기를 켜면 그날의 직전보강 정보로 바뀝니다.</span>
+      <span class="hint">직보만 보기를 켜면 그날의 직보 정보로 바뀝니다.</span>
     </div>
   </div>
 </div>
@@ -4088,7 +4088,7 @@ function renderCrumbs(){
   if(stuF.grade) items.push({label:`학년 ${stuF.grade}`, k:"grade"});
   if(stuF.teacher!==null) items.push({label: stuF.teacher? `${stuTeacherLabel()} ${stuF.teacher}T` : `${stuTeacherLabel()} 미지정`, k:"teacher"});
   if(stuF.regularClass!==null) items.push({label: stuF.regularClass? `정규반 ${stuF.regularClass}` : "정규반 미배정", k:"regularClass"});
-  if(stuF.examClass!==null) items.push({label: stuF.examClass? `시험대비 ${stuF.examClass}` : "시험대비 미배정", k:"examClass"});
+  if(stuF.examClass!==null) items.push({label: stuF.examClass? `내신반 ${stuF.examClass}` : "내신반 미배정", k:"examClass"});
   if(showIncompleteOnly) items.push({label:"정규반 미배정", k:"incomplete"});
   if(showExamIncompleteOnly) items.push({label:"내신반 미배정", k:"examincomplete"});
   if(showSameNameOnly) items.push({label:"동명이인만", k:"samename"});
@@ -4391,7 +4391,7 @@ function renderBulkValueInput(){
   const ph = TEACHER_FIELDS.includes(field) ? "예: 강지성"
     : field==="school" ? "예: 가락중학교"
     : field==="grade" ? "예: 중2"
-    : field==="regularClass" ? "정규반 이름" : "시험대비 반 이름";
+    : field==="regularClass" ? "정규반 이름" : "내신반 이름";
   const prev = document.getElementById("stuBulkValue");
   const keep = (prev && prev.tagName==="INPUT" && prev.dataset.list===listId) ? prev.value : "";
   wrap.innerHTML = `<input type="text" id="stuBulkValue" list="${listId}" data-list="${listId}" placeholder="${ph}" value="${escapeHtml(keep)}">`;
@@ -4956,7 +4956,7 @@ function buildClassImportPlan(rows, field){
 }
 
 function changeText(before, payload){
-  const label = { examClass: "시험대비 반", regularClass: "정규반", teacher: "담임",
+  const label = { examClass: "내신반", regularClass: "정규반", teacher: "담임",
                   examTeacher: "내신 담임", regularTeacher: "정규 담임",
                   examAssistant: "내신 부담임", regularAssistant: "정규 부담임", grade: "학년" };
   return Object.keys(payload).map(k=>
@@ -5054,7 +5054,7 @@ function renderClassImportPlan(plan, fileName){
       변경사항이 없어요 — 표의 내용이 지금 앱에 있는 것과 이미 같습니다. (파일은 정상적으로 읽혔어요)</p>`;
   }
 
-  const other = classImportField === "examClass" ? "정규반" : "시험대비 반";
+  const other = classImportField === "examClass" ? "정규반" : "내신반";
   html += `<p class="imp-note">학번과 ${other} 등 다른 값은 건드리지 않습니다. 적용 뒤 “되돌리기”로 한 번에 취소할 수 있어요.</p>`;
 
   document.getElementById("classImportBody").innerHTML = html;
@@ -5143,7 +5143,7 @@ function syncImpTarget(){
   document.querySelectorAll("#impTarget button").forEach(b=>
     b.classList.toggle("on", b.dataset.f === classImportField));
   document.getElementById("impTargetHint").textContent =
-    classImportField === "examClass" ? "학생의 시험대비 반 칸을 채웁니다" : "학생의 정규반 칸을 채웁니다";
+    classImportField === "examClass" ? "학생의 내신반 칸을 채웁니다" : "학생의 정규반 칸을 채웁니다";
 }
 document.getElementById("impTarget").addEventListener("click", (e)=>{
   const b = e.target.closest("button");
@@ -5335,7 +5335,7 @@ function renderScorePlan(){
       변경사항이 없어요 — 표의 점수가 지금 앱에 있는 것과 이미 같습니다. (파일은 정상적으로 읽혔어요)</p>`;
   }
 
-  html += `<p class="imp-note">점수만 씁니다. 직전보충 참석·시험 범위 등 다른 값은 건드리지 않습니다. 적용 뒤 “되돌리기”로 한 번에 취소할 수 있어요.</p>`;
+  html += `<p class="imp-note">점수만 씁니다. 직보 참석·시험 범위 등 다른 값은 건드리지 않습니다. 적용 뒤 “되돌리기”로 한 번에 취소할 수 있어요.</p>`;
   document.getElementById("scoreImportBody").innerHTML = html;
   document.getElementById("scoreImportApply").disabled = (plan.fill.length + plan.change.length) === 0;
 }
@@ -5870,20 +5870,6 @@ function examCardHtml(school, grade, examName){
       <p class="math-warn" style="display:none;">수학 시험일이 시험기간 밖이에요. 확인해주세요.</p>
       <button type="button" class="copy-prev-btn spread-date-btn">이 날짜를 다른 학년에도</button>
 
-      <div class="mini-row">
-        <div>
-          <label class="small">프린트</label>
-          <select data-field="printStatus">
-            <option value="unconfirmed" ${(!existing||existing.printStatus!=="confirmed")?"selected":""}>미확인</option>
-            <option value="confirmed" ${existing?.printStatus==="confirmed"?"selected":""}>확인</option>
-          </select>
-        </div>
-        <div>
-          <label class="small">입력 선생님</label>
-          <input type="text" data-field="inputTeacher" placeholder="예: 강지성" list="teacherList" value="${escapeHtml(existing?.inputTeacher||"")}">
-        </div>
-      </div>
-
       <div>
         <label class="small" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
           <span>시험 범위</span>
@@ -5903,7 +5889,7 @@ function examCardHtml(school, grade, examName){
       <div class="save-row">
         <button class="btn small save-exam-btn">입력 저장</button>
         <span class="dirty-flag">● 저장 안 됨</span>
-        <span class="makeup-info">직전보강 ${existing?.makeupDate? escapeHtml(existing.makeupDate) : "--"}</span>
+        <span class="makeup-info">직보 ${existing?.makeupDate? escapeHtml(existing.makeupDate) : "--"}</span>
         ${existing ? `<button class="icon-btn del delete-exam-btn" title="이 시험 정보를 삭제합니다">삭제</button>` : ""}
       </div>
       <div class="mini-row makeup-row">
@@ -6200,7 +6186,7 @@ function renderExamTab(){
 
   if(!currentExamSchool){
     summaryEl.textContent = "";
-    gridEl.innerHTML = `<div class="empty-state">먼저 '학생 명단' 탭에서 학교와 학년을 포함해 학생을 등록해주세요.</div>`;
+    gridEl.innerHTML = `<div class="empty-state">먼저 '학생 관리' 탭에서 학교와 학년을 포함해 학생을 등록해주세요.</div>`;
     return;
   }
   const schoolStudents = students.filter(s=>s.school===currentExamSchool);
@@ -6209,7 +6195,7 @@ function renderExamTab(){
   summaryEl.textContent = `재원생 ${schoolStudents.filter(s=> statusOf(s) !== "퇴원").length}명 · 학년 ${grades.length? grades.join(", ") : "미지정"}`;
 
   if(grades.length===0){
-    gridEl.innerHTML = `<div class="empty-state">이 학교 학생들의 학년이 아직 입력되지 않았어요. 학생 명단에서 학년을 채워주세요.</div>`;
+    gridEl.innerHTML = `<div class="empty-state">이 학교 학생들의 학년이 아직 입력되지 않았어요. '학생 관리' 탭에서 학년을 채워주세요.</div>`;
     return;
   }
   let html = "";
@@ -6233,8 +6219,6 @@ function collectCardData(cardEl){
     startDate: get("startDate").value,
     endDate: get("endDate").value,
     mathDate: get("mathDate") ? get("mathDate").value : "",
-    printStatus: get("printStatus").value,
-    inputTeacher: get("inputTeacher").value.trim(),
     examScope: get("examScope").value.trim(),
     schoolNotice: get("schoolNotice").value.trim(),
     units: [...cardEl.querySelectorAll(".unit-chip.on")].map(b=> b.dataset.u),
@@ -6350,7 +6334,7 @@ document.getElementById("examCardsGrid").addEventListener("click", async (e)=>{
   } else if(e.target.classList.contains("apply-makeup-btn")){
     const val = card.querySelector('[data-field="makeupDateInput"]').value;
     if(!val){ showToast("적용할 보강 날짜를 먼저 선택해주세요.", {type:"warn"}); return; }
-    saveExamCard(card, {makeupDate: val}).then(()=>{ showToast(`직전보강일을 ${val} 로 저장했어요.`, {type:"ok"}); flushTermArchiveNotice(); });
+    saveExamCard(card, {makeupDate: val}).then(()=>{ showToast(`직보일을 ${val} 로 저장했어요.`, {type:"ok"}); flushTermArchiveNotice(); });
   }
 });
 document.getElementById("examCardsGrid").addEventListener("change", (e)=>{
@@ -6595,7 +6579,7 @@ function schoolBoxMatchesExam(e, q){
 /* 화면 필터(학교 검색 / 학생 없는 시험 숨기기 / 선생님별 보기)를 적용한 전체 시험 목록 */
 function mathOnlyOn(){ return !!document.getElementById("mathOnly")?.checked; }
 function makeupOnlyOn(){ return !!document.getElementById("makeupOnly")?.checked; }
-/* 이 시험에 걸린 직전보충 날짜들 — 시험 전체 공통 일정 + 학생별 직보 날짜를 모두 모읍니다 */
+/* 이 시험에 걸린 직보 날짜들 — 시험 전체 공통 일정 + 학생별 직보 날짜를 모두 모읍니다 */
 function examMakeupDatesOf(e){
   const set = new Set();
   if((e.makeupDate||"").trim()) set.add(e.makeupDate);
@@ -6603,7 +6587,7 @@ function examMakeupDatesOf(e){
   Object.values(md).forEach(v=> mdateEntriesOf(v).forEach(en=>{ if((en.date||"").trim()) set.add(en.date); }));
   return set;
 }
-/* 이 시험에 직전보충이 하나라도 걸려 있는지 */
+/* 이 시험에 직보이 하나라도 걸려 있는지 */
 function examHasMakeup(e){ return examMakeupDatesOf(e).size > 0; }
 function visibleExams(opts){
   const ignoreTb = !!(opts && opts.ignoreTb);
@@ -6617,7 +6601,7 @@ function visibleExams(opts){
        (직보 날짜는 시험 날짜보다 먼저 입력되는 일이 많아요) */
     if((!e.startDate || !e.endDate) && !(makeupOnly && !mathOnly && examHasMakeup(e))) return false;
     if(mathOnly && !e.mathDate) return false;          /* 수학 날짜가 없으면 뺍니다 */
-    if(makeupOnly && !examHasMakeup(e)) return false;  /* 직전보충이 걸린 시험만 */
+    if(makeupOnly && !examHasMakeup(e)) return false;  /* 직보이 걸린 시험만 */
     if(calSchoolQ && !schoolBoxMatchesExam(e, calSchoolQ)) return false;
     if(calTbFilter && !ignoreTb && tbGroupOf(e).cls !== calTbFilter) return false;
     if(hideEmpty && studentsForExam(e).length === 0) return false;
@@ -7185,7 +7169,6 @@ function openDayModal(key, keepFilters){
     : list.map(e=>{
         const count = studentsOf(e).length;
         const period = (e.startDate===e.endDate) ? fmtWithDow(e.startDate) : `${fmtWithDow(e.startDate)} ~ ${fmtWithDow(e.endDate)}`;
-        const print = e.printStatus==="confirmed" ? "프린트 확인" : "프린트 미확인";
         return `<div class="cmp-item">
         <button class="cmp-row ${hasScope(e)?"":"missing"}" data-exam="${e.id}">
           <span class="cmp-school">
@@ -7199,7 +7182,7 @@ function openDayModal(key, keepFilters){
             ${unitTagsHtml(e)}${e.examScope ? escapeHtml(e.examScope).replace(/\n/g,"<br>")
               : (unitsOf(e).length ? "" : `<span class="none">시험 범위 미입력</span>`)}
             ${e.schoolNotice ? `<span class="nt">📌 ${escapeHtml(e.schoolNotice)}</span>` : ""}
-            <span class="period">${escapeHtml(period)} · ${print} · ${escapeHtml(e.examName||"")}</span>
+            <span class="period">${escapeHtml(period)} · ${escapeHtml(e.examName||"")}</span>
           </span>
         </button>
         ${stuBlock(e)}
@@ -7228,7 +7211,7 @@ document.getElementById("closeDayModal").addEventListener("click", closeDayModal
 document.getElementById("dayModal").addEventListener("click", (e)=>{ if(e.target.id==="dayModal") closeDayModal(); });
 
 /* ---------- 하루 요약 (달력 칸의 "요약" 버튼) ----------
-   "직보만 보기"가 켜져 있으면 그날의 직전보강 정보로, 꺼져 있으면 그날 시험 전체를
+   "직보만 보기"가 켜져 있으면 그날의 직보 정보로, 꺼져 있으면 그날 시험 전체를
    학교별 · 선생님별로 훑어볼 수 있는 텍스트로 정리합니다. 큰 상세 창을 열지 않아도 됩니다. */
 function daySummaryHeadText(key){
   const d = toDate(key);
@@ -7273,7 +7256,7 @@ function daySummaryExamText(key, list){
 }
 function daySummaryMakeupText(key, list){
   const calTeacher = (document.getElementById("calFilterTeacher")?.value || "").trim();
-  const lines = [daySummaryHeadText(key) + " 직전보강 요약"];
+  const lines = [daySummaryHeadText(key) + " 직보 요약"];
   if(calTeacher) lines.push(`(${calTeacher}T 담당만)`);
   lines.push("");
 
@@ -7299,7 +7282,7 @@ function daySummaryMakeupText(key, list){
     });
   });
 
-  if(!commonRows.length && teacherMap.size === 0) return lines.concat(["직전보강 일정이 없어요."]).join("\n");
+  if(!commonRows.length && teacherMap.size === 0) return lines.concat(["직보 일정이 없어요."]).join("\n");
 
   if(commonRows.length){
     lines.push("■ 전체 공통 일정");
@@ -7325,7 +7308,7 @@ function daySummaryText(key){
 function openDaySummaryModal(key){
   const d = toDate(key);
   document.getElementById("daySummaryTitle").textContent =
-    `${d.getMonth()+1}월 ${d.getDate()}일 요약${makeupOnlyOn() ? " (직전보강)" : ""}`;
+    `${d.getMonth()+1}월 ${d.getDate()}일 요약${makeupOnlyOn() ? " (직보)" : ""}`;
   document.getElementById("daySummaryText").value = daySummaryText(key);
   document.getElementById("daySummaryModal").classList.add("active");
 }
@@ -7838,7 +7821,7 @@ function renderScopeTab(){
   emptyBox.innerHTML = "";
   table.innerHTML = `
     <thead><tr>
-      <th>학교</th><th>학년</th><th>인원</th><th>시험 기간</th><th>시험 범위</th><th>학교 안내</th><th>프린트</th>
+      <th>학교</th><th>학년</th><th>인원</th><th>시험 기간</th><th>시험 범위</th><th>학교 안내</th>
     </tr></thead>
     <tbody>${rows.map((e,i)=>{
       /* 교과서별로 묶기: 교과서가 바뀌는 줄 앞에 제목 줄 */
@@ -7848,7 +7831,7 @@ function renderScopeTab(){
         if(i===0 || tbGroupOf(rows[i-1]).cls !== g.cls){
           const n = rows.filter(x=> tbGroupOf(x).cls===g.cls).length;
           const sw = g.cls==="t0" ? `<span class="tbg-sw tb-dash"></span>` : `<span class="tbg-sw" style="background:var(--tb${g.cls.slice(1)}-c);"></span>`;
-          groupRow = `<tr class="tb-group ${g.cls}"><td colspan="7">${sw}${escapeHtml(g.label)} <span class="tbg-n">${n}곳</span></td></tr>`;
+          groupRow = `<tr class="tb-group ${g.cls}"><td colspan="6">${sw}${escapeHtml(g.label)} <span class="tbg-n">${n}곳</span></td></tr>`;
         }
       }
       const count = studentsForExam(e).length;
@@ -7859,9 +7842,6 @@ function renderScopeTab(){
         : (unitTagsHtml(e) +
            (e.examScope ? escapeHtml(e.examScope).replace(/\n/g,"<br>")
                         : (unitsOf(e).length ? "" : `<span class="none">미입력</span>`)));
-      const print = e.printStatus==="confirmed"
-        ? `<span style="color:var(--green); font-weight:700; white-space:nowrap;">확인</span>`
-        : `<span style="color:var(--rust); font-weight:700; white-space:nowrap;">미확인</span>`;
       return groupRow + `<tr class="${(!hasScope(e) && !e.notConducted)?"missing":""}" data-exam-id="${e.id}">
         <td class="school">${escapeHtml(shortSchool(e.school))}</td>
         <td>${escapeHtml(e.grade||"")}</td>
@@ -7869,7 +7849,6 @@ function renderScopeTab(){
         <td style="white-space:nowrap;">${period}</td>
         <td>${scopeCell}</td>
         <td class="muted">${e.schoolNotice? escapeHtml(e.schoolNotice) : "—"}</td>
-        <td>${print}</td>
       </tr>`;
     }).join("")}</tbody>`;
 }
@@ -7893,7 +7872,7 @@ document.getElementById("scopeExportBtn").addEventListener("click", ()=>{
     return {
       "학교": c[0].textContent.trim(), "학년": c[1].textContent.trim(), "인원": c[2].textContent.trim(),
       "시험 기간": c[3].textContent.trim(), "시험 범위": c[4].innerText.trim(),
-      "학교 안내": c[5].textContent.trim(), "프린트": c[6].textContent.trim(),
+      "학교 안내": c[5].textContent.trim(),
     };
   });
   const label = seasonLabelOf(scopeSeason).replace(/\s+/g,"_");
@@ -8054,9 +8033,9 @@ function makeupGroupsOf(e){
 }
 
 function examSummaryText(list0, opts){
-  /* '직보만'으로 뽑을 땐 직전보강이 없는 시험은 통째로 뺍니다 */
+  /* '직보만'으로 뽑을 땐 직보이 없는 시험은 통째로 뺍니다 */
   const list = opts.mOnly ? list0.filter(e=> !e.notConducted && examHasMakeup(e)) : list0;
-  if(!list.length) return "직전보강이 잡힌 시험이 없습니다.";
+  if(!list.length) return "직보이 잡힌 시험이 없습니다.";
   const many = list.length > 1;
   return list.map(e=>{
     const period = (!e.startDate || !e.endDate) ? "(미정)"
@@ -8085,8 +8064,7 @@ function examSummaryText(list0, opts){
 
     if(opts.book){
       const bk = (typeof textbookOf === "function") ? textbookOf(e.school, e.grade) : "";
-      const pr = e.printStatus==="confirmed" ? "프린트 확인" : "프린트 미확인";
-      lines.push(`· 교과서    ${bk || "(미입력)"}   · ${pr}`);
+      lines.push(`· 교과서    ${bk || "(미입력)"}`);
     }
 
     const roster = studentsForExam(e);
@@ -8102,12 +8080,12 @@ function examSummaryText(list0, opts){
       const common = (e.makeupDate||"").trim();
       const groups = makeupGroupsOf(e);
       if(!common && !groups.length){
-        lines.push(`· 직전보강  (미정)`);
+        lines.push(`· 직보  (미정)`);
       } else {
-        if(common) lines.push(`· 직전보강  ${fmtWithDow(common)}${(e.makeupNote||"").trim()?"  "+e.makeupNote.trim():""}  (전체 공통)`);
+        if(common) lines.push(`· 직보  ${fmtWithDow(common)}${(e.makeupNote||"").trim()?"  "+e.makeupNote.trim():""}  (전체 공통)`);
         groups.forEach((g,i)=>{
           const when = `${fmtWithDow(g.date)} ${g.time ? timeText(g.time) : "시간 미정"}`;
-          const label = (!common && i===0) ? "· 직전보강  " : "            ";
+          const label = (!common && i===0) ? "· 직보  " : "            ";
           lines.push(`${label}${when} — ${g.names.length}명`);
           if(opts.mstu && g.names.length) lines.push(`              ${g.names.join(", ")}`);
         });
@@ -8127,7 +8105,7 @@ function examSummaryText(list0, opts){
   }).join(many ? "\n\n" : "\n") + (many && opts.msum ? makeupRollupText(list, opts) : "");
 }
 
-/* 여러 시험을 한 번에 복사할 때 — 직전보강만 날짜·시간순으로 모아 놓은 표 */
+/* 여러 시험을 한 번에 복사할 때 — 직보만 날짜·시간순으로 모아 놓은 표 */
 function makeupRollupText(list, opts){
   const rows = [];
   list.forEach(e=>{
@@ -8139,7 +8117,7 @@ function makeupRollupText(list, opts){
   });
   if(!rows.length) return "";
   rows.sort((a,b)=> a.date.localeCompare(b.date) || (a.time||"zz").localeCompare(b.time||"zz") || a.who.localeCompare(b.who,"ko"));
-  const out = ["", "── 직전보강 일정 모아보기 ──"];
+  const out = ["", "── 직보 일정 모아보기 ──"];
   let lastDate = "";
   rows.forEach(r=>{
     const dayHead = r.date === lastDate ? "          " : fmtWithDow(r.date).padEnd(10, " ");
@@ -8161,9 +8139,9 @@ function renderCopyOptions(){
     {k:"math",   label:"수학 시험일"},
     {k:"notice", label:"학교안내"},
     {k:"count",  label:"대상 인원"},
-    {k:"makeup", label:"직전보강"},
+    {k:"makeup", label:"직보"},
     {k:"mstu",   label:"직보 학생 이름"},
-    {k:"book",   label:"교과서·프린트"},
+    {k:"book",   label:"교과서"},
     {k:"roster", label:"담당 학생 명단"},
     {k:"msum",   label:"직보 모아보기", multiOnly:true},
   ];
@@ -8171,10 +8149,10 @@ function renderCopyOptions(){
   document.getElementById("copyOptions").innerHTML =
     `<span class="fl">넣을 항목</span>` +
     defs.filter(d=> !d.multiOnly || many)
-        .map(d=>`<button class="fbtn ${copyOpts[d.k]?"active":""}" data-k="${d.k}"${d.k==="mstu"?' title="직보 날짜·시간별로 학생 이름을 적습니다"':d.k==="msum"?' title="여러 시험의 직전보강만 날짜순으로 모아서 맨 뒤에 붙입니다"':""}>${d.label}</button>`).join("") +
+        .map(d=>`<button class="fbtn ${copyOpts[d.k]?"active":""}" data-k="${d.k}"${d.k==="mstu"?' title="직보 날짜·시간별로 학생 이름을 적습니다"':d.k==="msum"?' title="여러 시험의 직보만 날짜순으로 모아서 맨 뒤에 붙입니다"':""}>${d.label}</button>`).join("") +
     `<span class="copy-presets">` +
       `<button class="fbtn ghost" data-preset="kakao" title="학부모 공지에 쓰기 좋은 항목만">카톡용</button>` +
-      `<button class="fbtn ghost" data-preset="makeup" title="직전보강 일정과 학생 이름만">직보만</button>` +
+      `<button class="fbtn ghost" data-preset="makeup" title="직보 일정과 학생 이름만">직보만</button>` +
       `<button class="fbtn ghost" data-preset="full" title="모든 항목 켜기">전체</button>` +
     `</span>`;
   document.querySelectorAll("#copyOptions .fbtn").forEach(b=> b.addEventListener("click", ()=>{
@@ -8917,7 +8895,7 @@ function openStudentModal(studentId, returnTo){
     (regularTeacherOf(s) ? `<span class="tag rteacher">정규 ${escapeHtml(regularTeacherOf(s))}T</span>` : `<span class="tag none">정규 담임 미지정</span>`) +
     (s.regularAssistant ? `<span class="tag rteacher">정규 부 ${escapeHtml(s.regularAssistant)}T</span>` : ``) +
     (s.regularClass ? `<span class="tag cls">정규반 ${escapeHtml(s.regularClass)}</span>` : `<span class="tag none">정규반 미배정</span>`) +
-    (s.examClass ? `<span class="tag cls">시험대비 ${escapeHtml(s.examClass)}</span>` : `<span class="tag none">시험대비 반 미배정</span>`);
+    (s.examClass ? `<span class="tag cls">내신반 ${escapeHtml(s.examClass)}</span>` : `<span class="tag none">내신반 미배정</span>`);
 
   /* 이 학생이 치르는 시험 (학교+학년 일치) */
   const tk = todayKey();
@@ -8943,7 +8921,7 @@ function openStudentModal(studentId, returnTo){
           return `<button class="stu-exam-row ${e.endDate<tk?"past":""}" data-exam="${e.id}">
             <span>
               <span class="en">${escapeHtml(e.examName||"")} <span style="font-weight:600; color:var(--c2); font-size:12px;">${escapeHtml(period)}</span></span>
-              <span class="ed">${scope} · 직전보강 ${e.makeupDate ? escapeHtml(e.makeupDate) : "--"}</span>
+              <span class="ed">${scope} · 직보 ${e.makeupDate ? escapeHtml(e.makeupDate) : "--"}</span>
             </span>
             ${ddayBadge(e)}
           </button>`;
@@ -9071,7 +9049,7 @@ function setTeacherBasis(v){
 /* ---------- 시험 상세 모달 ---------- */
 let detailReturnTo = null;   // {type:"day", key} | {type:"student", id} | null
 
-/* ---------- 직전보충 참석 · 시험 점수 ---------- */
+/* ---------- 직보 참석 · 시험 점수 ---------- */
 let detailShowAll = false;         /* 선생님별 보기를 잠깐 풀고 전체를 볼 때 */
 let detailBusy = false;            /* 입력 중에는 창을 다시 그리지 않습니다 */
 let detailSaveTimer = null;
@@ -9195,16 +9173,15 @@ function openDetailModal(examId, returnTo){
   const period = (!exam.startDate || !exam.endDate) ? `<span class="flag-bad">미정</span>`
     : exam.startDate===exam.endDate ? fmtWithDow(exam.startDate) : `${fmtWithDow(exam.startDate)} ~ ${fmtWithDow(exam.endDate)}`;
   const makeupHtml = exam.makeupDate
-    ? `직전보충 ${fmtWithDow(exam.makeupDate)}${exam.makeupNote ? " " + escapeHtml(exam.makeupNote) : ""}`
-    : `직전보충 <span class="flag-bad">--</span>`;
-  const printHtml = exam.printStatus==="confirmed" ? `<span class="flag-ok">프린트 확인</span>` : `<span class="flag-bad">프린트 미확인</span>`;
+    ? `직보 ${fmtWithDow(exam.makeupDate)}${exam.makeupNote ? " " + escapeHtml(exam.makeupNote) : ""}`
+    : `직보 <span class="flag-bad">--</span>`;
 
   const tbook = textbookOf(exam.school, exam.grade);
   const mathHtml = exam.mathDate
     ? `<span class="meta-math">수학 ${fmtWithDow(exam.mathDate)}</span>`
     : `수학일 <span class="flag-bad">미입력</span>`;
   document.getElementById("detailMeta").innerHTML =
-    `시험기간 ${period}<span class="dot">·</span>${mathHtml}<span class="dot">·</span>${makeupHtml}<span class="dot">·</span>${printHtml}` +
+    `시험기간 ${period}<span class="dot">·</span>${mathHtml}<span class="dot">·</span>${makeupHtml}` +
     (tbook ? `<span class="dot">·</span><span class="meta-tb">교과서 ${escapeHtml(tbook)}</span>` : "");
 
   /* 시험 범위 · 안내 — 창 안에서 바로 쓰고 저장 */
@@ -9328,7 +9305,7 @@ function openDetailModal(examId, returnTo){
 
   let bodyHtml = `<div class="makeup-bar">
       <div class="mb-left">
-        <label class="mb-lbl" for="makeupDateIn">직전보충 일정</label>
+        <label class="mb-lbl" for="makeupDateIn">직보 일정</label>
         <input type="date" id="makeupDateIn" value="${escapeHtml(exam.makeupDate||"")}" ${editMode?"":"disabled"}>
         <input type="text" id="makeupNoteIn" placeholder="예: 2시 3층" value="${escapeHtml(exam.makeupNote||"")}" ${editMode?"":"disabled"}>
         ${editMode ? `<button class="btn secondary small" id="makeupSaveBtn">일정 저장</button>` : ""}
@@ -9351,7 +9328,7 @@ function openDetailModal(examId, returnTo){
       return drops.length ? `<div class="score-drop">지난 시험보다 ${SCORE_DROP_WARN}점 이상 떨어진 학생 <b>${drops.length}명</b> — ${
         drops.map(x=> `<button type="button" class="sd-name" data-open-student="${escapeHtml(x.s.id)}">${escapeHtml(x.s.name)}</button> ${x.pv.score}→${x.cur}`).join(" · ")}</div>` : "";
     })()}
-    ${editMode ? `<p class="mb-hint">학생 카드를 누르면 <b>직전보충 참석</b>으로 표시됩니다. 점수는 칸에 바로 적으면 저장돼요.</p>` : ""}
+    ${editMode ? `<p class="mb-hint">학생 카드를 누르면 <b>직보 참석</b>으로 표시됩니다. 점수는 칸에 바로 적으면 저장돼요.</p>` : ""}
     <div class="tbasis-row">
       <span class="section-label" style="margin:0;">담당 선생님별 학생 ${relevant.length}명${
         calTeacher ? (detailShowAll
@@ -9362,7 +9339,7 @@ function openDetailModal(examId, returnTo){
         detailShowAll ? `${escapeHtml(calTeacher)}T 학생만` : "전체 보기"}</button>` : ""}
       <span class="tb-lbl">담임 기준</span>
       <span class="seg tb-seg" id="tbasisSeg">
-        <button data-b="exam" class="${teacherBasis==="exam"?"on":""}">내신대비 반</button>
+        <button data-b="exam" class="${teacherBasis==="exam"?"on":""}">내신반</button>
         <button data-b="regular" class="${teacherBasis==="regular"?"on":""}">정규반</button>
       </span>
     </div>`;
@@ -9381,7 +9358,7 @@ function openDetailModal(examId, returnTo){
     return `<div class="assign-chip ${att?"att":""}" data-sid="${escapeHtml(s.id)}">
       <span class="chip-top">
         <span class="sname" data-open-student="${escapeHtml(s.id)}" title="이름을 누르면 이 학생의 다른 시험을 날짜순으로 볼 수 있어요">${escapeHtml(s.name)}</span>
-        <span class="att-mark" title="직전보충 참석">✓</span>
+        <span class="att-mark" title="직보 참석">✓</span>
         <input class="score-in" type="number" min="0" max="100" inputmode="numeric"
                placeholder="점수" value="${sc===undefined||sc===null?"":escapeHtml(String(sc))}" ${editMode?"":"disabled"}>
       </span>
@@ -9393,7 +9370,7 @@ function openDetailModal(examId, returnTo){
           if(!entries.length) return editMode ? "" : `<span class="mdate-empty">--</span>`;
           return entries.map((en,idx)=> `<span class="mdate-entry" data-idx="${idx}">
               <input class="mdate-date" type="date" value="${escapeHtml(en.date||"")}"
-                     title="이 학생이 직전보충 오는 날" ${editMode?"":"disabled"}>
+                     title="이 학생이 직보 오는 날" ${editMode?"":"disabled"}>
               <select class="mdate-time" title="시간" ${editMode?"":"disabled"}>${timeOptionsHtml(en.time||"")}</select>
               ${editMode?`<button type="button" class="mdate-del" title="이 일정 삭제">×</button>`:""}
             </span>`).join("");
@@ -9420,7 +9397,7 @@ function openDetailModal(examId, returnTo){
   } else {
     bodyHtml += teacherNames.map(t=> groupHtml(`${escapeHtml(t)}T`, byTeacher[t])).join("");
     /* 담임 기준과 상관없이 빈자리를 항상 따로 보여줍니다 */
-    bodyHtml += groupHtml("내신대비 담임 미지정", missingExam, "missing ex");
+    bodyHtml += groupHtml("내신 담임 미지정", missingExam, "missing ex");
     bodyHtml += groupHtml("정규반 담임 미지정", missingRegular, "missing rg");
     if(!teacherNames.length && !missingExam.length && !missingRegular.length)
       bodyHtml += `<div class="empty-state">담당 선생님 정보가 없어요.</div>`;
@@ -9439,7 +9416,7 @@ function openDetailModal(examId, returnTo){
     openDetailModal(examId, returnTo);
   });
 
-  /* 직전보충 일정 저장 */
+  /* 직보 일정 저장 */
   const mSave = document.getElementById("makeupSaveBtn");
   if(mSave) mSave.addEventListener("click", async (ev)=>{
     const d = document.getElementById("makeupDateIn").value;
@@ -9452,7 +9429,7 @@ function openDetailModal(examId, returnTo){
     detailBusy = false;                      /* 저장 뒤 머리말이 바로 갱신되도록 */
     await updateExamDoc(examId, { makeupDate: d, makeupNote: note });
     if(currentDetailExamId === examId) openDetailModal(examId);
-    showToast(`직전보충 일정을 저장했어요.`, {
+    showToast(`직보 일정을 저장했어요.`, {
       type:"ok", actionLabel:"되돌리기",
       onAction: async ()=>{ await updateExamDoc(examId, before); showToast("되돌렸어요.", {type:"warn"}); }
     });
@@ -9517,7 +9494,7 @@ function wireDetailTgBoxOnce(tgBox){
       const defaultDate = curExam && curExam.mathDate ? shiftKey(curExam.mathDate, -1) : "";
       const row = document.createElement("span");
       row.className = "mdate-entry"; row.dataset.idx = idx;
-      row.innerHTML = `<input class="mdate-date" type="date" value="${escapeHtml(defaultDate)}" title="이 학생이 직전보충 오는 날 — 기본은 수학 시험 전날, 필요하면 바꾸세요">` +
+      row.innerHTML = `<input class="mdate-date" type="date" value="${escapeHtml(defaultDate)}" title="이 학생이 직보 오는 날 — 기본은 수학 시험 전날, 필요하면 바꾸세요">` +
         `<select class="mdate-time" title="시간 — 기본 오후 1시, 필요하면 바꾸세요">${timeOptionsHtml("13:00")}</select>` +
         `<button type="button" class="mdate-del" title="이 일정 삭제">×</button>`;
       listEl.insertBefore(row, addBtn);
