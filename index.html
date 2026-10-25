@@ -2677,11 +2677,39 @@ async function addStudent(s){
   if(isConfigured){ await addDoc(collection(db,"students"), s); }
   else{ students.push({id:"s"+Date.now(), ...s}); saveLocal("kladi_students", students); onDataChange(); }
 }
+/* 여러 문서를 한꺼번에 저장 — 400건씩 묶어 한 번에 보냅니다.
+   예전엔 한 명씩 차례로 보내고 한 명 저장될 때마다 화면 전체를 다시 그려서, 340명이면 1분 넘게 걸렸습니다.
+   묶음 하나는 전부 저장되거나 전부 안 되거나 둘 중 하나입니다. 중간 묶음에서 실패하면
+   err.done(이미 저장된 건수)·err.total 을 붙여서 던집니다 → saveFailToast()가 몇 건까지 됐는지 알려줍니다. */
+async function commitInChunks(ops){
+  const SIZE = 400;
+  let done = 0;
+  for(let i = 0; i < ops.length; i += SIZE){
+    const b = writeBatch(db);
+    const part = ops.slice(i, i + SIZE);
+    part.forEach(o=>{
+      if(o.type === "update") b.update(o.ref, o.data);
+      else if(o.type === "set") b.set(o.ref, o.data);
+      else if(o.type === "delete") b.delete(o.ref);
+    });
+    try{ await b.commit(); }
+    catch(e){ e.done = done; e.total = ops.length; throw e; }
+    done += part.length;
+  }
+  return done;
+}
+function saveFailToast(e, what){
+  console.error(e);
+  const part = (e && typeof e.done === "number" && e.total)
+    ? (e.done ? ` ${e.total}건 중 ${e.done}건은 저장됐고, 나머지 ${e.total - e.done}건은 저장되지 않았어요.` : ` 하나도 저장되지 않았어요.`) : "";
+  showToast(`${what || "저장"} 중에 문제가 생겼어요.${part} 인터넷 연결을 확인하고 다시 해 주세요.`, {type:"bad", duration:12000});
+}
 async function addStudentsBulk(list){
   logChange("학생 일괄 추가", list.slice(0,3).map(x=>x.name).join(", ") + (list.length>3 ? " 외" : ""), list.length);
   const newIds = [];
   if(isConfigured){
-    for(const s of list){ const ref = await addDoc(collection(db,"students"), s); newIds.push(ref.id); }
+    const ops = list.map(s=>{ const ref = doc(collection(db,"students")); newIds.push(ref.id); return { type:"set", ref, data:s }; });
+    await commitInChunks(ops);
   } else {
     list.forEach(s=>{
       const id = "s"+Date.now()+Math.random().toString(36).slice(2);
@@ -2711,7 +2739,7 @@ async function saveSetting(key, value){
 
 async function updateStudentsBulk(ids, payload){
   if(isConfigured){
-    for(const id of ids){ await updateDoc(doc(db,"students",id), payload); }
+    await commitInChunks(ids.map(id=> ({ type:"update", ref:doc(db,"students",id), data:payload })));
   } else {
     students.forEach(s=>{ if(ids.includes(s.id)) Object.assign(s, payload); });
     saveLocal("kladi_students", students); onDataChange();
@@ -2720,7 +2748,7 @@ async function updateStudentsBulk(ids, payload){
 async function removeStudentsBulk(ids){
   logChange("학생 일괄 삭제", ids.map(i=>(students.find(x=>x.id===i)||{}).name).filter(Boolean).slice(0,3).join(", ") + (ids.length>3?" 외":""), ids.length);
   if(isConfigured){
-    for(const id of ids){ await deleteDoc(doc(db,"students",id)); }
+    await commitInChunks(ids.map(id=> ({ type:"delete", ref:doc(db,"students",id) })));
   } else {
     students = students.filter(s=> !ids.includes(s.id));
     saveLocal("kladi_students", students); onDataChange();
@@ -2947,7 +2975,7 @@ function showToast(message, opts={}){
 /* 삭제/일괄변경을 되돌리기 위한 복원 함수 */
 async function restoreStudentDocs(list){
   if(isConfigured){
-    for(const s of list){ const {id, ...rest} = s; await setDoc(doc(db,"students",id), rest); }
+    await commitInChunks(list.map(s=>{ const {id, ...rest} = s; return { type:"set", ref:doc(db,"students",id), data:rest }; }));
   } else {
     list.forEach(s=> students.push({...s}));
     saveLocal("kladi_students", students); onDataChange();
@@ -2962,7 +2990,7 @@ async function restoreStudentFields(snapshot){
     (snapshot[0] ? Object.keys(snapshot[0].payload || {}).map(k=> MERGE_LABEL[k] || k).join(", ") : ""), snapshot.length);
   // snapshot: [{id, payload}]
   if(isConfigured){
-    for(const it of snapshot){ await updateDoc(doc(db,"students",it.id), it.payload); }
+    await commitInChunks(snapshot.map(it=> ({ type:"update", ref:doc(db,"students",it.id), data:it.payload })));
   } else {
     snapshot.forEach(it=>{ const s = students.find(x=>x.id===it.id); if(s) Object.assign(s, it.payload); });
     saveLocal("kladi_students", students); onDataChange();
@@ -4388,9 +4416,12 @@ document.getElementById("stuBulkApply").addEventListener("click", async ()=>{
   });
 
   const log = document.getElementById("stuBulkLog");
+  const applyBtn = document.getElementById("stuBulkApply");
   log.textContent = `${ids.length}명 변경 중...`;
-  await updateStudentsBulk(ids, {[field]: value});
-  log.textContent = "";
+  applyBtn.disabled = true;
+  try{ await updateStudentsBulk(ids, {[field]: value}); }
+  catch(e){ log.textContent = ""; applyBtn.disabled = false; saveFailToast(e, "여러 명 바꾸기"); return; }
+  log.textContent = ""; applyBtn.disabled = false;
   showToast(`${ids.length}명의 ${label}을(를) "${value || "(비움)"}" 로 바꿨어요.`, {
     type:"ok", actionLabel:"되돌리기",
     onAction: async ()=>{
@@ -4627,8 +4658,9 @@ document.getElementById("excelFileInput").addEventListener("change", (e)=>{
         }
       });
     } catch(err){
-      console.error(err);
       statusEl.textContent = "";
+      if(err && typeof err.done === "number"){ saveFailToast(err, "엑셀로 일괄 등록"); return; }   /* 저장 단계에서 멈춘 경우 */
+      console.error(err);
       showToast("파일을 읽는 중 문제가 생겼어요. 엑셀 템플릿 형식(학번/이름/학교/학년/담당/수업요일 제목행)과 같은지 확인해주세요.", {type:"bad", duration:10000});
     } finally {
       e.target.value = "";
@@ -5140,16 +5172,22 @@ document.getElementById("classImportApply").addEventListener("click", async (ev)
     payload: Object.fromEntries(Object.keys(u.payload).map(k=> [k, u.before[k]]))
   }));
 
-  if(plan.updates.length) await restoreStudentFields(plan.updates.map(u=>({id:u.id, payload:u.payload})));
-  const addedIds = plan.adds.length ? await addStudentsBulk(plan.adds) : [];
-
   /* 명부에 없어 체크한 학생은 퇴원으로 */
   const leaveIds = [...leavePick];
   const leaveBefore = leaveIds.map(id=>{
     const s = students.find(x=> x.id === id);
     return { id, payload: { status: statusOf(s) } };
   });
-  if(leaveIds.length) await restoreStudentFields(leaveIds.map(id=>({ id, payload:{ status:"퇴원" } })));
+  let addedIds = [];
+  try{
+    if(plan.updates.length) await restoreStudentFields(plan.updates.map(u=>({id:u.id, payload:u.payload})));
+    addedIds = plan.adds.length ? await addStudentsBulk(plan.adds) : [];
+    if(leaveIds.length) await restoreStudentFields(leaveIds.map(id=>({ id, payload:{ status:"퇴원" } })));
+  }catch(e){
+    btn.disabled = false; btn.textContent = "적용하기";
+    saveFailToast(e, "반 배정 가져오기");
+    return;
+  }
 
   btn.disabled = false; btn.textContent = "적용하기";
   closeClassImport();
@@ -5374,8 +5412,17 @@ document.getElementById("scoreImportApply").addEventListener("click", async (ev)
     byExamUndo.get(r.examId)[`scores.${r.id}`] =
       (r.before === undefined || r.before === null || r.before === "") ? null : r.before;
   });
-  for(const [examId, patch] of byExamPatch){
-    await updateExamDoc(examId, patch);
+  let doneExams = 0;
+  try{
+    for(const [examId, patch] of byExamPatch){
+      await updateExamDoc(examId, patch);
+      doneExams++;
+    }
+  }catch(e){
+    btn.disabled = false; btn.textContent = "적용하기";
+    e.done = doneExams; e.total = byExamPatch.size;
+    saveFailToast(e, "시험 점수 가져오기 (시험 카드 기준)");
+    return;
   }
   const n = plan.fill.length + plan.change.length;
   logChange("시험 점수 가져오기", `${scoreExamName} · ${scoreFileName}`, n);
@@ -7964,6 +8011,8 @@ document.getElementById("promoteRun").addEventListener("click", async (ev)=>{
         showToast("학년 올리기를 되돌렸어요.", {type:"warn"});
       }
     });
+  } catch(e){
+    saveFailToast(e, "학년 올리기");
   } finally {
     btn.disabled = false; btn.textContent = "학년 올리기 실행";
   }
