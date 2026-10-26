@@ -1232,6 +1232,14 @@
   .auto-bak-dir-row #autoBakDirStatus{font-size:12px; font-weight:700; color:var(--c2);}
   .auto-bak-dir-row #autoBakDirStatus.on{color:var(--green);}
   .auto-bak-dir-row #autoBakDirStatus.warn{color:var(--rust);}
+  /* 휴대폰: 제목·설명·단추가 한 줄에 끼어 글자가 세로로 쪼개지지 않게 */
+  @media (max-width:560px){
+    .auto-bak h4{flex-wrap:wrap; row-gap:4px;}
+    .auto-bak h4 .hint{order:2; flex:1 1 100%; margin-left:0;}
+    .auto-bak h4 > .btn{order:1;}
+    .auto-bak-row{flex-wrap:wrap; row-gap:6px;}
+    .auto-bak-row .n{flex:1 1 auto; min-width:0;}
+  }
 
   /* 합칠 후보 — 눈에 띄게 */
   .badge-info.warn{background:var(--mustard-dim); color:var(--c102);}
