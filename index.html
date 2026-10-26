@@ -707,6 +707,9 @@
     .cal-head{flex-direction:column; align-items:stretch;}
     .cal-nav{justify-content:space-between;}
     .cal-head .month-label{min-width:0; flex:1 1 auto;}
+    /* 휴대폰: [달력|목록] [오늘] 다음 줄에 ‹ 2026년 10월 › 가 갈라지지 않게 */
+    .cal-nav::before{content:""; order:3; flex-basis:100%; height:0;}
+    .cal-nav #prevMonth{order:4;} .cal-nav #monthLabel{order:5;} .cal-nav #nextMonth{order:6;}
     .month-picker{left:0; right:auto;}
     .summary-row{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
   }
@@ -827,6 +830,9 @@
     #panel-students:not(.filters-open) #stuGradeFilters,
     #panel-students:not(.filters-open) #stuChoBar,
     #panel-students:not(.filters-open) .idx-panel{display:none !important;}
+    /* 캘린더: 검색·선생님·스위치 상자도 접어서 달력이 바로 보이게 */
+    #panel-calendar:not(.filters-open) > .filter-bar{display:none !important;}
+    #calFilterToggle.has-on{border-style:solid; border-color:var(--mustard);}
   }
   /* 점수 변화 */
   .chip-prev{display:block; font-size:11px; font-weight:600; color:var(--c2); margin:-1px 0 3px;}
@@ -1821,11 +1827,12 @@
       <span>📊 요약 보기</span><span class="st-hint" id="summaryToggleHint">▾</span></button>
     <div class="summary-row" id="summaryRow"></div>
 
+    <button class="filter-fold-btn phone-only" id="calFilterToggle" type="button" aria-expanded="false">▾ 검색·선생님·보기 설정 펼치기</button>
     <div class="filter-bar">
       <div class="f-search">
         <label>학교 · 학생 검색</label>
         <div class="school-search">
-          <input type="text" id="calSchoolSearch" list="schoolList" name="school-q" placeholder="학교 또는 학생 이름 (초성도 됩니다)"
+          <input type="text" id="calSchoolSearch" list="schoolList" name="school-q" placeholder="학교·학생 이름 (초성도 돼요)"
                  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore>
           <button class="clr" id="calSchoolClear" title="지우기">&times;</button>
         </div>
@@ -4643,6 +4650,27 @@ document.getElementById("stuFilterToggle").addEventListener("click", (e)=>{
   e.currentTarget.setAttribute("aria-expanded", open);
   e.currentTarget.textContent = open ? "▴ 거르기 접기" : "▾ 상태·학년·이름·학교/담임/반 거르기 펼치기";
 });
+/* 휴대폰 캘린더: 검색·선생님·보기 설정 접기 — 기본값과 다른 설정이 몇 개 켜져 있는지 단추에 표시 */
+function updateCalFilterToggle(){
+  const btn = document.getElementById("calFilterToggle");
+  if(!btn) return;
+  const open = document.getElementById("panel-calendar").classList.contains("filters-open");
+  const on = [];
+  if(document.getElementById("calSchoolSearch").value.trim()) on.push("검색");
+  if(document.getElementById("calFilterTeacher").value) on.push("선생님");
+  if(!document.getElementById("hideEmptyExams").checked) on.push("학생 없는 시험 보임");
+  if(document.getElementById("mathOnly").checked) on.push("수학만");
+  if(document.getElementById("makeupOnly").checked) on.push("직보만");
+  btn.classList.toggle("has-on", on.length > 0);
+  btn.setAttribute("aria-expanded", open);
+  btn.textContent = open ? "▴ 설정 접기"
+    : (on.length ? `▾ 설정 펼치기 · 켜짐: ${on.join(", ")}` : "▾ 검색·선생님·보기 설정 펼치기");
+}
+document.getElementById("calFilterToggle").addEventListener("click", ()=>{
+  document.getElementById("panel-calendar").classList.toggle("filters-open");
+  updateCalFilterToggle();
+});
+document.getElementById("calSchoolSearch").addEventListener("input", updateCalFilterToggle);
 document.getElementById("excelDownloadBtn").addEventListener("click", ()=>{
   const rows = filteredStudents().map(s=>({
     "학번": s.studentNumber||"", "이름": s.name||"", "학교": s.school||"", "학년": s.grade||"",
@@ -6932,6 +6960,7 @@ function renderCalListView(){
 }
 
 function renderCalendar(){
+  updateCalFilterToggle();
   renderSchoolHit();
   renderSeasonChips();
   document.getElementById("monthLabel").innerHTML = `${viewYear}년 ${viewMonth+1}월 <span class="caret">▾</span>`;
