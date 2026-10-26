@@ -616,8 +616,9 @@
   .tag.clickable:hover{filter:brightness(0.93);}
   .icon-btn{ border:none; background:var(--c19); border-radius:7px; padding:6px 9px; cursor:pointer; font-size:12.5px; }
   .icon-btn:hover{background:var(--c37);}
-  .icon-btn.del{background:var(--c114); color:var(--c151);}
-  .icon-btn.del:hover{background:var(--c159);}
+  /* 제거: 줄마다 빨간 단추가 늘 보이면 눈이 피곤하고 잘못 누르기 쉬워 — 평소엔 조용한 글자, 손을 올리면 빨갛게 */
+  .icon-btn.del{background:transparent; color:var(--c2);}
+  .icon-btn.del:hover, .icon-btn.del:focus-visible{background:var(--c114); color:var(--c151);}
 
   /* ---------- 시험정보 입력 탭 ---------- */
   .exam-school-row{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:18px;}
@@ -1635,6 +1636,7 @@
   .badge-warn{ font-size:11.5px; font-weight:700; background:var(--c32); color:var(--rust); padding:5px 11px;
     border-radius:20px; cursor:pointer; white-space:nowrap; border:none; }
   .badge-warn.active{background:var(--rust); color:var(--c1);}
+  .badge-warn.zero:not(.active){background:var(--c19); color:var(--c2);}   /* 0명이면 경고색 대신 회색 */
   .table-scroll{overflow-x:auto;}
   /* [C] 화면이 넓어 표가 다 들어갈 땐 가로 스크롤 상자를 없애고 머리글을 위에 붙입니다 */
   @media (min-width:1000px){
@@ -4201,6 +4203,7 @@ function renderStudents(){
   const badge = document.getElementById("incompleteBadge");
   badge.textContent = `정규반 미배정 ${incompleteCount}명`;
   badge.classList.toggle("active", showIncompleteOnly);
+  badge.classList.toggle("zero", incompleteCount === 0);
 
   /* 내신(시험대비) 반 미배정 배지 */
   const exIncomplete = students.filter(s=> !s.examClass && statusOf(s) !== "퇴원").length;
