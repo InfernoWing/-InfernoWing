@@ -1317,6 +1317,9 @@
   .mode-btn.editing .dot{background:var(--c27);}
   @media (max-width:560px){
     .mode-btn{position:static; margin-top:12px;}
+    /* 머리 오른쪽 단추 묶음 안에서는 띄우지 않음 — 휴대폰에서 '수정 모드' 단추가 제목보다 아래로 처지던 것 */
+    .head-actions .mode-btn{margin-top:0;}
+    .head-actions{top:50%; transform:translateY(-50%);}
   }
   .pw-row{display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; margin-top:12px;}
   .pw-row > div{flex:1; min-width:150px;}
