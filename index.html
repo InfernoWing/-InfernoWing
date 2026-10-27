@@ -1125,7 +1125,7 @@
   /* 수학 시험일 — 막대 아래에 굵은 밑줄 */
   .bar .mday{position:absolute; left:0; bottom:1px; height:3px; border-radius:2px;
     background:var(--pt); opacity:.9; z-index:0;}
-  .bar.past{opacity:.45;}
+  .bar.past{opacity:.68; filter:saturate(.55);}   /* 끝난 시험: 흐리게 하되 글자는 읽히게 (.45는 너무 흐렸음) */
   .bar.noscope{border-style:dashed; border-width:1.5px; border-color:var(--rust);}
 
   /* 상세 창 뒤로가기 */
@@ -7624,7 +7624,7 @@ function renderSummary(){
 let schedSeason = "";
 let schedGrade = "";
 let schedGradeTouched = false;   // 사용자가 학년을 한 번이라도 직접 고르면 true
-const TL_NAME_W = 124, TL_DAY_W = 30, TL_WKND_W = 13;   /* 시험이 없는 토·일은 좁게 */
+const TL_NAME_W = 124, TL_DAY_W = 30, TL_WKND_W = 18;   /* 시험이 없는 토·일은 좁게 (13이면 날짜 글자가 붙어 보여 18로) */
 
 function shiftKey(key, days){
   const d = toDate(key);
