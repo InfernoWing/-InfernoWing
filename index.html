@@ -606,6 +606,10 @@
   html[data-theme="dark"] .checkbox-row input[type="checkbox"]:not(:checked){ background:#212121; border-color:#857b63; }
   html[data-theme="dark"] .filter-bar input[type=text]{ background:#212121; border-color:#857b63; }
   html[data-theme="dark"] .filter-bar select{ border-color:#857b63; }
+  /* 어두운 화면: 다른 입력칸(학생 검색 등)도 테두리를 밝게, 안내 글을 읽히게 */
+  html[data-theme="dark"] input[type=text], html[data-theme="dark"] input[type=search],
+  html[data-theme="dark"] input:not([type]), html[data-theme="dark"] textarea{ border-color:#857b63; }
+  html[data-theme="dark"] input::placeholder, html[data-theme="dark"] textarea::placeholder{ color:#a59d88; }
   html[data-theme="dark"] .filter-bar input[type=text]::placeholder{ color:#a59d88; }
   .tag{ display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px; margin-right:5px; }
   .tag.school{background:var(--blue-dim); color:var(--blue);}
