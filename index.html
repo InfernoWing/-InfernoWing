@@ -1280,6 +1280,14 @@
   .tag.st-재원{background:var(--c31); color:var(--green);}
   .tag.st-휴원{background:var(--c126); color:var(--c9);}
   .tag.st-퇴원{background:var(--c19); color:var(--c2);}
+  /* 학생 표: 모든 칸이 알약이라 다 같은 무게로 보이던 것 — 학교·학년·담임·'재원'은 그냥 글자로,
+     알약은 반·휴원/퇴원·미지정처럼 눈여겨볼 것만 */
+  .student-table .tag.school, .student-table .tag.grade,
+  .student-table .tag.teacher, .student-table .tag.rteacher{
+    background:none; padding:0; margin-right:0; border-radius:0; font-size:12.5px; font-weight:600; color:var(--ink);}
+  .student-table .tag.clickable:hover{filter:none; text-decoration:underline; text-underline-offset:3px;}
+  .student-table .tag.st-재원{background:none; padding:0; font-size:12.5px; font-weight:600; color:var(--c2);}
+  html[data-theme="dark"] .student-table .tag.school, html[data-theme="dark"] .student-table .tag.rteacher{background:none; color:var(--ink);}
   .student-table tr.left td{opacity:.55;}
   .student-table tr.left:hover td{opacity:.8;}
   .promote-row{display:flex; justify-content:space-between; align-items:center; gap:10px;
