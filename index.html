@@ -1079,7 +1079,8 @@
   /* ---------- 학교별 일정 타임라인 ---------- */
   .tl-scroll{overflow-x:auto; background:var(--c1); border:1.5px solid var(--c13); border-radius:11px;}
   .tl{position:relative;}
-  .tl-row{display:grid; align-items:stretch; border-bottom:1px solid var(--c29);}
+  .tl-row{display:grid; align-items:stretch; border-bottom:1px solid var(--c29);
+    width:max-content; min-width:100%;}   /* 줄 폭 = 내용 폭 — 좁으면 옆으로 밀 때 학교 이름 칸이 같이 밀려 사라졌음(휴대폰) */
   .tl-row:last-child{border-bottom:none;}
   .tl-name{padding:9px 12px; font-weight:800; color:var(--ink);
     background:var(--c4); position:sticky; left:0; z-index:3; border-right:1.5px solid var(--c5);
