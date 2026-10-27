@@ -648,7 +648,9 @@
   .save-row{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:2px; flex-wrap:wrap;}
   .save-row .delete-exam-btn{margin-left:auto;}
   .makeup-info{font-size:11px; color:var(--c2); white-space:nowrap;}
-  .makeup-row{align-items:stretch;}
+  .makeup-row{align-items:center;}
+  .makeup-row .mk-lbl{margin:0; font-size:12px; font-weight:700; color:var(--c6); white-space:nowrap;}   /* 날짜칸 이름표 — 무슨 날짜인지 안 보이던 것 */
+  .makeup-row input[type=date]{flex:1 1 140px; min-width:0;}
   .footer-note{font-size:10px; color:var(--c62); margin-top:2px;}
 
   /* ---------- Calendar ---------- */
@@ -6010,8 +6012,9 @@ function examCardHtml(school, grade, examName){
         ${existing ? `<button class="icon-btn del delete-exam-btn" title="이 시험 정보를 삭제합니다">삭제</button>` : ""}
       </div>
       <div class="mini-row makeup-row">
-        <input type="date" data-field="makeupDateInput">
-        <button class="btn secondary small apply-makeup-btn">보강일 적용</button>
+        <label class="mk-lbl">직보일</label>
+        <input type="date" data-field="makeupDateInput" aria-label="직보일">
+        <button class="btn secondary small apply-makeup-btn">직보일 저장</button>
       </div>
 
       <div class="footer-note">${existing?.savedAt? "마지막 저장: "+escapeHtml(existing.savedAt) : "아직 저장 안 됨"}</div>
@@ -6456,7 +6459,7 @@ document.getElementById("examCardsGrid").addEventListener("click", async (e)=>{
     });
   } else if(e.target.classList.contains("apply-makeup-btn")){
     const val = card.querySelector('[data-field="makeupDateInput"]').value;
-    if(!val){ showToast("적용할 보강 날짜를 먼저 선택해주세요.", {type:"warn"}); return; }
+    if(!val){ showToast("저장할 직보일을 먼저 골라 주세요.", {type:"warn"}); return; }
     saveExamCard(card, {makeupDate: val}).then(()=>{ showToast(`직보일을 ${val} 로 저장했어요.`, {type:"ok"}); flushTermArchiveNotice(); });
   }
 });
