@@ -704,7 +704,8 @@
     border:none; border-left:1.5px solid var(--c145); background:transparent; padding:7px 11px;
     font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer; color:var(--c6); white-space:nowrap;
   }
-  .seg.single .seg-btn{border-left:none; padding-left:4px;}
+  .seg.single .seg-btn{border-left:none; padding-left:13px; color:var(--c6);}
+  .seg.single .seg-btn.active{color:var(--chalk);}
   .seg .seg-btn:hover{background:var(--c7);}
   .seg .seg-btn.active{background:var(--board); color:var(--chalk);}
   .seg .seg-btn .n{background:var(--pill-count); color:var(--c1); border-radius:999px; font-size:9.5px; padding:1px 5px; margin-left:4px;}
@@ -6858,11 +6859,13 @@ function renderSeasonChips(){
     const multi = c.months.length > 1;
     const btns = c.months.map(mm=>{
       const active = (mm.y===viewYear && mm.m===viewMonth);
-      const monthTxt = multi ? `${mm.m+1}월` : "";
+      /* 달이 하나뿐인 시험은 이름까지 단추 하나로 — 고르면 단추 전체가 칠해지게(반쪽만 칠해지던 것) */
+      const monthTxt = multi ? `${mm.m+1}월` : escapeHtml(c.label);
       const title = `${c.label} · ${mm.y}년 ${mm.m+1}월 ${mm.count}건`;
       return `<button class="seg-btn ${active?"active":""}" data-y="${mm.y}" data-m="${mm.m}" title="${escapeHtml(title)}">${monthTxt}<span class="n">${mm.count}</span></button>`;
     }).join("");
-    return `<span class="seg ${multi?"":"single"}"><span class="seg-label">${c.label}</span>${btns}</span>`;
+    return multi ? `<span class="seg"><span class="seg-label">${c.label}</span>${btns}</span>`
+                 : `<span class="seg single">${btns}</span>`;
   }).join("");
 
   row.querySelectorAll(".seg-btn").forEach(b=>{
