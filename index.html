@@ -602,6 +602,8 @@
   .checkbox-row input[type="checkbox"]:checked::after{ transform:translateX(16px); }
   .checkbox-row input[type="checkbox"]:hover{ border-color:var(--rust); }
   .checkbox-row input[type="checkbox"]:focus-visible{ outline:2px solid var(--rust); outline-offset:2px; }
+  /* 밝은 화면: 꺼진 스위치가 거르기 상자 바탕에 묻혀 흐리던 것 — 테두리를 진하게 */
+  .checkbox-row input[type="checkbox"]:not(:checked){ border-color:#c2b79c; }
   /* 어두운 화면: 꺼진 스위치 바탕·검색칸이 거르기 상자 바탕과 같은 색이라 안 보이던 것 — 선택칸처럼 더 어둡게, 테두리는 밝게 */
   html[data-theme="dark"] .checkbox-row input[type="checkbox"]:not(:checked){ background:#212121; border-color:#857b63; }
   html[data-theme="dark"] .filter-bar input[type=text]{ background:#212121; border-color:#857b63; }
