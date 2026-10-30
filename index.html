@@ -1586,6 +1586,10 @@
     .cal-scroll{overflow:visible !important;}
     /* 학교별 일정: '시험 선택' 상자는 인쇄 제목과 같은 내용이라 빼기 */
     #panel-schedule .filter-bar{display:none !important;}
+    /* 학생 관리: 단추 줄·ㄱㄴㄷ 줄·왼쪽 학교 목록·검색칸은 빼고 제목+표만 */
+    #stuTools, #stuChoBar, #stuSelAll, .idx-panel, .crumb-none, #panel-students .filter-bar,
+    #panel-students .stu-search, .filter-fold-btn{display:none !important;}
+    #panel-students .split{display:block !important;}
     .summary-row{display:grid !important;}
     .cal-legend, .exam-pill, .cl-item, .summary-card{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
   }
