@@ -1209,9 +1209,12 @@
   .brief-row{display:flex; align-items:center; gap:9px; padding:6px 9px; border-radius:9px; font-size:12.5px;}
   .brief-row:nth-child(odd){background:var(--c15);}   /* 줄무늬: 진한 회갈색 → 연한 베이지 */
   .brief-row .nm{font-weight:800; min-width:66px;}
-  .brief-row .sch{font-size:11.5px; color:var(--c40); min-width:62px;}
-  .brief-row .cls{font-size:11px; color:var(--c40);}
-  .brief-row .rest{margin-left:auto; display:flex; align-items:center; gap:7px;}
+  .brief-row .sch{font-size:11.5px; color:var(--c40); min-width:62px; white-space:nowrap;}
+  .brief-row .cls{font-size:11px; color:var(--c40); white-space:nowrap;}   /* '화목토B'가 두 줄로 쪼개지던 것 */
+  .brief-row .rest{margin-left:auto; display:flex; align-items:center; gap:7px; min-width:0;}   /* 좁은 화면: 범위 글이 줄어들게(줄 밖으로 삐져나오던 것) */
+  .brief-row .rest .scope{min-width:0;}
+  .brief-row .rest .dday, .brief-row .rest > :last-child{flex-shrink:0;}
+  @media (max-width:420px){ .brief-row{gap:7px;} .brief-row .nm{min-width:52px;} .brief-row .sch{min-width:0;} }
   .brief-row .scope{font-size:11px; color:var(--c40); max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .brief-row .noscope{color:var(--rust); font-weight:700;}
   html[data-theme="dark"] .brief-grp h5 .cnt, html[data-theme="dark"] .brief-row .sch,
@@ -6226,7 +6229,8 @@ function renderBrief(){
     const e = nextExamOf(s);
     const tk = todayKey();
     return { s, e, d: e ? (e.startDate <= tk ? 0 : daysBetween(tk, e.startDate)) : 9999 };
-  }).sort((a,b)=> a.d - b.d || (a.s.name||"").localeCompare(b.s.name||"","ko"));
+  }).sort((a,b)=> a.d - b.d || (a.s.school||"").localeCompare(b.s.school||"","ko") || (a.s.name||"").localeCompare(b.s.name||"","ko"));   /* 같은 학교끼리 붙여서 */
+  const noScopeShown = new Set();   /* '범위 미입력'은 시험(학교)마다 처음 한 번만 */
 
   const dateTxt = `${today.getMonth()+1}월 ${today.getDate()}일(${"일월화수목금토"[today.getDay()]})`;
   document.getElementById("briefMeta").textContent =
@@ -6250,8 +6254,9 @@ function renderBrief(){
         <span class="sch">${escapeHtml(shortSchool(s.school))}</span>
         <span class="cls">${escapeHtml(splitCls(s.examClass || s.regularClass)[0] || "")}</span>
         <span class="rest">
-          ${e ? `<span class="scope ${hasScope(e)?"":"noscope"}">${
-                  hasScope(e) ? escapeHtml((e.examScope || unitsOf(e).join(" · ")).slice(0,40)) : "범위 미입력"}</span>
+          ${e ? `${hasScope(e)
+                  ? `<span class="scope">${escapeHtml((e.examScope || unitsOf(e).join(" · ")).slice(0,40))}</span>`
+                  : (noScopeShown.has(e.id) ? "" : (noScopeShown.add(e.id), `<span class="scope noscope">범위 미입력</span>`))}
                 ${ddayBadge(e)}` : ``}
         </span></div>`).join("") + `</div>`;
   });
