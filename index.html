@@ -967,6 +967,25 @@
   .scope-table tr.missing{background:var(--c18);}
   .scope-table .none{color:var(--rust); font-weight:700;}
   .scope-table .muted{color:var(--c3);}
+  /* 휴대폰: 표 대신 학교마다 카드 — 가장 중요한 '시험 범위'가 화면 밖(오른쪽)에 있던 것 */
+  @media (max-width:700px){
+    table.scope-table{min-width:0; display:block; background:none;}
+    .scope-table thead{display:none;}
+    .scope-table tbody{display:flex; flex-direction:column; gap:8px;}
+    .scope-table tr[data-exam-id]{display:grid; grid-template-columns:auto auto 1fr; column-gap:8px; row-gap:4px; align-items:baseline;
+      padding:11px 13px; border:1px solid var(--c29); border-radius:12px; background:var(--c4);}
+    .scope-table tr[data-exam-id] td{padding:0; border:none; line-height:1.6;}
+    .scope-table td.school{font-size:14px;}
+    .scope-table td.sc-grade{color:var(--c2); font-weight:700;}
+    .scope-table td.sc-cnt{justify-self:end; color:var(--c2); font-weight:700;}
+    .scope-table td.sc-period{grid-column:1/-1; color:var(--c2); font-size:12px;}
+    .scope-table td.sc-scope{grid-column:1/-1; font-size:13px;}
+    .scope-table td.sc-notice{grid-column:1/-1; font-size:12px; border-top:1px dashed var(--c29); padding-top:5px;}
+    .scope-table td.sc-notice.empty{display:none;}
+    .scope-table tr.missing{border-color:var(--rust);}
+    .scope-table tr.tb-group{display:block; margin-top:6px;}
+    .scope-table tr.tb-group td{display:block; border-radius:10px;}
+  }
 
   /* 저장 안 된 시험 카드 표시 */
   .exam-card.dirty{border-color:var(--mustard); box-shadow:0 0 0 3px var(--mustard-dim);}
@@ -8001,11 +8020,11 @@ function renderScopeTab(){
                         : (unitsOf(e).length ? "" : `<span class="none">미입력</span>`)));
       return groupRow + `<tr class="${(!hasScope(e) && !e.notConducted)?"missing":""}" data-exam-id="${e.id}">
         <td class="school">${escapeHtml(shortSchool(e.school))}</td>
-        <td>${escapeHtml(e.grade||"")}</td>
-        <td>${count}명</td>
-        <td style="white-space:nowrap;">${period}</td>
-        <td>${scopeCell}</td>
-        <td class="muted">${e.schoolNotice? escapeHtml(e.schoolNotice) : "—"}</td>
+        <td class="sc-grade">${escapeHtml(e.grade||"")}</td>
+        <td class="sc-cnt">${count}명</td>
+        <td class="sc-period" style="white-space:nowrap;">${period}</td>
+        <td class="sc-scope">${scopeCell}</td>
+        <td class="muted sc-notice ${e.schoolNotice?"":"empty"}">${e.schoolNotice? escapeHtml(e.schoolNotice) : "—"}</td>
       </tr>`;
     }).join("")}</tbody>`;
 }
