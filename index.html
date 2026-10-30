@@ -282,7 +282,7 @@
     --c66:#354b4b;
     --c67:#c0cfbe26;
     --c68:#7d62ad;
-    --c69:#c0cfbecc;
+    --c69:#0b0f0bcc;   /* 어두운 화면 팝업 뒤 배경 — 밝은 연두색 안개(#c0cfbecc)였던 것 */
     --c70:#41aaaa;
     --c71:#464133;
     --c72:#e4e2dd;
@@ -563,6 +563,8 @@
     font-size:13.5px; cursor:pointer; transition:.15s; white-space:nowrap;
   }
   .btn:hover{background:var(--board-dark);}
+  /* 어두운 화면: 진한 초록 단추가 갈색 상자 바탕에 묻히던 것 — 밝은 테두리 */
+  html[data-theme="dark"] .btn:not(.secondary){box-shadow:inset 0 0 0 1.5px #7d9a86;}
   .btn.secondary{background:transparent; color:var(--ink); border:1.5px solid var(--c72);}
   .btn.secondary:hover{background:var(--c7);}
   .btn.small{padding:7px 12px; font-size:12px;}
