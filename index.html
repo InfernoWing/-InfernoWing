@@ -1578,6 +1578,14 @@
     /* 학교별 일정 — 가로로 잘리지 않고, 막대 색이 그대로 인쇄되게 */
     .tl-scroll{overflow:visible !important;}
     .tl-row{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+
+    /* 캘린더: 누르는 단추·검색 상자는 종이에 안 찍히게(달 이름·요약·달력만) */
+    #todayBriefBtn, #panel-calendar > .filter-bar, #calFilterToggle, .summary-toggle,
+    .cal-nav .today-btn, .cal-nav .arrow, #monthLabel .caret, .filter-fold-btn,
+    .cal-legend .lg-hint, .cl-past-toggle, .day-summary-btn, .hint-line{display:none !important;}
+    .cal-scroll{overflow:visible !important;}
+    .summary-row{display:grid !important;}
+    .cal-legend, .exam-pill, .cl-item, .summary-card{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
   }
   .print-title{display:none;}
 
