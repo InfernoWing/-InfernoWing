@@ -6002,6 +6002,19 @@ function retroFoldHtml(existing, sy){
   const done = (r.tags && r.tags.length) || r.weak || r.memo || r.help;
   return `<details class="retro-fold"><summary>시험 후 회고 ${done ? `<span class="rf-done">적어 둠</span>` : `<span class="rf-hint">눌러서 적기</span>`}</summary>${retroBoxHtml(existing, sy)}</details>`;
 }
+/* 회고 칸에 무언가 적거나 고르면 접기 제목을 바로 '적어 둠'으로 */
+function refreshRetroFoldLabel(fold){
+  const box = fold && fold.querySelector(".retro-box"); if(!box) return;
+  const done = box.querySelector(".retro-chip.on, .retro-seg button.on") ||
+    [...box.querySelectorAll('input[type="text"]')].some(i=> i.value.trim());
+  const sum = fold.querySelector(":scope > summary"); if(!sum) return;
+  const tag = sum.querySelector(".rf-done, .rf-hint");
+  if(tag){ tag.className = done ? "rf-done" : "rf-hint"; tag.textContent = done ? "적어 둠" : "눌러서 적기"; }
+}
+["input","click"].forEach(t=> document.addEventListener(t, (ev)=>{
+  const fold = ev.target.closest && ev.target.closest(".retro-fold");
+  if(fold && !ev.target.closest("summary")) setTimeout(()=> refreshRetroFoldLabel(fold), 0);
+}));
 /* 입력칸에서 값을 읽어 학년도별 map으로 합쳐줍니다 */
 function collectRetros(container, existing){
   const box = container.querySelector(".retro-box");
@@ -6078,7 +6091,7 @@ function examCardHtml(school, grade, examName){
       </div>
 
       ${driveFilesHtml(existing || {school, grade, examName}, 4)}
-      ${isExamOver(existing) ? retroBoxHtml(existing, sy) : ""}
+      ${isExamOver(existing) ? retroFoldHtml(existing, sy) : ""}
 
       <div class="save-row">
         <button class="btn small save-exam-btn">입력 저장</button>
