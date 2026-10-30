@@ -819,6 +819,12 @@
   .exam-pill .mbadge{background:var(--pc); color:var(--on-pc); border-radius:5px; font-size:9px;
     font-weight:800; padding:1px 4px; flex-shrink:0; letter-spacing:.02em;}
   .exam-pill.math .mbadge{background:var(--on-pc); color:var(--pc);}
+  /* 휴대폰 달력 칸: 좁아서 학교 이름이 "둔·"처럼 잘리던 것 — '수학' 글자는 빼고(진하게 채운 알약이 곧 수학일) 간격·숫자 작게 */
+  @media (max-width:700px){
+    .cal-cell .exam-pill{gap:3px; padding-left:5px; padding-right:3px;}
+    .cal-cell .exam-pill .mbadge{display:none;}
+    .cal-cell .exam-pill .count{min-width:14px; height:14px; font-size:9px; padding:0 3px;}
+  }
   .cl-item.math{border-color:var(--pc); box-shadow:inset 4px 0 0 var(--pc);}
   .cl-item .mbadge{background:var(--pc); color:var(--on-pc); border-radius:5px; font-size:9.5px;
     font-weight:800; padding:1px 5px; margin-left:2px;}
