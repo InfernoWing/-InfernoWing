@@ -1463,6 +1463,14 @@
   .meta-tb{font-weight:700; color:var(--c68);}
 
 /* ---------- 시험 후 회고 ---------- */
+  .retro-fold{margin-top:14px;}
+  .retro-fold > summary{cursor:pointer; font-size:13px; font-weight:800; padding:9px 12px; border:1px dashed var(--c42); border-radius:10px; list-style:none;}
+  .retro-fold > summary::-webkit-details-marker{display:none;}
+  .retro-fold > summary::before{content:"▸ "; color:var(--c2);}
+  .retro-fold[open] > summary::before{content:"▾ ";}
+  .retro-fold .rf-hint{font-weight:600; font-size:11.5px; color:var(--c2); margin-left:4px;}
+  .retro-fold .rf-done{font-weight:700; font-size:11px; color:var(--green); background:var(--c31); border-radius:999px; padding:1px 8px; margin-left:4px;}
+  .retro-fold .retro-box{margin-top:8px;}
   .retro-box{background:var(--c33); border:1px solid var(--c42); border-radius:12px; padding:13px 14px; margin-top:14px;}
   .retro-head{font-size:13px; font-weight:900; display:flex; align-items:center; gap:7px; flex-wrap:wrap;}
   .retro-head .rsy{background:var(--mustard); color:var(--c48); font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:999px;}
@@ -5955,6 +5963,12 @@ function retroBoxHtml(existing, sy){
     <input type="text" data-field="retroMemo" placeholder="예: 기출 3개년 돌린 학생은 대부분 90점 이상" value="${escapeHtml(r.memo||"")}">
   </div>`;
 }
+/* 시험 상세 창: 회고 칸은 접어 두고 필요할 때 펼침 (적어 둔 게 있으면 제목에 표시) */
+function retroFoldHtml(existing, sy){
+  const r = retroOf(existing, sy) || {};
+  const done = (r.tags && r.tags.length) || r.weak || r.memo || r.help;
+  return `<details class="retro-fold"><summary>시험 후 회고 ${done ? `<span class="rf-done">적어 둠</span>` : `<span class="rf-hint">눌러서 적기</span>`}</summary>${retroBoxHtml(existing, sy)}</details>`;
+}
 /* 입력칸에서 값을 읽어 학년도별 map으로 합쳐줍니다 */
 function collectRetros(container, existing){
   const box = container.querySelector(".retro-box");
@@ -9366,6 +9380,8 @@ function openDetailModal(examId, returnTo){
   const dPast = retroEntries(exam).filter(r=> r.sy < dSY);
   const dAll  = retroEntries(exam);
   if(!editMode){
+    /* 보기 모드는 예전 순서(범위 → 명단) */
+    { const tg = document.getElementById("detailTeacherGroups"); if(tg && scopeBox.nextElementSibling !== tg) scopeBox.parentNode.insertBefore(scopeBox, tg); }
     scopeBox.innerHTML =
       driveFilesHtml(exam, 3) +
       (dAll.length ? `<div class="section-label">시험 회고</div>` + lastRetroBoxHtml(dAll) : "") +
@@ -9388,7 +9404,7 @@ function openDetailModal(examId, returnTo){
       <textarea id="detailScopeInput" placeholder="예: 수학(상) 2단원 전체 ~ 3-1, 교과서 유인물 포함">${escapeHtml(exam.examScope||"")}</textarea>
       <span class="st" style="margin-top:9px;">학교 안내 사항</span>
       <textarea id="detailNoticeInput" placeholder="예: 서술형 30%, 프린트 3종 배부">${escapeHtml(exam.schoolNotice||"")}</textarea>
-      ${isExamOver(exam) ? retroBoxHtml(exam, dSY) : ""}
+      ${isExamOver(exam) ? retroFoldHtml(exam, dSY) : ""}
       <div class="row">
         <button class="btn small" id="detailScopeSave">저장</button>
         <button class="mini-btn" id="goFillScope" style="margin-top:0;">시험정보 입력에서 열기 →</button>
@@ -9397,6 +9413,8 @@ function openDetailModal(examId, returnTo){
     </div>` + termHistoryHtml(exam);
 
   document.getElementById("goFillScope").addEventListener("click", ()=> jumpToExamInput(exam));
+  /* 수정 모드: 고쳐 쓰는 칸이 길어 학생 명단이 한참 아래 있던 것 — 명단을 위로 */
+  { const tg = document.getElementById("detailTeacherGroups"); if(tg && tg.nextElementSibling !== scopeBox) scopeBox.parentNode.insertBefore(tg, scopeBox); }
   document.getElementById("detailScopeSave").addEventListener("click", async (ev)=>{
     const scope = document.getElementById("detailScopeInput").value.trim();
     const notice = document.getElementById("detailNoticeInput").value.trim();
