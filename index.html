@@ -1142,9 +1142,9 @@
   .bar.c6{--pb:var(--c57); --pd:var(--c66); --pt:var(--c52);}
   .bar.c7{--pb:var(--c46); --pd:var(--c53); --pt:var(--c59);}
   .bar .btx{position:relative; z-index:1;}
-  /* 수학 시험일 — 막대 아래에 굵은 밑줄 */
-  .bar .mday{position:absolute; left:0; bottom:1px; height:3px; border-radius:2px;
-    background:var(--pt); opacity:.9; z-index:0;}
+  /* 수학 시험일 — 그날 칸을 막대 안에서 진하게 칠함 (밑줄은 '3명' 글자와 겹쳤음) */
+  .bar .mday{position:absolute; left:0; top:0; bottom:0; border-radius:4px;
+    background:var(--pt); opacity:.2; z-index:0;}
   .bar.past{opacity:.68; filter:saturate(.55);}   /* 끝난 시험: 흐리게 하되 글자는 읽히게 (.45는 너무 흐렸음) */
   .bar.noscope{border-style:dashed; border-width:1.5px; border-color:var(--rust);}
 
@@ -7861,7 +7861,7 @@ function renderScheduleTab(){
   legend.innerHTML = `<span>학년 색상</span>` + grades.map(g=>{
     const c = gradeColor(g);
     return `<span class="lg"><span class="sw" style="background:${COLOR_HEX[c]}; border-color:${COLOR_BORDER[c]};"></span>${escapeHtml(g)}</span>`;
-  }).join("") + `<span style="margin-left:4px;">· 흐린 막대는 끝난 시험 · 빨간 점선 테두리는 시험 범위 미입력</span>`;
+  }).join("") + `<span style="margin-left:4px;">· 막대 안 진한 칸은 수학 시험일 · 흐린 막대는 끝난 시험 · 빨간 점선 테두리는 시험 범위 미입력</span>`;
 
   /* 오늘(또는 첫 시험)이 보이도록 가로 스크롤 위치 조정 */
   const box = document.getElementById("schedScroll");
