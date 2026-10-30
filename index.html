@@ -1167,6 +1167,13 @@
     padding:5px 8px; border-radius:7px; margin-bottom:1px;}
   .stu-quick .sq-tag.ex{background:var(--c110); color:var(--c146);}
   .stu-quick .sq-tag.rg{background:var(--c92); color:var(--c36);}
+  /* 수정 모드에선 바로 아래 입력칸과 같은 내용이라 위 알약 숨김(보기 모드에선 그대로) */
+  body:not(.view-mode) #stuTags{display:none;}
+  /* 휴대폰: '내신반'·'정규' 이름표가 칸들 옆에 떠 있던 것 — 묶음 제목처럼 위에 */
+  @media (max-width:560px){
+    .stu-quick .sq-grp{flex-direction:column; align-items:stretch; gap:5px;}
+    .stu-quick .sq-tag{align-self:flex-start;}
+  }
 
   /* 데이터 관리 · 정리 */
   .data-tools{display:flex; gap:8px; flex-wrap:wrap; align-items:center;
@@ -9112,7 +9119,7 @@ function openStudentModal(studentId, returnTo){
           const scopeFull = [unitsOf(e).join(" · "), (e.examScope||"").split("\n")[0]].filter(Boolean).join(" · ");
           const scope = hasScope(e)
             ? escapeHtml(scopeFull.slice(0,40)) + (scopeFull.length>40?"…":"")
-            : `<span class="noscope">시험 범위 미입력</span>`;
+            : (e.endDate < tk ? `범위 기록 없음` : `<span class="noscope">시험 범위 미입력</span>`);   /* 끝난 시험엔 빨간 경고 대신 */
           return `<button class="stu-exam-row ${e.endDate<tk?"past":""}" data-exam="${e.id}">
             <span>
               <span class="en">${escapeHtml(e.examName||"")} <span style="font-weight:600; color:var(--c2); font-size:12px;">${escapeHtml(period)}</span></span>
