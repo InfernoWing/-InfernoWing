@@ -713,6 +713,7 @@
   .seg .seg-btn .n{background:var(--pill-count); color:var(--c1); border-radius:999px; font-size:9.5px; padding:1px 5px; margin-left:4px;}
   .seg .seg-btn.active .n{background:var(--mustard); color:var(--c27);}
   .hint-line{font-size:12px; color:var(--c3); margin:0 0 14px;}
+  .bl-short{display:none;}   /* 휴대폰용 짧은 단추 이름 — 기본은 숨김 */
   /* 안내 한 줄: 컴퓨터는 맨 위 설명, 휴대폰은 달력 바로 위(맨 위 설명은 휴대폰에서 숨김) */
   #panel-calendar .hint-line{display:none;}
   @media (max-width:700px){ #panel-calendar .hint-line{display:block;} }
@@ -1833,6 +1834,12 @@
   @media (max-width:700px){
     .app-head .subtitle{display:none;}
     #panel-calendar .panel-desc{display:none;}
+    /* 시험 범위·학교별 일정 탭도: 설명 문장 숨기고 단추 3개를 한 줄로 */
+    #panel-scope .panel-desc, #panel-schedule .panel-desc{display:none;}
+    #panel-scope .head-btns, #panel-schedule .head-btns{flex-wrap:nowrap !important; width:100%; gap:6px !important;}
+    #panel-scope .head-btns .btn, #panel-schedule .head-btns .btn{flex:1 1 0; min-width:0; padding:8px 6px; font-size:12px;
+      white-space:nowrap; text-align:center; justify-content:center;}
+    .head-btns .bl-long{display:none;} .head-btns .bl-short{display:inline;}
     .summary-toggle{display:flex;}
     .summary-row{display:none;}
     .summary-row.open{display:grid;}
@@ -1991,12 +1998,12 @@
         <h2 class="panel-title">학교별 일정</h2>
         <p class="panel-desc">가로가 날짜, 세로가 학교입니다. 어느 학교가 언제 시험인지, 어느 주에 몰려 있는지 한눈에 보여요.</p>
       </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;" class="print-hide">
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;" class="print-hide head-btns">
         <button class="btn secondary" id="schedImportBtn"
-          title="학교별 일정표 엑셀을 그대로 고르면 됩니다 — 시험기간·수학시험일·교과서·특이사항과 색칠한 단원까지 읽습니다">📅 학교별 일정 가져오기</button>
+          title="학교별 일정표 엑셀을 그대로 고르면 됩니다 — 시험기간·수학시험일·교과서·특이사항과 색칠한 단원까지 읽습니다"><span class="bl-long">📅 학교별 일정 가져오기</span><span class="bl-short">📅 일정 가져오기</span></button>
         <input type="file" id="schedImportInput" accept=".xlsx,.xls" style="display:none;">
-        <button class="btn secondary" id="schedTodayBtn">오늘로 이동</button>
-        <button class="btn secondary" id="schedPrintBtn" title="지금 보이는 일정표를 그대로 인쇄하거나 PDF로 저장합니다">🖨 인쇄 / PDF 저장</button>
+        <button class="btn secondary" id="schedTodayBtn"><span class="bl-long">오늘로 이동</span><span class="bl-short">오늘로</span></button>
+        <button class="btn secondary" id="schedPrintBtn" title="지금 보이는 일정표를 그대로 인쇄하거나 PDF로 저장합니다"><span class="bl-long">🖨 인쇄 / PDF 저장</span><span class="bl-short">🖨 인쇄</span></button>
       </div>
     </div>
 
@@ -2022,10 +2029,10 @@
         <h2 class="panel-title">시험 범위</h2>
         <p class="panel-desc">학교별 시험 범위를 한 장에 모아서 봅니다. 범위가 비어 있는 줄은 빨갛게 표시돼요.</p>
       </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button class="btn print-hide" id="scopeCopyBtn">📋 시험 요약 복사</button>
-        <button class="btn secondary print-hide" id="scopeExportBtn">⤓ 엑셀로 내보내기</button>
-        <button class="btn secondary print-hide" id="scopePrintBtn">🖨 인쇄 / PDF 저장</button>
+      <div class="head-btns" style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn print-hide" id="scopeCopyBtn"><span class="bl-long">📋 시험 요약 복사</span><span class="bl-short">📋 요약 복사</span></button>
+        <button class="btn secondary print-hide" id="scopeExportBtn"><span class="bl-long">⤓ 엑셀로 내보내기</span><span class="bl-short">⤓ 엑셀</span></button>
+        <button class="btn secondary print-hide" id="scopePrintBtn"><span class="bl-long">🖨 인쇄 / PDF 저장</span><span class="bl-short">🖨 인쇄</span></button>
       </div>
     </div>
 
