@@ -2139,11 +2139,11 @@
         <input type="text" id="stuRegularClass" placeholder="예: 1M1S" list="regularClassList">
       </div>
       <div>
-        <label>정규 담임(심화)</label>
+        <label>정규 담임(선행)</label>
         <input type="text" id="stuRegularTeacher" placeholder="예: 이노윤" list="teacherList">
       </div>
       <div>
-        <label>정규 부담임(선행)</label>
+        <label>정규 부담임(심화)</label>
         <input type="text" id="stuRegularAssistant" placeholder="예: 이소영" list="teacherList">
       </div>
       <div>
@@ -2234,8 +2234,8 @@
       <select id="stuBulkField">
         <option value="teacher">담임 선생님</option>
         <option value="examTeacher">내신 담임</option>
-        <option value="regularTeacher">정규 담임(심화)</option>
-        <option value="regularAssistant">정규 부담임(선행)</option>
+        <option value="regularTeacher">정규 담임(선행)</option>
+        <option value="regularAssistant">정규 부담임(심화)</option>
         <option value="grade">학년</option>
         <option value="school">학교</option>
         <option value="regularClass">정규반</option>
@@ -2524,8 +2524,8 @@
       <div class="sq-grp">
         <span class="sq-tag rg">정규</span>
         <div class="sq-row">
-          <div><label class="small">담임(심화)</label><input type="text" id="sqRegT" list="teacherList" placeholder="예: 이노윤"></div>
-          <div><label class="small">부담임(선행)</label><input type="text" id="sqRegA" list="teacherList" placeholder="예: 이소영"></div>
+          <div><label class="small">담임(선행)</label><input type="text" id="sqRegT" list="teacherList" placeholder="예: 이노윤"></div>
+          <div><label class="small">부담임(심화)</label><input type="text" id="sqRegA" list="teacherList" placeholder="예: 이소영"></div>
           <div><label class="small">반</label><input type="text" id="sqRegular" list="regularClassList" placeholder="예: 1M1S"></div>
         </div>
       </div>
@@ -4810,8 +4810,8 @@ document.getElementById("excelFileInput").addEventListener("change", (e)=>{
         const regularClass = pick(row, ["정규반","학기중 반","학기중반","반","학기반"]);
         const examClass = pick(row, ["시험대비 반","시험대비반","시험반","대비반"]);
         const examTeacher = pick(row, ["내신 담임","내신담임","시험대비 담임","내신대비 담임"]) || teacher;
-        const regularTeacher = pick(row, ["정규 담임","정규담임","담임(심화)","심화담임"]);
-        const regularAssistant = pick(row, ["정규 부담임","정규부담임","부담임","부담임(선행)","선행담임","보조담임"]);
+        const regularTeacher = pick(row, ["정규 담임","정규담임","담임(선행)","선행담임","담임(심화)"]);
+        const regularAssistant = pick(row, ["정규 부담임","정규부담임","부담임","부담임(심화)","심화담임","부담임(선행)","보조담임"]);
         const rawStatus = pick(row, ["상태","재원상태","재원 상태"]);
         const status = STATUS_LIST.includes(rawStatus) ? rawStatus : "재원";
         parsed.push({studentNumber, name, school, grade, teacher, examTeacher,
@@ -4934,10 +4934,12 @@ function parseClassSheet(grid){
       if(!cls || NUM.test(cls)) continue;
       const time = cellStr(grid, off["수업시간"], c);
       if(!DOW.test(time)) continue;
-      const teacher = off["담임(심화)"] !== undefined ? cellStr(grid, off["담임(심화)"], c)
+      /* 2026년 11월부터 반별 현황표는 담임(선행)·부담임(심화) — 예전 표(담임(심화)·부담임(선행))도 읽습니다 */
+      const teacher = off["담임(선행)"] !== undefined ? cellStr(grid, off["담임(선행)"], c)
+                    : off["담임(심화)"] !== undefined ? cellStr(grid, off["담임(심화)"], c)
                     : off["담임"]       !== undefined ? cellStr(grid, off["담임"], c) : "";
-      /* 정규반 표에는 담임(심화) 밑에 부담임(선행)이 한 줄 더 있습니다 */
-      const assistant = off["부담임(선행)"] !== undefined ? cellStr(grid, off["부담임(선행)"], c)
+      const assistant = off["부담임(심화)"] !== undefined ? cellStr(grid, off["부담임(심화)"], c)
+                      : off["부담임(선행)"] !== undefined ? cellStr(grid, off["부담임(선행)"], c)
                       : off["부담임"]       !== undefined ? cellStr(grid, off["부담임"], c)
                       : off["보조담임"]     !== undefined ? cellStr(grid, off["보조담임"], c) : "";
       for(let rr = start; rr <= end; rr++){
@@ -4959,8 +4961,8 @@ function parseFlatSheet(grid){
     name:   ["이름","성명","학생명","학생"],
     school: ["학교","출신학교","중학교"],
     cls:    ["반","반명","수강반","내신대비반","시험대비반"],
-    teacher:["담임","담임(심화)","담당","선생님"],
-    assist: ["부담임","부담임(선행)","부담당","보조담임"],
+    teacher:["담임","담임(선행)","담임(심화)","담당","선생님"],
+    assist: ["부담임","부담임(심화)","부담임(선행)","부담당","보조담임"],
     time:   ["수업시간","요일","시간"],
   };
   for(let r = 0; r < Math.min(grid.length, 20); r++){
@@ -5095,7 +5097,7 @@ function buildClassImportPlan(rows, field){
            변동이 1~2건인데도 수백 명이 바뀐 것처럼 보이던 문제를 막습니다. */
         if(!(s.teacher || "").trim()) payload.teacher = r.teacher;
       }
-      if(r.assistant && (s[AFIELD] || "") !== r.assistant) payload[AFIELD] = r.assistant;   // 부담임(선행)
+      if(r.assistant && (s[AFIELD] || "") !== r.assistant) payload[AFIELD] = r.assistant;   // 부담임(심화)
       if(grade && (s.grade || "") !== grade) payload.grade = grade;
       if(Object.keys(payload).length === 0){ same.push({ ...r, examClass, viaBase, storedName: s.name }); return; }
       /* 실제로 값이 달라지는 것과, 빈 칸을 채우기만 하는 것을 갈라 둡니다.
@@ -9914,6 +9916,8 @@ function aiEnsureUi(){
   .ai-tbl .diff{font-weight:700; color:#c0392b;}
   .ai-tbl .new{font-weight:700; color:#b9770e;}
   .ai-inline{margin-top:8px;}
+  #aiModal [hidden]{display:none !important;}
+  .ai-tbl td:first-child, .ai-tbl th{white-space:nowrap;}
   @media (max-width:600px){ #aiModal .modal{padding:18px 14px;} .ai-tbl{font-size:12px;}
     #panel-schedule .head-btns #aiNoticeBtn{flex:0 0 auto !important; padding:8px 10px;} }
   @media print{ .ai-btn{display:none !important;} }`;
