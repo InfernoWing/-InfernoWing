@@ -5301,11 +5301,11 @@ function parseLeaveSheet(grid){
 
 function openClassImport(grids, fileName, quiet, sheetNames){
   let rows = [];
-  /* 반별 현황표는 두 번째 시트만 읽습니다(시트가 하나뿐이면 그 시트).
+  /* 반별 현황표는 뒤에서 2번째 시트만 읽습니다(맨 뒤는 신입생&퇴원생 시트, 시트가 하나뿐이면 그 시트).
      — 여러 시트를 같이 읽으면 같은 학생이 두 번 나와 '새 학생'으로 잘못 잡힙니다 */
-  const use = grids.length > 1 ? 1 : 0;
+  const use = grids.length > 1 ? grids.length - 2 : 0;
   if(grids[use]) rows = parseClassSheet(grids[use]);
-  if(rows.length && grids.length > 1 && sheetNames && sheetNames[use]) fileName = `${fileName || ""} · 두 번째 시트 '${sheetNames[use]}'만 읽음`;
+  if(rows.length && grids.length > 1 && sheetNames && sheetNames[use]) fileName = `${fileName || ""} · 뒤에서 2번째 시트 '${sheetNames[use]}'만 읽음`;
   if(rows.length === 0) grids.forEach(g=>{ rows = rows.concat(parseFlatSheet(g)); });
   if(rows.length === 0){
     if(!quiet) showToast(`표에서 학생을 찾지 못했어요. 반별 현황표이거나, 이름·학교 제목줄이 있는 표여야 합니다.`,
