@@ -3905,7 +3905,7 @@ async function handleDroppedFile(file){
   if(!sheets){ showToast("엑셀을 읽지 못했어요. 파일이 .xlsx 인지 확인해주세요.", {type:"bad"}); return; }
 
   if(openSchedImport(sheets, file.name, true)) return;                 // 학교별 일정표
-  if(openClassImport(sheets.map(s=> s.grid), file.name, true)) return; // 반 배정표
+  if(openClassImport(sheets.map(s=> s.grid), file.name, true, sheets.map(s=> s.name))) return; // 반 배정표
   showToast("이 표가 무엇인지 알아보지 못했어요. 학교별 일정표(학교·교과서 제목줄)나 반별 현황표를 넣어주세요.",
     {type:"warn", duration:10000});
 }
@@ -5299,9 +5299,17 @@ function parseLeaveSheet(grid){
   return out;
 }
 
-function openClassImport(grids, fileName, quiet){
+function openClassImport(grids, fileName, quiet, sheetNames){
   let rows = [];
-  grids.forEach(g=>{ rows = rows.concat(parseClassSheet(g)); });
+  /* 한 파일에 달마다 시트가 쌓여 있으면(예: 중1(10월), 중1(11월5일)) 맨 뒤 반별 시트만 읽습니다.
+     — 여러 달을 같이 읽으면 같은 학생이 두 번 나와 '새 학생'으로 잘못 잡힙니다 */
+  const perSheet = grids.map(g=> parseClassSheet(g));
+  const withRows = perSheet.map((r,i)=> r.length ? i : -1).filter(i=> i >= 0);
+  if(withRows.length){
+    const last = withRows[withRows.length - 1];
+    rows = perSheet[last];
+    if(withRows.length > 1 && sheetNames && sheetNames[last]) fileName = `${fileName || ""} · '${sheetNames[last]}' 시트만 읽음`;
+  }
   if(rows.length === 0) grids.forEach(g=>{ rows = rows.concat(parseFlatSheet(g)); });
   if(rows.length === 0){
     if(!quiet) showToast(`표에서 학생을 찾지 못했어요. 반별 현황표이거나, 이름·학교 제목줄이 있는 표여야 합니다.`,
@@ -5327,7 +5335,7 @@ document.getElementById("classImportInput").addEventListener("change", async (e)
   try{
     const grids = await gridsOf(await file.arrayBuffer());
     if(!grids) showToast("엑셀을 읽지 못했어요. 파일이 .xlsx 인지 확인해주세요.", {type:"bad"});
-    else openClassImport(grids.map(g=> g.grid), file.name);
+    else openClassImport(grids.map(g=> g.grid), file.name, false, grids.map(g=> g.name));
   }catch(err){
     console.error(err);
     showToast("파일을 읽는 중 문제가 생겼어요.", {type:"bad"});
