@@ -1604,6 +1604,7 @@
   .print-title{display:none;}
 
   /* ---------- Overlay / Modal ---------- */
+  body.no-exam .exam-ui{display:none !important;}
   .overlay{ display:none; position:fixed; inset:0; background:var(--c69); align-items:center; justify-content:center; z-index:50; padding:20px; }
   .overlay.active{display:flex;}
   /* 확인창은 다른 모달 위에 떠야 합니다 */
@@ -2128,7 +2129,7 @@
         <label>학년</label>
         <input type="text" id="stuGrade" placeholder="예: 중2" list="gradeList">
       </div>
-      <div>
+      <div class="exam-ui">
         <label>담임 선생님</label>
         <input type="text" id="stuTeacher" placeholder="예: 김도윤" list="teacherList">
       </div>
@@ -2139,14 +2140,14 @@
         <input type="text" id="stuRegularClass" placeholder="예: 1M1S" list="regularClassList">
       </div>
       <div>
-        <label>정규 담임(선행)</label>
+        <label>담임</label>
         <input type="text" id="stuRegularTeacher" placeholder="예: 이노윤" list="teacherList">
       </div>
       <div>
-        <label>정규 부담임(심화)</label>
+        <label>부담임</label>
         <input type="text" id="stuRegularAssistant" placeholder="예: 이소영" list="teacherList">
       </div>
-      <div>
+      <div class="exam-ui">
         <label>내신반</label>
         <input type="text" id="stuExamClass" placeholder="나중에 채워도 돼요" list="examClassList">
       </div>
@@ -2172,7 +2173,7 @@
       </div>
       <button class="btn secondary small" id="clearFilterBtn">조건 모두 해제</button>
       <button class="badge-warn" id="incompleteBadge">정규반 미배정 0명</button>
-      <button class="badge-warn" id="examIncompleteBadge">내신반 미배정 0명</button>
+      <button class="badge-warn exam-ui" id="examIncompleteBadge">내신반 미배정 0명</button>
       <button class="badge-info" id="sameNameBadge" style="display:none;">동명이인 0명</button>
       <button class="badge-info warn" id="mergeBadge" style="display:none;" title="같은 학교에 이름 뒤 숫자만 다른 학생이 있어요. 한 명이 둘로 갈라진 것일 수 있습니다.">합칠 후보 0명</button>
     </div>
@@ -2191,11 +2192,11 @@
           <button data-tab="teacher">담임</button>
           <button data-tab="class">반</button>
         </div>
-        <div class="sub-toggle" id="stuSubToggle" style="display:none;">
+        <div class="sub-toggle exam-ui" id="stuSubToggle" style="display:none;">
           <button data-cf="regularClass" class="active">정규반</button>
           <button data-cf="examClass">내신반</button>
         </div>
-        <div class="sub-toggle" id="stuTeaToggle" style="display:none;">
+        <div class="sub-toggle exam-ui" id="stuTeaToggle" style="display:none;">
           <button data-tk="exam" class="active">내신 담임</button>
           <button data-tk="regular">정규 담임</button>
         </div>
@@ -2214,10 +2215,10 @@
                 <th class="sortable" data-sort="name">이름</th>
                 <th class="sortable" data-sort="school">학교</th>
                 <th class="sortable" data-sort="grade">학년</th>
-                <th class="sortable" data-sort="examTeacher">내신 담임</th>
-                <th class="sortable" data-sort="regularTeacher">정규 담임</th>
+                <th class="sortable exam-ui" data-sort="examTeacher">내신 담임</th>
+                <th class="sortable" data-sort="regularTeacher">담임</th>
                 <th class="sortable" data-sort="regularClass">정규반</th>
-                <th class="sortable" data-sort="examClass">내신반</th>
+                <th class="sortable exam-ui" data-sort="examClass">내신반</th>
                 <th class="sortable" data-sort="status">상태</th>
                 <th class="act"></th>
               </tr>
@@ -2232,14 +2233,14 @@
     <div class="bulkbar edit-only" id="stuBulk">
       <span class="cnt" id="stuBulkCount">0명 선택됨</span>
       <select id="stuBulkField">
-        <option value="teacher">담임 선생님</option>
-        <option value="examTeacher">내신 담임</option>
-        <option value="regularTeacher">정규 담임(선행)</option>
-        <option value="regularAssistant">정규 부담임(심화)</option>
+        <option value="teacher" class="exam-ui">담임 선생님</option>
+        <option value="examTeacher" class="exam-ui">내신 담임</option>
+        <option value="regularTeacher">담임</option>
+        <option value="regularAssistant">부담임</option>
         <option value="grade">학년</option>
         <option value="school">학교</option>
         <option value="regularClass">정규반</option>
-        <option value="examClass">내신반</option>
+        <option value="examClass" class="exam-ui">내신반</option>
         <option value="status">재원 상태</option>
       </select>
       <span id="stuBulkValueWrap"></span>
@@ -2448,7 +2449,7 @@
     <button class="close-x" id="closeClassImport">&times;</button>
     <h3>반 배정 가져오기</h3>
     <p class="modal-meta" id="classImportMeta"></p>
-    <div class="imp-target">
+    <div class="imp-target exam-ui">
       <span class="lbl">이 표는</span>
       <div class="seg" id="impTarget">
         <button data-f="examClass" class="on">내신반</button>
@@ -2514,7 +2515,7 @@
     <div class="stu-tags" id="stuTags"></div>
 
     <div class="stu-quick edit-only" id="stuQuick">
-      <div class="sq-grp">
+      <div class="sq-grp exam-ui">
         <span class="sq-tag ex">내신반</span>
         <div class="sq-row">
           <div><label class="small">담임</label><input type="text" id="sqTeacher" list="teacherList" placeholder="예: 강지성"></div>
@@ -2524,8 +2525,8 @@
       <div class="sq-grp">
         <span class="sq-tag rg">정규</span>
         <div class="sq-row">
-          <div><label class="small">담임(선행)</label><input type="text" id="sqRegT" list="teacherList" placeholder="예: 이노윤"></div>
-          <div><label class="small">부담임(심화)</label><input type="text" id="sqRegA" list="teacherList" placeholder="예: 이소영"></div>
+          <div><label class="small">담임</label><input type="text" id="sqRegT" list="teacherList" placeholder="예: 이노윤"></div>
+          <div><label class="small">부담임</label><input type="text" id="sqRegA" list="teacherList" placeholder="예: 이소영"></div>
           <div><label class="small">반</label><input type="text" id="sqRegular" list="regularClassList" placeholder="예: 1M1S"></div>
         </div>
       </div>
@@ -2597,6 +2598,14 @@ const isConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
 let db, collection, onSnapshot, addDoc, deleteDoc, updateDoc, setDoc, doc, query, orderBy;
 let writeBatch, deleteField, limitQ;   /* 복원(여러 건 한 번에) · 학생 한 명 칸 지우기 · 공유 이력 개수 제한 */
 let students = [];
+/* 내신대비 반 — 2026년 11월부터 따로 두지 않습니다. 정규반 담임이 내신대비 담임을 겸합니다.
+   false면 내신반·내신 담임 칸과 단추를 숨기고, '담임'은 모두 정규반 담임·부담임으로 봅니다.
+   다시 내신반을 쓰게 되면 true로 바꾸면 예전 화면으로 돌아옵니다(저장된 자료는 지우지 않았음). */
+const EXAM_CLASS_ON = false;
+if(!EXAM_CLASS_ON){
+  document.body.classList.add("no-exam");
+  document.querySelectorAll("#stuBulkField option.exam-ui").forEach(o=> o.remove());   /* 휴대폰 사파리는 숨긴 항목도 보여서 아예 뺌 */
+}
 let exams = []; // {id, school, grade, examName, notConducted, notConductedReason, startDate, endDate, printStatus, inputTeacher, examScope, schoolNotice, makeupDate, retros, savedAt}
 
 const GRADE_ORDER = ["초4","초5","초6","중1","중2","중3","고1","고2","고3"];
@@ -3262,7 +3271,7 @@ function sortGrades(arr){ return [...arr].sort((a,b)=> gradeSortIndex(a)-gradeSo
 function populateDropdowns(){
   const schools = uniq(students.map(s=>s.school)).sort();
   const teachers = uniq([].concat(
-    students.map(s=> examTeacherOf(s)), students.map(s=> regularTeacherOf(s))
+    EXAM_CLASS_ON ? students.map(s=> examTeacherOf(s)) : [], students.map(s=> regularTeacherOf(s))
   )).filter(Boolean).sort();
   const grades = uniq(students.map(s=>s.grade));
 
@@ -3300,7 +3309,7 @@ let showExamIncompleteOnly = false;  // 시험대비(내신) 반 미배정만 �
 let showNoTeacherOnly = false;       // 담임 미지정(정규·내신 담임 둘 다 없음)만 보기
 /* 담임 미지정 = 정규 담임도 내신 담임도 없는 학생. 정규 기간엔 내신대비 반이 없을 수 있어서,
    한쪽만 있으면 담임이 있는 것으로 봅니다 */
-function hasNoTeacher(s){ return !examTeacherOf(s) && !regularTeacherOf(s); }
+function hasNoTeacher(s){ return EXAM_CLASS_ON ? (!examTeacherOf(s) && !regularTeacherOf(s)) : !regularTeacherOf(s); }
 /* 내신대비 반을 운영 중인지 — 재원생 중 한 명이라도 내신반이 있으면 운영 중.
    운영하지 않을 때는 학생 관리의 "내신반 미배정" 거르기 단추를 숨깁니다.
    (내신 담임·내신반이 비어 있다는 표시는 기간과 상관없이 띄우지 않습니다 — 내신반 담임은 원래 없을 때도 있음) */
@@ -3335,6 +3344,7 @@ let stuF = {cho:"", school:"", grade:"", teacher:null, regularClass:null, examCl
 /* 학생 관리에서 '담임'을 볼 때의 기준 — 내신 담임과 정규 담임은 서로 다른 칸입니다 */
 let stuTeacherKind = "exam";                       // exam | regular
 try{ stuTeacherKind = localStorage.getItem("kladi_stutkind") || "exam"; }catch(e){}
+if(!EXAM_CLASS_ON) stuTeacherKind = "regular";
 function setStuTeacherKind(v){
   stuTeacherKind = (v === "regular") ? "regular" : "exam";
   try{ localStorage.setItem("kladi_stutkind", stuTeacherKind); }catch(e){}
@@ -3342,7 +3352,7 @@ function setStuTeacherKind(v){
 function stuTeacherOf(s){
   return stuTeacherKind === "regular" ? regularTeacherOf(s) : examTeacherOf(s);
 }
-function stuTeacherLabel(){ return stuTeacherKind === "regular" ? "정규 담임" : "내신 담임"; }
+function stuTeacherLabel(){ return stuTeacherKind === "regular" ? (EXAM_CLASS_ON ? "정규 담임" : "담임") : "내신 담임"; }
 let selectedStudents = new Set();
 let lastStuRow = null;
 
@@ -4341,10 +4351,10 @@ function renderStudents(){
             <td><input type="text" class="edit-field" data-field="name" value="${escapeHtml(s.name||"")}" style="width:78px;"></td>
             <td><input type="text" class="edit-field" data-field="school" value="${escapeHtml(s.school||"")}" list="schoolList" style="width:100px;"></td>
             <td><input type="text" class="edit-field" data-field="grade" value="${escapeHtml(s.grade||"")}" list="gradeList" style="width:56px;"></td>
-            <td><input type="text" class="edit-field" data-field="examTeacher" value="${escapeHtml(examTeacherOf(s))}" list="teacherList" style="width:74px;"></td>
+            <td class="exam-ui"><input type="text" class="edit-field" data-field="examTeacher" value="${escapeHtml(examTeacherOf(s))}" list="teacherList" style="width:74px;"></td>
             <td><input type="text" class="edit-field" data-field="regularTeacher" value="${escapeHtml(regularTeacherOf(s))}" list="teacherList" style="width:74px;"></td>
             <td><input type="text" class="edit-field" data-field="regularClass" value="${escapeHtml(s.regularClass||"")}" list="regularClassList" style="width:88px;"></td>
-            <td><input type="text" class="edit-field" data-field="examClass" value="${escapeHtml(s.examClass||"")}" list="examClassList" style="width:88px;"></td>
+            <td class="exam-ui"><input type="text" class="edit-field" data-field="examClass" value="${escapeHtml(s.examClass||"")}" list="examClassList" style="width:88px;"></td>
             <td><select class="edit-field" data-field="status" style="width:74px;">${
               STATUS_LIST.map(st=>`<option value="${st}" ${statusOf(s)===st?"selected":""}>${st}</option>`).join("")
             }</select></td>
@@ -4368,14 +4378,14 @@ function renderStudents(){
         }</td>
         <td data-c="school">${s.school? `<span class="tag school clickable" data-jump="school" data-v="${escapeHtml(s.school)}">${escapeHtml(shortSchool(s.school))}</span>`:"—"}</td>
         <td data-c="grade">${s.grade? `<span class="tag grade clickable" data-jump="grade" data-v="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:"—"}</td>
-        <td data-c="examTeacher">${examTeacherOf(s)
+        <td class="exam-ui" data-c="examTeacher">${examTeacherOf(s)
               ? `<span class="tag teacher clickable" data-jump="examTeacher" data-v="${escapeHtml(examTeacherOf(s))}">${escapeHtml(examTeacherOf(s))}T</span>`
               : `<span class="muted">—</span>`}</td>
         <td data-c="regularTeacher">${regularTeacherOf(s)
               ? `<span class="tag rteacher clickable" data-jump="regularTeacher" data-v="${escapeHtml(regularTeacherOf(s))}">${escapeHtml(regularTeacherOf(s))}T</span>`
               : `<span class="tag none clickable" data-jump="regularTeacher" data-v="">미지정</span>`}</td>
         <td data-c="regularClass"><span class="clickable" data-jump="regularClass" data-v="${escapeHtml(s.regularClass||"")}">${clsTag(s.regularClass)}</span></td>
-        <td data-c="examClass">${s.examClass ? `<span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span>` : `<span class="muted">—</span>`}</td>
+        <td class="exam-ui" data-c="examClass">${s.examClass ? `<span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span>` : `<span class="muted">—</span>`}</td>
         <td data-c="status"><span class="tag st-${statusOf(s)}">${statusOf(s)}</span></td>
         <td class="act edit-only" data-c="act">
           <button class="icon-btn edit-btn" data-id="${s.id}">수정</button>
@@ -4407,14 +4417,14 @@ function renderStudents(){
         <div class="sc-tags">
           ${s.school? `<span class="tag school clickable" data-jump="school" data-v="${escapeHtml(s.school)}">${escapeHtml(shortSchool(s.school))}</span>`:""}
           ${s.grade? `<span class="tag grade clickable" data-jump="grade" data-v="${escapeHtml(s.grade)}">${escapeHtml(s.grade)}</span>`:""}
-          ${examTeacherOf(s)
+          ${EXAM_CLASS_ON && examTeacherOf(s)
             ? `<span class="tag teacher clickable" data-jump="examTeacher" data-v="${escapeHtml(examTeacherOf(s))}" title="내신 담임">내신 ${escapeHtml(examTeacherOf(s))}T</span>`
             : ""}
           ${regularTeacherOf(s)
-            ? `<span class="tag rteacher clickable" data-jump="regularTeacher" data-v="${escapeHtml(regularTeacherOf(s))}" title="정규 담임">정규 ${escapeHtml(regularTeacherOf(s))}T</span>`
-            : `<span class="tag none clickable" data-jump="regularTeacher" data-v="">정규 담임 미지정</span>`}
+            ? `<span class="tag rteacher clickable" data-jump="regularTeacher" data-v="${escapeHtml(regularTeacherOf(s))}" title="담임">${EXAM_CLASS_ON ? "정규" : "담임"} ${escapeHtml(regularTeacherOf(s))}T</span>`
+            : `<span class="tag none clickable" data-jump="regularTeacher" data-v="">${EXAM_CLASS_ON ? "정규 담임" : "담임"} 미지정</span>`}
           <span class="clickable" data-jump="regularClass" data-v="${escapeHtml(s.regularClass||"")}">${clsTag(s.regularClass)}</span>
-          ${s.examClass ? `<span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span>` : ""}
+          ${EXAM_CLASS_ON && s.examClass ? `<span class="clickable" data-jump="examClass" data-v="${escapeHtml(s.examClass||"")}">${clsTag(s.examClass)}</span>` : ""}
         </div>
         <div class="sc-actions edit-only">
           <button class="icon-btn edit-btn" data-id="${s.id}">수정</button>
@@ -5152,9 +5162,10 @@ function buildClassImportPlan(rows, field){
 
 function changeText(before, payload){
   const label = { examClass: "내신반", regularClass: "정규반", teacher: "담임",
-                  examTeacher: "내신 담임", regularTeacher: "정규 담임",
-                  examAssistant: "내신 부담임", regularAssistant: "정규 부담임", grade: "학년" };
-  return Object.keys(payload).map(k=>
+                  examTeacher: "내신 담임", regularTeacher: EXAM_CLASS_ON ? "정규 담임" : "담임",
+                  examAssistant: "내신 부담임", regularAssistant: EXAM_CLASS_ON ? "정규 부담임" : "부담임", grade: "학년" };
+  /* 내신반을 안 쓰는 동안은 예전 '담임' 칸(속으로만 채움)은 보여주지 않습니다 */
+  return Object.keys(payload).filter(k=> EXAM_CLASS_ON || k !== "teacher").map(k=>
     `${label[k]} <del>${escapeHtml(before[k] || "없음")}</del><ins>${escapeHtml(payload[k])}</ins>`
   ).join(" · ");
 }
@@ -5201,7 +5212,7 @@ function renderClassImportPlan(plan, fileName){
   }
   if(fillUpd.length){
     html += `<div class="imp-sec"><h5>담임 칸만 정리되는 학생 ${fillUpd.length}명</h5>
-      <p class="imp-note">지금 쓰고 있는 담임과 <b>같은 값</b>을, 이 명부에 맞는 칸(내신 담임 / 정규 담임)에 옮겨 적는 것뿐입니다. 화면에 보이는 담임은 그대로예요. 한 번 정리해 두면 다음부터는 진짜 변동만 뜹니다.</p>` +
+      <p class="imp-note">지금 쓰고 있는 담임과 <b>같은 값</b>을, ${EXAM_CLASS_ON ? "이 명부에 맞는 칸(내신 담임 / 정규 담임)에" : "담임 칸에"} 옮겨 적는 것뿐입니다. 화면에 보이는 담임은 그대로예요. 한 번 정리해 두면 다음부터는 진짜 변동만 뜹니다.</p>` +
       listOf(fillUpd, u=>`<div class="imp-row">
         <span class="who">${escapeHtml(u.name)}</span>
         <span class="sch">${escapeHtml(shortSchool(u.school))}</span>
@@ -5319,6 +5330,7 @@ function openClassImport(grids, fileName, quiet, sheetNames){
   const fn = (fileName || "").replace(/\s+/g, "");
   if(/정규|분기/.test(fn) && !/내신|시험대비/.test(fn)) classImportField = "regularClass";
   else classImportField = "examClass";
+  if(!EXAM_CLASS_ON) classImportField = "regularClass";   /* 내신반을 안 쓰는 동안은 늘 정규반 */
   syncImpTarget();
   classImportPlan = buildClassImportPlan(rows, classImportField);
   renderClassImportPlan(classImportPlan, fileName);
@@ -8578,7 +8590,7 @@ const MERGE_FIELDS = ["studentNumber","teacher","examTeacher","examClass","examA
 function filledCount(s){ return MERGE_FIELDS.filter(f=> (s[f]||"").toString().trim()).length; }
 
 const MERGE_LABEL = {studentNumber:"학번", teacher:"담임", examTeacher:"내신 담임", examClass:"내신반",
-  examAssistant:"내신 부담임", regularTeacher:"정규 담임", regularAssistant:"정규 부담임",
+  examAssistant:"내신 부담임", regularTeacher: EXAM_CLASS_ON ? "정규 담임" : "담임", regularAssistant: EXAM_CLASS_ON ? "정규 부담임" : "부담임",
   regularClass:"정규반", grade:"학년", status:"재원 상태", name:"이름", school:"학교"};
 
 /* keep 에 비어 있는 칸을 drop 쪽 값으로 채웁니다 */
@@ -9141,11 +9153,11 @@ function openStudentModal(studentId, returnTo){
 
   document.getElementById("stuTags").innerHTML =
     `<span class="tag st-${statusOf(s)}">${statusOf(s)}</span>` +
-    (examTeacherOf(s) ? `<span class="tag teacher">내신 ${escapeHtml(examTeacherOf(s))}T</span>` : "") +
-    (regularTeacherOf(s) ? `<span class="tag rteacher">정규 ${escapeHtml(regularTeacherOf(s))}T</span>` : `<span class="tag none">정규 담임 미지정</span>`) +
-    (s.regularAssistant ? `<span class="tag rteacher">정규 부 ${escapeHtml(s.regularAssistant)}T</span>` : ``) +
+    (EXAM_CLASS_ON && examTeacherOf(s) ? `<span class="tag teacher">내신 ${escapeHtml(examTeacherOf(s))}T</span>` : "") +
+    (regularTeacherOf(s) ? `<span class="tag rteacher">${EXAM_CLASS_ON ? "정규" : "담임"} ${escapeHtml(regularTeacherOf(s))}T</span>` : `<span class="tag none">${EXAM_CLASS_ON ? "정규 담임" : "담임"} 미지정</span>`) +
+    (s.regularAssistant ? `<span class="tag rteacher">${EXAM_CLASS_ON ? "정규 부" : "부담임"} ${escapeHtml(s.regularAssistant)}T</span>` : ``) +
     (s.regularClass ? `<span class="tag cls">정규반 ${escapeHtml(s.regularClass)}</span>` : `<span class="tag none">정규반 미배정</span>`) +
-    (s.examClass ? `<span class="tag cls">내신반 ${escapeHtml(s.examClass)}</span>` : "");
+    (EXAM_CLASS_ON && s.examClass ? `<span class="tag cls">내신반 ${escapeHtml(s.examClass)}</span>` : "");
 
   /* 이 학생이 치르는 시험 (학교+학년 일치) */
   const tk = todayKey();
@@ -9275,10 +9287,10 @@ function textbookHtml(school, grade){
    (다시 내신대비반 담임 기준으로 돌아가는 날은 아직 정하지 않았습니다) */
 const REGULAR_MANAGES_FROM = "2026-10-16";
 function regularManagesNow(){ return todayKey() >= REGULAR_MANAGES_FROM; }
-function mgmtTeacherOf(s){ return regularManagesNow() ? regularTeacherOf(s) : examTeacherOf(s); }
+function mgmtTeacherOf(s){ return (!EXAM_CLASS_ON || regularManagesNow()) ? regularTeacherOf(s) : examTeacherOf(s); }
 /* 시험 상세 창의 '담임 기준'은 이제 정규반이 기본입니다. 직접 눌러 바꾸면 그 브라우저에서 기억합니다
    (예전에 저장해 둔 '내신대비 반' 선택은 쓰지 않도록 새 이름으로 기억합니다) */
-let teacherBasis = (()=>{ try{ return localStorage.getItem("kladi_tbasis2") || "regular"; }catch(e){ return "regular"; } })();   // exam | regular
+let teacherBasis = (()=>{ if(!EXAM_CLASS_ON) return "regular"; try{ return localStorage.getItem("kladi_tbasis2") || "regular"; }catch(e){ return "regular"; } })();   // exam | regular
 /* 예전 데이터는 담임 칸 하나만 있었어요. 그때 값은 내신대비 담임으로 봅니다
    (정규 담임이 따로 들어와 있으면 끌어오지 않습니다). */
 function examTeacherOf(s){
@@ -9542,7 +9554,7 @@ function openDetailModal(examId, returnTo){
   const byTeacher = {};
   relevant.forEach(s=>{
     /* 고른 담임 기준 쪽이 비어 있으면 다른 쪽 담임으로 묶습니다 (정규 기간엔 내신대비 반이 없을 수 있어서) */
-    const teacher = teacherOf(s) || teacherOf(s, teacherBasis === "regular" ? "exam" : "regular");
+    const teacher = teacherOf(s) || (EXAM_CLASS_ON ? teacherOf(s, teacherBasis === "regular" ? "exam" : "regular") : "");
     if(!teacher) return;                       // 둘 다 없으면 아래 '담임 미지정'으로
     if(!byTeacher[teacher]) byTeacher[teacher]=[];
     byTeacher[teacher].push(s);
@@ -9592,8 +9604,8 @@ function openDetailModal(examId, returnTo){
       }</span>
       ${calTeacher ? `<button class="btn secondary small" id="detailScopeBtn">${
         detailShowAll ? `${escapeHtml(calTeacher)}T 학생만` : "전체 보기"}</button>` : ""}
-      <span class="tb-lbl">담임 기준</span>
-      <span class="seg tb-seg" id="tbasisSeg">
+      <span class="tb-lbl exam-ui">담임 기준</span>
+      <span class="seg tb-seg exam-ui" id="tbasisSeg">
         <button data-b="exam" class="${teacherBasis==="exam"?"on":""}">내신반</button>
         <button data-b="regular" class="${teacherBasis==="regular"?"on":""}">정규반</button>
       </span>
@@ -9632,10 +9644,10 @@ function openDetailModal(examId, returnTo){
             </span>`).join("");
         })()}${editMode?`<button type="button" class="mdate-add" title="직보 일정 추가">+ 추가</button>`:""}</span>
       </span>
-      ${examTeacherOf(s) ? teaLine("내신담임", examTeacherOf(s), "tea", teacherBasis==="exam") : ""}
-      ${(s.examClass||"").trim() ? line("내신반", (s.examClass||"").trim(), "ex") : ""}
-      ${teaLine("정규담임", regularTeacherOf(s), "tg", teacherBasis==="regular")}
-      ${rA ? teaLine("정규부담임", rA, "tv", false) : ""}
+      ${EXAM_CLASS_ON && examTeacherOf(s) ? teaLine("내신담임", examTeacherOf(s), "tea", teacherBasis==="exam") : ""}
+      ${EXAM_CLASS_ON && (s.examClass||"").trim() ? line("내신반", (s.examClass||"").trim(), "ex") : ""}
+      ${teaLine(EXAM_CLASS_ON ? "정규담임" : "담임", regularTeacherOf(s), "tg", teacherBasis==="regular")}
+      ${rA ? teaLine(EXAM_CLASS_ON ? "정규부담임" : "부담임", rA, "tv", false) : ""}
       ${line("정규반", (s.regularClass||"").trim(), "rg")}
     </div>`;
   };
