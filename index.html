@@ -499,6 +499,7 @@
   }
   .head-inner{max-width:1120px;margin:0 auto;position:relative;}
   h1.title{ font-family:'Gowun Batang',serif; font-size:clamp(24px,4.2vw,34px); margin:0 0 4px; font-weight:700; }
+  h1.title .home-link{ color:inherit; text-decoration:none; cursor:pointer; }
   .subtitle{color:var(--chalk-dim); font-size:13.5px; margin:0;}
   /* [E] 탭 이름과 같은 패널 제목은 숨깁니다 (인쇄할 땐 다시 보이게) */
   .panel-title{display:none;}
@@ -1875,7 +1876,7 @@
 
 <header class="app-head">
   <div class="head-inner">
-    <h1 class="title">학원 관리 시스템</h1>
+    <h1 class="title"><a href="./" id="homeLink" class="home-link" title="처음 화면으로">학원 관리 시스템</a></h1>
     <p class="subtitle">학교를 고르면 학년별 시험 카드가 자동으로 뜨고, 캘린더·학생 관리와 연동돼요</p>
     <div class="head-actions">
       <button class="mode-btn" id="modeBtn"><span class="dot"></span><span id="modeLabel">보기 모드</span></button>
@@ -3241,6 +3242,24 @@ document.getElementById("pwChangeSubmit").addEventListener("click", async ()=>{
 });
 
 applyMode();
+
+/* 맨 위 제목을 누르면 처음 화면(이번 달 캘린더)으로 돌아갑니다. 열려 있는 창은 닫고 맨 위로 올라갑니다. */
+document.getElementById("homeLink").addEventListener("click", (e)=>{
+  if(e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;   /* 새 탭으로 열기는 그대로 */
+  e.preventDefault();
+  document.querySelectorAll(".overlay.active").forEach(o=> o.classList.remove("active"));
+  try{ closeMonthPicker(); }catch(x){}
+  switchTab("calendar");
+  viewYear = today.getFullYear(); viewMonth = today.getMonth();
+  renderCalendar();
+  window.scrollTo({top:0, behavior:"smooth"});
+});
+/* F5 — 새로고침 (저장 안 된 입력이 있으면 브라우저가 한 번 더 묻습니다) */
+document.addEventListener("keydown", (e)=>{
+  if(e.key !== "F5" || e.ctrlKey || e.metaKey || e.altKey) return;
+  e.preventDefault();
+  location.reload();
+});
 
 /* ---------- 탭 전환 ---------- */
 function switchTab(tabName){
