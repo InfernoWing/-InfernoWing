@@ -3292,7 +3292,8 @@ function sortGrades(arr){ return [...arr].sort((a,b)=> gradeSortIndex(a)-gradeSo
 function populateDropdowns(){
   const schools = uniq(students.map(s=>s.school)).sort();
   const teachers = uniq([].concat(
-    EXAM_CLASS_ON ? students.map(s=> examTeacherOf(s)) : [], students.map(s=> regularTeacherOf(s))
+    EXAM_CLASS_ON ? students.filter(s=> statusOf(s) !== "퇴원").map(s=> examTeacherOf(s)) : [],
+    students.filter(s=> statusOf(s) !== "퇴원").map(s=> regularTeacherOf(s))   /* 퇴원한 학생 담임은 목록에서 뺍니다 (그만둔 선생님이 계속 남지 않게) */
   )).filter(Boolean).sort();
   const grades = uniq(students.map(s=>s.grade));
 
