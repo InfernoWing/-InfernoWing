@@ -1128,7 +1128,9 @@
   .tl-daycell.mstart{border-left:2px solid var(--c22);}
   /* 날짜 눈금 (헤더 2단: 월 / 일·요일) */
   .tl-monthlabel{position:absolute; top:2px; font-size:12px; color:var(--ink); font-weight:800;
-    padding-left:5px; white-space:nowrap;}
+    padding-left:5px; white-space:nowrap; cursor:pointer; z-index:2;}
+  .tl-monthlabel:hover{color:var(--c22); text-decoration:underline;}
+  .tl-daycell.fold{background:var(--c77); border-right:2px solid var(--c22);}
   .tl-dnum{position:absolute; top:20px; font-size:10.5px; color:var(--c6); font-weight:700;
     text-align:center; line-height:1.15;}
   .tl-dnum .dw{display:block; font-size:8.5px; color:var(--c3); font-weight:600;}
@@ -7747,8 +7749,9 @@ function renderSummary(){
 /* ---------- 학교별 일정 타임라인 ---------- */
 let schedSeason = "";
 let schedGrade = "";
+let schedFolded = new Set();     // 눌러서 접어 둔 달 (예: "2026-09") — 이 화면을 연 동안만 기억
 let schedGradeTouched = false;   // 사용자가 학년을 한 번이라도 직접 고르면 true
-const TL_NAME_W = 124, TL_DAY_W = 30, TL_WKND_W = 18;   /* 시험이 없는 토·일은 좁게 (13이면 날짜 글자가 붙어 보여 18로) */
+const TL_NAME_W = 124, TL_DAY_W = 30, TL_WKND_W = 18, TL_FOLD_W = 44;   /* 시험이 없는 토·일은 좁게 (13이면 날짜 글자가 붙어 보여 18로) */
 
 function shiftKey(key, days){
   const d = toDate(key);
@@ -7843,7 +7846,9 @@ function renderScheduleTab(){
   let cursorX = 0;
   for(let i=0;i<days;i++){
     const dw = toDate(shiftKey(from, i)).getDay();
-    const w = (dw===0 || dw===6) ? TL_WKND_W : TL_DAY_W;
+    const mk = shiftKey(from, i).slice(0,7);
+    let w = (dw===0 || dw===6) ? TL_WKND_W : TL_DAY_W;
+    if(schedFolded.has(mk)) w = (i===0 || shiftKey(from, i-1).slice(0,7)!==mk) ? TL_FOLD_W : 0;   /* 접은 달은 한 칸만 남김 */
     dayLeft[i] = cursorX; dayWid[i] = w; cursorX += w;
   }
   /* [B] 오른쪽이 남으면 날짜 칸을 늘려 화면 폭을 꽉 채웁니다 (막대 글씨가 잘리지 않게) */
@@ -7874,11 +7879,19 @@ function renderScheduleTab(){
     const isMstart = d.getDate()===1;
     const isWstart = dow===1;                       // 월요일마다 주 구분선
     const holi = holidayOf(k);
+    const mk = k.slice(0,7);
+    if(schedFolded.has(mk)){
+      if(dayWid[i] > 0){
+        cells += `<div class="tl-daycell fold mstart" style="left:${dayLeft[i]}px; width:${dayWid[i]}px;"></div>`;
+        labels += `<div class="tl-monthlabel" data-m="${mk}" title="누르면 ${d.getMonth()+1}월을 펼쳐요">▸${d.getMonth()+1}월</div>`.replace('<div class="tl-monthlabel"', `<div class="tl-monthlabel" style="left:${dayLeft[i]}px;"`);
+      }
+      continue;
+    }
     const cls = holi ? "holi" : dow===0 ? "sun" : dow===6 ? "wk" : "";
     cells += `<div class="tl-daycell ${cls} ${isWstart?"wstart":""} ${isMstart?"mstart":""}"
       style="left:${dayLeft[i]}px; width:${dayWid[i]}px;"${holi?` title="${escapeHtml(holi)}"`:""}></div>`;
     if(isMstart || i===0)
-      labels += `<div class="tl-monthlabel" style="left:${dayLeft[i]}px;">${d.getMonth()+1}월</div>`;
+      labels += `<div class="tl-monthlabel" data-m="${mk}" style="left:${dayLeft[i]}px;" title="누르면 ${d.getMonth()+1}월을 접어요">${d.getMonth()+1}월</div>`;
     const dcls = (k===tk) ? "tday" : holi ? "holi" : dow===6 ? "sat" : dow===0 ? "sun" : "";
     labels += `<div class="tl-dnum ${dcls} ${isWknd?"nar":""}" style="left:${dayLeft[i]}px; width:${dayWid[i]}px;"${holi?` title="${escapeHtml(holi)}"`:""}>${d.getDate()}<span class="dw">${DOW_KO[dow]}</span></div>`;
   }
@@ -7932,6 +7945,11 @@ function renderScheduleTab(){
   });
 
   tl.innerHTML = html;
+  tl.querySelectorAll(".tl-monthlabel").forEach(m=> m.addEventListener("click", ()=>{
+    const k = m.dataset.m;
+    if(schedFolded.has(k)) schedFolded.delete(k); else schedFolded.add(k);
+    renderScheduleTab();
+  }));
   tl.querySelectorAll(".bar").forEach(b=> b.addEventListener("click", ()=> openDetailModal(b.dataset.exam, null)));
   tl.querySelectorAll(".tl-name.clickable").forEach(n=>
     n.addEventListener("click", ()=> openRetroHistory(n.dataset.school)));
