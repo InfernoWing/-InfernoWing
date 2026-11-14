@@ -1245,6 +1245,14 @@
   .merge-chg.none{color:var(--c2); background:var(--c55);}
 
   /* B-2 오늘 수업 브리핑 */
+  .head-btns-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .todo-row{display:flex; align-items:center; gap:9px; width:100%; padding:8px 10px; border:none; background:transparent;
+    border-radius:8px; font-family:inherit; font-size:13px; color:var(--ink); text-align:left; cursor:pointer;}
+  .todo-row:nth-child(odd){background:var(--c15);}
+  .todo-row:hover{background:var(--c25);}
+  .todo-row .nm{font-weight:800;}
+  .todo-row .sub{font-size:12px; color:var(--c40);}
+  .todo-row .rest{margin-left:auto; flex-shrink:0;}
   .brief-bar{display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin:12px 0 14px;}
   .brief-bar select{min-width:130px;}
   .brief-grp{margin-bottom:16px;}
@@ -1644,8 +1652,8 @@
   #askModal .btn.danger{background:var(--rust); border-color:var(--rust); color:var(--c1);}
   .modal{ background:var(--paper-card); border-radius:16px; padding:24px; max-width:540px; width:100%; max-height:88vh; overflow-y:auto; }
   /* 긴 창은 안쪽에서 따로 굴리지 않고, 내용만큼 아래로 늘어나게 둡니다 */
-  #detailModal.active, #studentModal.active, #dayModal.active, #briefModal.active{ display:block; overflow-y:auto; }
-  #detailModal .modal, #studentModal .modal, #dayModal .modal, #briefModal .modal{
+  #detailModal.active, #studentModal.active, #dayModal.active, #briefModal.active, #todoModal.active{ display:block; overflow-y:auto; }
+  #detailModal .modal, #studentModal .modal, #dayModal .modal, #briefModal .modal, #todoModal .modal{
     max-height:none; overflow:visible; margin:0 auto; }
   /* [A] 학생이 많은 창은 넓게 — 카드가 2~3열로 들어갑니다 */
   #detailModal .modal, #dayModal .modal{ max-width:1040px; }
@@ -1939,7 +1947,10 @@
         <h2 class="panel-title">캘린더</h2>
         <p class="panel-desc">알약을 누르면 상세 정보와 학생 명단이 열려요.</p>
       </div>
-      <button class="btn" id="todayBriefBtn">📋 오늘 수업</button>
+      <div class="head-btns-row">
+        <button class="btn secondary" id="todoBtn">📝 할 일</button>
+        <button class="btn" id="todayBriefBtn">📋 오늘 수업</button>
+      </div>
     </div>
 
     <button class="summary-toggle" id="summaryToggle" type="button" aria-expanded="false" aria-controls="summaryRow">
@@ -2426,6 +2437,16 @@
   </div>
 </div>
 
+<!-- 할 일 목록 -->
+<div class="overlay" id="todoModal">
+  <div class="modal" style="max-width:600px;">
+    <button class="close-x" id="closeTodoModal">&times;</button>
+    <h3>할 일</h3>
+    <p class="modal-meta" id="todoMeta"></p>
+    <div id="todoBody"></div>
+  </div>
+</div>
+
 <!-- 확인창 (브라우저 기본 창 대신) -->
 <div class="overlay" id="askModal">
   <div class="modal" style="max-width:420px;">
@@ -2722,7 +2743,7 @@ async function initFirebase(){
     const d = snap.data();
     if(d && d.editPasswordHash) editPwHash = d.editPasswordHash;
     if(d && d.textbooks && JSON.stringify(d.textbooks) !== JSON.stringify(textbooks)){
-      textbooks = d.textbooks; renderExamTabForce();
+      textbooks = d.textbooks; renderExamTabForce(); updateTodoBtn();
       /* 캘린더 알약 색·시험 범위 탭 묶음이 교과서를 쓰므로 같이 다시 그립니다
          (처음 열 때 시험 정보가 교과서보다 먼저 오면 전부 "교과서 미등록"으로 그려져 있던 것) */
       renderCalendar(); renderScopeTab();
@@ -6482,6 +6503,66 @@ document.getElementById("stuPrintBtn").addEventListener("click", ()=>{
   window.print();
 });
 
+/* ---------- 할 일 목록 — 범위 미입력 시험과 교과서 미등록 학교를 한곳에 ---------- */
+function todoItems(){
+  const scopeList = upcomingExams().filter(e=> !hasScope(e) && studentsForExam(e).length > 0);
+  const active = students.filter(s=> statusOf(s) !== "퇴원" && s.school);
+  const bookList = uniq(active.map(s=> s.school)).sort((a,b)=> a.localeCompare(b,"ko"))
+    .map(sc=> ({ school: sc, grades: sortGrades(uniq(active.filter(s=> s.school === sc).map(s=> s.grade)).filter(g=> !textbookOf(sc, g))) }))
+    .filter(x=> x.grades.length);
+  return { scopeList, bookList };
+}
+function updateTodoBtn(){
+  const b = document.getElementById("todoBtn"); if(!b) return;
+  const { scopeList, bookList } = todoItems();
+  const n = scopeList.length + bookList.length;
+  b.textContent = n ? `📝 할 일 ${n}` : "📝 할 일";
+}
+function renderTodo(){
+  const { scopeList, bookList } = todoItems();
+  const tk = todayKey();
+  document.getElementById("todoMeta").textContent =
+    (scopeList.length + bookList.length) ? `범위 미입력 ${scopeList.length}건 · 교과서 미등록 ${bookList.length}곳` : "";
+  let html = "";
+  if(scopeList.length){
+    html += `<div class="brief-grp"><h5>시험 범위 미입력 <span class="cnt">${scopeList.length}건</span></h5>` +
+      scopeList.map(e=>{
+        const d = e.startDate <= tk ? 0 : daysBetween(tk, e.startDate);
+        return `<button class="todo-row" data-kind="scope" data-id="${escapeHtml(e.id)}">
+          <span class="nm">${escapeHtml(shortSchool(e.school))}</span>
+          <span class="sub">${escapeHtml(e.grade||"")} ${escapeHtml(e.examName||"")} · ${escapeHtml(fmtWithDow(e.startDate))}</span>
+          <span class="rest">${ddayBadge(e)}</span></button>`; }).join("") + `</div>`;
+  }
+  if(bookList.length){
+    html += `<div class="brief-grp"><h5>교과서 미등록 <span class="cnt">${bookList.length}곳</span></h5>` +
+      bookList.map(x=>`<button class="todo-row" data-kind="book" data-school="${escapeHtml(x.school)}">
+        <span class="nm">${escapeHtml(shortSchool(x.school))}</span>
+        <span class="sub">${escapeHtml(x.grades.join(", "))}</span></button>`).join("") + `</div>`;
+  }
+  const box = document.getElementById("todoBody");
+  box.innerHTML = html || `<div class="empty-state">할 일이 없어요. 범위도 교과서도 모두 채워져 있어요.</div>`;
+  box.querySelectorAll(".todo-row").forEach(r=> r.addEventListener("click", ()=>{
+    document.getElementById("todoModal").classList.remove("active");
+    if(r.dataset.kind === "scope"){
+      const e = exams.find(x=> x.id === r.dataset.id); if(!e) return;
+      scopeSeason = seasonKeyOf(e); scopeGrade = ""; scopeOnlyMissing = true;
+      switchTab("scope"); renderScopeTab();
+    } else {
+      currentExamSchool = r.dataset.school;
+      const sel = document.getElementById("examSchoolSelect"); if(sel) sel.value = currentExamSchool;
+      switchTab("examinput"); renderExamTab();
+    }
+  }));
+}
+document.getElementById("todoBtn").addEventListener("click", ()=>{
+  renderTodo(); document.getElementById("todoModal").classList.add("active");
+});
+document.getElementById("closeTodoModal").addEventListener("click", ()=>
+  document.getElementById("todoModal").classList.remove("active"));
+document.getElementById("todoModal").addEventListener("click", (e)=>{
+  if(e.target.id === "todoModal") e.currentTarget.classList.remove("active");
+});
+
 /* ---------- 오늘 수업 브리핑 ---------- */
 const DAY_GROUPS = { 월:"월수금", 수:"월수금", 금:"월수금", 화:"화목토", 목:"화목토", 토:"화목토" };
 let briefDay = "", briefTeacherPick = "";
@@ -7961,6 +8042,7 @@ function renderSummary(){
     <span class="sd">재원생 ${students.filter(s=> statusOf(s) !== "퇴원").length}명 중</span></button>`;
 
   box.innerHTML = card1 + card2 + card4 + card5 + card1b;
+  updateTodoBtn();
 
   box.querySelectorAll(".stat-card").forEach(b=> b.addEventListener("click", ()=>{
     const go = b.dataset.go;
@@ -9548,6 +9630,7 @@ async function saveTextbook(school, grade, value){
   const k = tbKey(school, grade);
   if(value) next[k] = value; else delete next[k];
   textbooks = next;
+  updateTodoBtn();
   await saveSetting("textbooks", next);
 }
 function textbookHtml(school, grade){

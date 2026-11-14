@@ -47,6 +47,9 @@ async function open(browser, view) {
   for (const [label, view] of [['컴퓨터', { width: 1280, height: 900 }], ['휴대폰', { width: 390, height: 844 }]]) {
     const { page, errs } = await open(browser, view);
     ok(`${label}: "이번 주 시험 보는 학교" 줄에 오늘 시험이 나옴`, await page.$eval('.stat-card.week', e => e.textContent.includes('가짜중') && e.textContent.includes('진행 중')).catch(() => false));
+    await page.click('#todoBtn'); await page.waitForTimeout(250);
+    ok(`${label}: "할 일" 창에 범위 미입력·교과서 미등록이 나옴`, await page.$$eval('#todoBody .todo-row', r => r.some(x => x.dataset.kind === 'scope') && r.some(x => x.dataset.kind === 'book')));
+    await page.click('#closeTodoModal');
     const tabs = await page.$$eval('.tab-btn[data-tab]', b => b.map(x => x.dataset.tab));
     ok(`${label}: 탭 ${tabs.length}개 찾음`, tabs.length >= 5, tabs.join(','));
     for (const t of tabs) {
