@@ -4304,6 +4304,8 @@ function clsTag(v){
          (time ? `<span class="ct">${escapeHtml(time)}</span>` : "") + `</span>`;
 }
 
+const STU_CARD_STEP = 30;          /* 휴대폰 카드 보기에서 한 번에 보이는 학생 수 */
+let stuCardLimit = STU_CARD_STEP, stuCardKey = "";
 function renderStudents(){
   const tbody = document.getElementById("studentTableBody");
   const emptyBox = document.getElementById("studentEmptyState");
@@ -4413,7 +4415,13 @@ function renderStudents(){
   cardBox.style.display = stuView==="card" ? "flex" : "none";
 
   if(stuView==="card"){
-    cardBox.innerHTML = list.length===0 ? "" : list.map((s,i)=>{
+    /* 휴대폰에서는 처음 30명만 그리고 "학생 더 보기"로 30명씩 늘립니다 (전원이 한 번에 나와 끝없이 길던 것).
+       거르기·정렬로 명단이 바뀌면 다시 30명부터 */
+    const cardKey = list.map(s=> s.id).join(",");
+    if(cardKey !== stuCardKey){ stuCardKey = cardKey; stuCardLimit = STU_CARD_STEP; }
+    const cardList = window.innerWidth <= 820 ? list.slice(0, stuCardLimit) : list;
+    const cardRest = list.length - cardList.length;
+    cardBox.innerHTML = list.length===0 ? "" : cardList.map((s,i)=>{
       const sel = selectedStudents.has(s.id);
       const st = statusOf(s);
       return `<div class="stu-card ${sel?"sel":""} ${st==="퇴원"?"left":""}" data-ri="${i}" data-id="${s.id}">
@@ -4442,7 +4450,10 @@ function renderStudents(){
           <button class="icon-btn del" data-id="${s.id}">제거</button>
         </div>
       </div>`;
-    }).join("");
+    }).join("") + (cardRest > 0
+      ? `<button class="filter-fold-btn" id="stuMoreBtn" type="button" style="display:block;">▾ 학생 더 보기 (남은 ${cardRest}명)</button>` : "");
+    const moreBtn = document.getElementById("stuMoreBtn");
+    if(moreBtn) moreBtn.addEventListener("click", ()=>{ stuCardLimit += STU_CARD_STEP; renderStudents(); });
   } else {
     cardBox.innerHTML = "";
   }
