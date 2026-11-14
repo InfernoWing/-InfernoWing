@@ -9598,9 +9598,10 @@ function openDetailModal(examId, returnTo){
 
   let bodyHtml = `<div class="makeup-bar">
       <div class="mb-left">
-        <label class="mb-lbl" for="makeupDateIn">직보 일정</label>
-        <input type="date" id="makeupDateIn" value="${escapeHtml(exam.makeupDate||"")}" ${editMode?"":"disabled"}>
-        <input type="text" id="makeupNoteIn" placeholder="예: 2시 3층" value="${escapeHtml(exam.makeupNote||"")}" ${editMode?"":"disabled"}>
+        ${/* 보기 모드에선 적어 둔 값이 있을 때만 보입니다 (빈 입력칸이 떠 있던 것) */""}
+        ${editMode || exam.makeupDate || exam.makeupNote ? `<label class="mb-lbl" for="makeupDateIn">직보 일정</label>` : ""}
+        ${editMode || exam.makeupDate ? `<input type="date" id="makeupDateIn" value="${escapeHtml(exam.makeupDate||"")}" ${editMode?"":"disabled"}>` : ""}
+        ${editMode || exam.makeupNote ? `<input type="text" id="makeupNoteIn" placeholder="예: 2시 3층" value="${escapeHtml(exam.makeupNote||"")}" ${editMode?"":"disabled"}>` : ""}
         ${editMode ? `<button class="btn secondary small" id="makeupSaveBtn">일정 저장</button>` : ""}
       </div>
       <div class="mb-right">
