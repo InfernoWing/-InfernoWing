@@ -396,7 +396,6 @@
     #studentTableWrap tbody td.chk{grid-row:1/3;}
     #studentTableWrap tbody td[data-c="name"]{grid-column:2; font-weight:900; font-size:14.5px;}
     #studentTableWrap tbody td[data-c="act"]{grid-column:3; grid-row:1/3; align-self:center;}
-    #studentTableWrap tbody td[data-c="studentNumber"]{display:none;}
     #studentTableWrap tbody td[data-c="school"],
     #studentTableWrap tbody td[data-c="grade"],
     #studentTableWrap tbody td[data-c="examTeacher"],
@@ -2114,10 +2113,6 @@
     <div id="stuAddBox" style="display:none;">
     <div class="form-row edit-only">
       <div>
-        <label>학번</label>
-        <input type="text" id="stuNumber" placeholder="예: 20250114">
-      </div>
-      <div>
         <label>이름</label>
         <input type="text" id="stuName" placeholder="예: 김지민">
       </div>
@@ -2211,7 +2206,6 @@
             <thead>
               <tr>
                 <th class="chk edit-only"><input type="checkbox" id="stuChkAll"></th>
-                <th class="sortable" data-sort="studentNumber">학번</th>
                 <th class="sortable" data-sort="name">이름</th>
                 <th class="sortable" data-sort="school">학교</th>
                 <th class="sortable" data-sort="grade">학년</th>
@@ -4022,7 +4016,7 @@ document.getElementById("schedImportApply").addEventListener("click", async (ev)
 let stuSort = { key:"", dir:"asc" };
 try{
   const saved = JSON.parse(localStorage.getItem("kladi_stusort") || "null");
-  if(saved && typeof saved.key === "string") stuSort = saved;
+  if(saved && typeof saved.key === "string" && saved.key !== "studentNumber") stuSort = saved;   /* 학번 칸은 없앴습니다 */
 }catch(e){}
 
 function sortKeyOf(s, key){
@@ -4366,7 +4360,6 @@ function renderStudents(){
         return `
           <tr class="editing">
             <td class="chk edit-only"></td>
-            <td><input type="text" class="edit-field" data-field="studentNumber" value="${escapeHtml(s.studentNumber||"")}" style="width:78px;"></td>
             <td><input type="text" class="edit-field" data-field="name" value="${escapeHtml(s.name||"")}" style="width:78px;"></td>
             <td><input type="text" class="edit-field" data-field="school" value="${escapeHtml(s.school||"")}" list="schoolList" style="width:100px;"></td>
             <td><input type="text" class="edit-field" data-field="grade" value="${escapeHtml(s.grade||"")}" list="gradeList" style="width:56px;"></td>
@@ -4387,7 +4380,6 @@ function renderStudents(){
       return `
       <tr class="${sel?"sel":""} ${statusOf(s)==="퇴원"?"left":""}" data-ri="${i}" data-id="${s.id}">
         <td class="chk edit-only" data-c="chk"><input type="checkbox" data-id="${s.id}" ${sel?"checked":""}></td>
-        <td data-c="studentNumber">${s.studentNumber? escapeHtml(s.studentNumber) : "—"}</td>
         <td class="name-cell" data-c="name"><span class="stu-link" data-student="${s.id}">${escapeHtml(s.name)}</span>${
           (nameCounts[(s.name||"").trim()]||0) > 1
             ? ` <span class="tag dup" title="같은 이름의 학생이 ${nameCounts[(s.name||"").trim()]}명 있어요 — 학교·학년·담임으로 구분하세요">동명 ${nameCounts[(s.name||"").trim()]}</span>` : ""
@@ -4506,7 +4498,7 @@ function renderStudents(){
     const row = b.closest("tr");
     const get = f => row.querySelector(`[data-field="${f}"]`).value.trim();
     const payload = {
-      studentNumber: get("studentNumber"), name: get("name"), school: get("school"),
+      name: get("name"), school: get("school"),
       grade: get("grade"),
       examTeacher: get("examTeacher"), regularTeacher: get("regularTeacher"),
       regularClass: get("regularClass"), examClass: get("examClass"),
@@ -4736,7 +4728,6 @@ document.getElementById("stuAddToggle").addEventListener("click", ()=>{
 
 document.getElementById("addStudentBtn").addEventListener("click", async ()=>{
   if(!guardEdit()) return;
-  const studentNumber = document.getElementById("stuNumber").value.trim();
   const name = document.getElementById("stuName").value.trim();
   const school = document.getElementById("stuSchool").value.trim();
   const grade = document.getElementById("stuGrade").value.trim();
@@ -4746,9 +4737,9 @@ document.getElementById("addStudentBtn").addEventListener("click", async ()=>{
   const regularAssistant = document.getElementById("stuRegularAssistant").value.trim();
   const examClass = document.getElementById("stuExamClass").value.trim();
   if(!name){ showToast("이름을 입력해주세요.", {type:"bad"}); return; }
-  await addStudent({studentNumber, name, school, grade, teacher, examTeacher: teacher,
+  await addStudent({name, school, grade, teacher, examTeacher: teacher,
                     regularClass, regularTeacher, regularAssistant, examClass, status:"재원"});
-  ["stuNumber","stuName","stuSchool","stuGrade","stuTeacher","stuRegularClass",
+  ["stuName","stuSchool","stuGrade","stuTeacher","stuRegularClass",
    "stuRegularTeacher","stuRegularAssistant","stuExamClass"]
     .forEach(id=> document.getElementById(id).value="");
 });
