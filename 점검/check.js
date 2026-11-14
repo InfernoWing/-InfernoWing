@@ -50,6 +50,9 @@ async function open(browser, view) {
     await page.click('#todoBtn'); await page.waitForTimeout(250);
     ok(`${label}: "할 일" 창에 범위 미입력·교과서 미등록이 나옴`, await page.$$eval('#todoBody .todo-row', r => r.some(x => x.dataset.kind === 'scope') && r.some(x => x.dataset.kind === 'book')));
     await page.click('#closeTodoModal');
+    await page.click('#avgBtn'); await page.waitForTimeout(250);
+    ok(`${label}: "점수 평균" 창이 열리고 반별·학교별 전환됨`, await (async () => { const a = await page.$eval('#avgBody', e => e.innerText.length > 0); await page.click('#avgModeSeg [data-m="school"]'); return a && await page.$eval('#avgModeSeg [data-m="school"]', e => e.classList.contains('active')); })());
+    await page.click('#closeAvgModal');
     const tabs = await page.$$eval('.tab-btn[data-tab]', b => b.map(x => x.dataset.tab));
     ok(`${label}: 탭 ${tabs.length}개 찾음`, tabs.length >= 5, tabs.join(','));
     for (const t of tabs) {

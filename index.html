@@ -1253,6 +1253,13 @@
   .todo-row .nm{font-weight:800;}
   .todo-row .sub{font-size:12px; color:var(--c40);}
   .todo-row .rest{margin-left:auto; flex-shrink:0;}
+  .avg-wrap{overflow-x:auto;}
+  .avg-table{border-collapse:collapse; width:100%; font-size:13px;}
+  .avg-table th, .avg-table td{padding:7px 9px; text-align:center; white-space:nowrap; border-bottom:1px solid var(--c15);}
+  .avg-table th{font-size:12px; color:var(--c40); font-weight:800;}
+  .avg-table th:first-child, .avg-table td:first-child{text-align:left; font-weight:800;}
+  .avg-table td b{font-size:14px;}
+  .avg-table td .n{display:block; font-size:11px; color:var(--c40);}
   .brief-bar{display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin:12px 0 14px;}
   .brief-bar select{min-width:130px;}
   .brief-grp{margin-bottom:16px;}
@@ -1652,8 +1659,8 @@
   #askModal .btn.danger{background:var(--rust); border-color:var(--rust); color:var(--c1);}
   .modal{ background:var(--paper-card); border-radius:16px; padding:24px; max-width:540px; width:100%; max-height:88vh; overflow-y:auto; }
   /* 긴 창은 안쪽에서 따로 굴리지 않고, 내용만큼 아래로 늘어나게 둡니다 */
-  #detailModal.active, #studentModal.active, #dayModal.active, #briefModal.active, #todoModal.active{ display:block; overflow-y:auto; }
-  #detailModal .modal, #studentModal .modal, #dayModal .modal, #briefModal .modal, #todoModal .modal{
+  #detailModal.active, #studentModal.active, #dayModal.active, #briefModal.active, #todoModal.active, #avgModal.active{ display:block; overflow-y:auto; }
+  #detailModal .modal, #studentModal .modal, #dayModal .modal, #briefModal .modal, #todoModal .modal, #avgModal .modal{
     max-height:none; overflow:visible; margin:0 auto; }
   /* [A] 학생이 많은 창은 넓게 — 카드가 2~3열로 들어갑니다 */
   #detailModal .modal, #dayModal .modal{ max-width:1040px; }
@@ -1948,6 +1955,7 @@
         <p class="panel-desc">알약을 누르면 상세 정보와 학생 명단이 열려요.</p>
       </div>
       <div class="head-btns-row">
+        <button class="btn secondary" id="avgBtn">📈 점수 평균</button>
         <button class="btn secondary" id="todoBtn">📝 할 일</button>
         <button class="btn" id="todayBriefBtn">📋 오늘 수업</button>
       </div>
@@ -2434,6 +2442,22 @@
       <button class="btn secondary small" id="briefPrint">🖨 인쇄</button>
     </div>
     <div id="briefBody"></div>
+  </div>
+</div>
+
+<!-- 점수 평균 변화 -->
+<div class="overlay" id="avgModal">
+  <div class="modal" style="max-width:760px;">
+    <button class="close-x" id="closeAvgModal">&times;</button>
+    <h3>점수 평균 변화</h3>
+    <p class="modal-meta" id="avgMeta"></p>
+    <div class="brief-bar">
+      <div class="seg" id="avgModeSeg">
+        <button class="seg-btn" data-m="class">반별</button>
+        <button class="seg-btn" data-m="school">학교별</button>
+      </div>
+    </div>
+    <div id="avgBody"></div>
   </div>
 </div>
 
@@ -6501,6 +6525,64 @@ document.getElementById("stuPrintBtn").addEventListener("click", ()=>{
   document.getElementById("stuPrintTitle").innerHTML =
     `학생 명단 <span class="sub">${escapeHtml(cond || "전체")} · ${n}명 · ${d} 기준</span>`;
   window.print();
+});
+
+/* ---------- 점수 평균 변화 — 반별·학교별로 시험마다 평균을 나란히 ---------- */
+let avgMode = "class";
+function renderAvg(){
+  document.getElementById("avgModeSeg").querySelectorAll(".seg-btn")
+    .forEach(b=> b.classList.toggle("active", b.dataset.m === avgMode));
+  const groups = new Map();      /* 이름 → Map(순서 → {label, full, scores[]}) */
+  students.filter(s=> statusOf(s) !== "퇴원").forEach(s=>{
+    const key = avgMode === "school" ? (s.school || "학교 미입력") : (splitCls(s.regularClass)[0] || "반 미배정");
+    scoreRecordsOf(s.id).forEach(r=>{
+      if(!groups.has(key)) groups.set(key, new Map());
+      const g = groups.get(key);
+      if(!g.has(r.order)) g.set(r.order, { label: r.label, full: r.full, scores: [] });
+      g.get(r.order).scores.push(r.score);
+    });
+  });
+  const orders = [...new Set([...groups.values()].flatMap(g=> [...g.keys()]))].sort((a,b)=> a-b).slice(-6);
+  const body = document.getElementById("avgBody");
+  document.getElementById("avgMeta").textContent = orders.length ? "점수가 들어간 시험만 나와요. 재원·휴원 학생 기준이고, 최근 6번까지 보여요." : "";
+  if(!orders.length){
+    body.innerHTML = `<div class="empty-state">아직 입력된 점수가 없어요. 시험 상세 창에서 점수를 넣으면 여기에 평균이 나와요.</div>`;
+    return;
+  }
+  const labelOf = o=> { for(const g of groups.values()){ if(g.has(o)) return g.get(o); } return {label:"", full:""}; };
+  const rows = [...groups.keys()].sort((a,b)=> a.localeCompare(b,"ko")).map(k=>{
+    const g = groups.get(k);
+    let prev = null;
+    const cells = orders.map(o=>{
+      const c = g.get(o);
+      if(!c) return `<td>-</td>`;
+      const avg = Math.round(c.scores.reduce((x,y)=> x+y, 0) / c.scores.length * 10) / 10;
+      let diff = "";
+      if(prev !== null){
+        const d = Math.round((avg - prev) * 10) / 10;
+        const cls = d <= -SCORE_DROP_WARN ? "drop" : (d < 0 ? "down" : (d > 0 ? "up" : "same"));
+        diff = ` <span class="sd-diff ${cls}">${d > 0 ? "▲"+d : (d < 0 ? "▼"+(-d) : "그대로")}</span>`;
+      }
+      prev = avg;
+      return `<td><b>${avg}</b>${diff}<span class="n">${c.scores.length}명</span></td>`;
+    }).join("");
+    return `<tr><td>${escapeHtml(k)}</td>${cells}</tr>`;
+  }).join("");
+  body.innerHTML = `<div class="avg-wrap"><table class="avg-table"><thead><tr><th>${avgMode === "school" ? "학교" : "반"}</th>` +
+    orders.map(o=> `<th title="${escapeHtml(labelOf(o).full)}">${escapeHtml(labelOf(o).label)}</th>`).join("") +
+    `</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+document.getElementById("avgBtn").addEventListener("click", ()=>{
+  renderAvg(); document.getElementById("avgModal").classList.add("active");
+});
+document.getElementById("avgModeSeg").addEventListener("click", (e)=>{
+  const b = e.target.closest(".seg-btn"); if(!b) return;
+  avgMode = b.dataset.m; renderAvg();
+});
+document.getElementById("closeAvgModal").addEventListener("click", ()=>
+  document.getElementById("avgModal").classList.remove("active"));
+document.getElementById("avgModal").addEventListener("click", (e)=>{
+  if(e.target.id === "avgModal") e.currentTarget.classList.remove("active");
 });
 
 /* ---------- 할 일 목록 — 범위 미입력 시험과 교과서 미등록 학교를 한곳에 ---------- */
