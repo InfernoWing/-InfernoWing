@@ -7010,7 +7010,9 @@ function renderSeasonChips(){
       .map(([k,c])=>{ const [y,m]=k.split("-").map(Number); return {y,m,count:c}; })
       .sort((a,b)=> a.y-b.y || a.m-b.m);
     const lastEnd = list.reduce((mx,e)=> e.endDate>mx ? e.endDate : mx, "");
-    return {label:def.label, months, ended: lastEnd < localDateStr(today)};
+    /* 마지막 시험이 끝난 지 2주가 지나야 '끝난 시험' — 뒤늦게 추가되는 학교가 있을 수 있어서 여유를 둡니다.
+       나중에 더 늦게 끝나는 학교가 추가되면 마지막 날이 늦춰지므로 다시 펼쳐진 채로 보입니다. */
+    return {label:def.label, months, ended: shiftKey(lastEnd, 14) < localDateStr(today)};
   }).filter(Boolean);
 
   if(chips.length===0){ row.innerHTML = ""; return; }
