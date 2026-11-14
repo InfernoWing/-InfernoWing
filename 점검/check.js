@@ -34,7 +34,9 @@ async function open(browser, view) {
   await page.addInitScript(() => { sessionStorage.setItem('kladi_edit', '1'); sessionStorage.setItem('kladi_who_skip', '1'); });
   await page.goto('http://127.0.0.1:8127/test.html'); await page.waitForTimeout(600);
   await page.evaluate(s => { s.forEach((x, i) => window.__mockfs.seed('students', 'stu' + i, x));
-    window.__mockfs.seed('exams', 'ex1', { school: '가짜중', grade: '중1', examName: '중간고사', startDate: '2026-11-20', endDate: '2026-11-22' }); }, [1, 2, 3, 4, 5].map(stu));
+    window.__mockfs.seed('exams', 'ex1', { school: '가짜중', grade: '중1', examName: '중간고사', startDate: '2026-11-20', endDate: '2026-11-22' });
+    const t = new Date(), k = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+    window.__mockfs.seed('exams', 'ex2', { school: '가짜중', grade: '중1', examName: '기말고사', startDate: k, endDate: k }); }, [1, 2, 3, 4, 5].map(stu));
   await page.waitForTimeout(400);
   return { page, errs };
 }
@@ -44,6 +46,7 @@ async function open(browser, view) {
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
   for (const [label, view] of [['컴퓨터', { width: 1280, height: 900 }], ['휴대폰', { width: 390, height: 844 }]]) {
     const { page, errs } = await open(browser, view);
+    ok(`${label}: "이번 주 시험 보는 학교" 줄에 오늘 시험이 나옴`, await page.$eval('.stat-card.week', e => e.textContent.includes('가짜중') && e.textContent.includes('진행 중')).catch(() => false));
     const tabs = await page.$$eval('.tab-btn[data-tab]', b => b.map(x => x.dataset.tab));
     ok(`${label}: 탭 ${tabs.length}개 찾음`, tabs.length >= 5, tabs.join(','));
     for (const t of tabs) {
