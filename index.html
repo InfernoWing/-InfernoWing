@@ -5443,6 +5443,10 @@ document.getElementById("classImportApply").addEventListener("click", async (ev)
   if(!classImportPlan) return;
   const plan = classImportPlan;
   const btn = ev.currentTarget;
+  /* 새로 추가가 많으면 한 번 더 확인 (11월 12일 중복 325명 사고 재발 방지) */
+  if(plan.adds.length >= 20 && !await askConfirm(
+      `새로 추가되는 학생이 ${plan.adds.length}명이에요. 현재 등록된 학생은 ${students.length}명입니다.\n\n이름이 조금 다르게 적혀 같은 학생이 중복으로 만들어지는 건 아닌지 위 "새로 추가되는 학생" 목록을 한 번 더 확인해 주세요.\n\n그래도 ${plan.adds.length}명을 추가할까요?`,
+      {title:"새로 추가 인원이 많아요", yes:`${plan.adds.length}명 추가`, danger:true})) return;
   btn.disabled = true; btn.textContent = "적용 중...";
 
   const undoFields = plan.updates.map(u=>({
@@ -6386,21 +6390,7 @@ async function purgeOldTrash(){
     await commitInChunks(snap.docs.map(d=> ({ type:"delete", ref:d.ref })));
   }catch(err){ console.warn("오래된 삭제 보관분 정리 실패", err); }
 }
-/* 변경 이력도 쌓이기만 하지 않게, 6개월(180일) 지난 것은 지웁니다. 수정 모드에서 학생 관리 탭을 열 때 화면을 연 뒤 한 번, 100건씩 */
-const LOG_KEEP_DAYS = 180;
-let logsPurged = false;
-async function purgeOldLogs(){
-  if(logsPurged || !editMode || !isConfigured || !db || sharedLogsFailed || !whereQ || !getDocsQ) return;
-  logsPurged = true;
-  try{
-    const cut = new Date(Date.now() - LOG_KEEP_DAYS*86400000).toISOString();
-    const snap = await getDocsQ(query(collection(db, "logs"), whereQ("at", "<", cut), limitQ(100)));
-    if(snap.empty) return;
-    await commitInChunks(snap.docs.map(d=> ({ type:"delete", ref:d.ref })));
-  }catch(err){ console.warn("오래된 변경 이력 정리 실패", err); }
-}
 function ensureSharedTrash(){
-  purgeOldLogs();
   purgeOldTrash();
   if(!isConfigured || !db || sharedTrashUnsub || sharedTrashFailed) { renderTrash(); return; }
   sharedTrashUnsub = onSnapshot(query(collection(db, "trash"), orderBy("at", "desc"), limitQ(TRASH_SHOW)),
