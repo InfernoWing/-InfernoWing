@@ -704,6 +704,11 @@
   .seg{display:inline-flex; align-items:stretch; border:1.5px solid var(--c12); background:var(--c1); border-radius:16px; overflow:hidden;}
   .seg .seg-label{display:flex; align-items:center; padding:7px 4px 7px 13px; font-size:13px; font-weight:700; color:var(--c6); white-space:nowrap;}
   .seg.single .seg-label{padding-right:2px;}
+  /* 학기 이름을 누르면 달 단추를 접고 펴요 */
+  .seg button.seg-label{border:none; background:transparent; font-family:inherit; cursor:pointer;}
+  .seg button.seg-label:hover{background:var(--c7);}
+  .seg .seg-label .fold-arrow{margin-left:4px; font-size:10px;}
+  .seg.folded .seg-label{padding-right:13px;}
   .seg .seg-btn{
     border:none; border-left:1.5px solid var(--c145); background:transparent; padding:7px 11px;
     font-family:inherit; font-weight:700; font-size:13px; cursor:pointer; color:var(--c6); white-space:nowrap;
@@ -6970,6 +6975,9 @@ const SEASON_DEFS = [
   {sem:2, examName:"기말고사", label:"2학기 기말"},
 ];
 
+/* 접어 둔 학기 칩 — 이 기기 브라우저에 기억 (키: "학년도|학기 이름") */
+const seasonFolded = (()=>{ try{ return new Set(JSON.parse(localStorage.getItem("kladi_seasonFolded")||"[]")); }catch(e){ return new Set(); } })();
+function saveSeasonFolded(){ try{ localStorage.setItem("kladi_seasonFolded", JSON.stringify([...seasonFolded])); }catch(e){} }
 function renderSeasonChips(){
   const row = document.getElementById("seasonRow");
   const sy = schoolYearOf(viewYear, viewMonth);
@@ -7016,12 +7024,21 @@ function renderSeasonChips(){
       const title = `${c.label} · ${mm.y}년 ${mm.m+1}월 ${mm.count}건`;
       return `<button class="seg-btn ${active?"active":""}" data-y="${mm.y}" data-m="${mm.m}" title="${escapeHtml(title)}">${monthTxt}<span class="n">${mm.count}</span></button>`;
     }).join("");
-    return multi ? `<span class="seg"><span class="seg-label">${c.label}</span>${btns}</span>`
-                 : `<span class="seg single">${btns}</span>`;
+    if(!multi) return `<span class="seg single">${btns}</span>`;
+    const foldKey = `${sy}|${c.label}`;
+    const folded = seasonFolded.has(foldKey);
+    return `<span class="seg${folded?" folded":""}"><button type="button" class="seg-label" data-fold="${escapeHtml(foldKey)}" aria-expanded="${!folded}" title="${folded?"눌러서 펴기":"눌러서 접기"}">${c.label}<span class="fold-arrow">${folded?"▸":"▾"}</span></button>${folded?"":btns}</span>`;
   }).join("");
 
   row.querySelectorAll(".seg-btn").forEach(b=>{
     b.addEventListener("click", ()=> goToMonth(Number(b.dataset.y), Number(b.dataset.m)));
+  });
+  row.querySelectorAll("[data-fold]").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const k = b.dataset.fold;
+      if(seasonFolded.has(k)) seasonFolded.delete(k); else seasonFolded.add(k);
+      saveSeasonFolded(); renderSeasonChips();
+    });
   });
 }
 /* 학년별 알약 색상 (c1~c7) */
