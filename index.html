@@ -6975,9 +6975,10 @@ const SEASON_DEFS = [
   {sem:2, examName:"기말고사", label:"2학기 기말"},
 ];
 
-/* 접어 둔 학기 칩 — 이 기기 브라우저에 기억 (키: "학년도|학기 이름") */
-const seasonFolded = (()=>{ try{ return new Set(JSON.parse(localStorage.getItem("kladi_seasonFolded")||"[]")); }catch(e){ return new Set(); } })();
-function saveSeasonFolded(){ try{ localStorage.setItem("kladi_seasonFolded", JSON.stringify([...seasonFolded])); }catch(e){} }
+/* 학기 칩 접기 — 직접 누른 것만 이 기기 브라우저에 기억 (키: "학년도|학기 이름", 값: true=접음/false=폄).
+   누른 적 없으면 이미 끝난 시험은 접힌 채로, 아직 안 끝난 시험은 펼친 채로 보입니다. */
+const seasonFoldPref = (()=>{ try{ return JSON.parse(localStorage.getItem("kladi_seasonFold2")||"{}") || {}; }catch(e){ return {}; } })();
+function saveSeasonFold(){ try{ localStorage.setItem("kladi_seasonFold2", JSON.stringify(seasonFoldPref)); }catch(e){} }
 function renderSeasonChips(){
   const row = document.getElementById("seasonRow");
   const sy = schoolYearOf(viewYear, viewMonth);
@@ -7008,7 +7009,8 @@ function renderSeasonChips(){
     const months = [...tally.entries()]
       .map(([k,c])=>{ const [y,m]=k.split("-").map(Number); return {y,m,count:c}; })
       .sort((a,b)=> a.y-b.y || a.m-b.m);
-    return {label:def.label, months};
+    const lastEnd = list.reduce((mx,e)=> e.endDate>mx ? e.endDate : mx, "");
+    return {label:def.label, months, ended: lastEnd < localDateStr(today)};
   }).filter(Boolean);
 
   if(chips.length===0){ row.innerHTML = ""; return; }
@@ -7026,7 +7028,7 @@ function renderSeasonChips(){
     }).join("");
     if(!multi) return `<span class="seg single">${btns}</span>`;
     const foldKey = `${sy}|${c.label}`;
-    const folded = seasonFolded.has(foldKey);
+    const folded = (foldKey in seasonFoldPref) ? seasonFoldPref[foldKey] : c.ended;
     return `<span class="seg${folded?" folded":""}"><button type="button" class="seg-label" data-fold="${escapeHtml(foldKey)}" aria-expanded="${!folded}" title="${folded?"눌러서 펴기":"눌러서 접기"}">${c.label}<span class="fold-arrow">${folded?"▸":"▾"}</span></button>${folded?"":btns}</span>`;
   }).join("");
 
@@ -7036,8 +7038,8 @@ function renderSeasonChips(){
   row.querySelectorAll("[data-fold]").forEach(b=>{
     b.addEventListener("click", ()=>{
       const k = b.dataset.fold;
-      if(seasonFolded.has(k)) seasonFolded.delete(k); else seasonFolded.add(k);
-      saveSeasonFolded(); renderSeasonChips();
+      seasonFoldPref[k] = b.getAttribute("aria-expanded") === "true";   /* 펼쳐져 있으면 접고, 접혀 있으면 폄 */
+      saveSeasonFold(); renderSeasonChips();
     });
   });
 }
