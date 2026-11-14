@@ -500,7 +500,6 @@
   .head-inner{max-width:1120px;margin:0 auto;position:relative;}
   h1.title{ font-family:'Gowun Batang',serif; font-size:clamp(24px,4.2vw,34px); margin:0 0 4px; font-weight:700; }
   h1.title .home-link{ color:inherit; text-decoration:none; cursor:pointer; }
-  .subtitle{color:var(--chalk-dim); font-size:13.5px; margin:0;}
   /* [E] 탭 이름과 같은 패널 제목은 숨깁니다 (인쇄할 땐 다시 보이게) */
   .panel-title{display:none;}
   @media print{ .panel-title{display:block !important;} }
@@ -1857,7 +1856,6 @@
     font-family:inherit; font-size:13px; font-weight:700; color:var(--ink); cursor:pointer; margin-bottom:10px;}
   .summary-toggle .st-hint{font-size:11.5px; font-weight:600; color:var(--c2);}
   @media (max-width:700px){
-    .app-head .subtitle{display:none;}
     #panel-calendar .panel-desc{display:none;}
     /* 시험 범위·학교별 일정 탭도: 설명 문장 숨기고 단추 3개를 한 줄로 */
     #panel-scope .panel-desc, #panel-schedule .panel-desc{display:none;}
@@ -1879,7 +1877,6 @@
 <header class="app-head">
   <div class="head-inner">
     <h1 class="title"><a href="./" id="homeLink" class="home-link" title="처음 화면으로">학원 관리 시스템</a></h1>
-    <p class="subtitle">학교를 고르면 학년별 시험 카드가 자동으로 뜨고, 캘린더·학생 관리와 연동돼요</p>
     <div class="head-actions">
       <button class="mode-btn" id="modeBtn"><span class="dot"></span><span id="modeLabel">보기 모드</span></button>
       <button class="theme-btn" id="themeBtn" title="밝게 / 어둡게 바꾸기" aria-label="화면 밝기 바꾸기">🌙</button>
