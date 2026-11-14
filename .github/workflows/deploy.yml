@@ -1,0 +1,54 @@
+name: 점검 후 배포
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 점검 도구 설치
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: 자동 점검 실행 (가짜 서버·가짜 자료, 운영 자료는 건드리지 않음)
+        run: node 점검/check.js
+
+  deploy:
+    # 점검이 통과해야만 배포합니다. main에 올렸을 때만 배포(pull_request는 점검만).
+    needs: check
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: 사이트에 올릴 파일만 모으기
+        run: |
+          mkdir _site
+          cp index.html icon-180.png icon-192.png _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
